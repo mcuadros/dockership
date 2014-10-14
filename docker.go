@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -23,6 +24,15 @@ func (i ImageId) IsCommit(commit string) bool {
 	return strings.HasSuffix(string(i), commit)
 }
 
+type Container struct {
+	Image ImageId
+	docker.APIContainers
+}
+
+func (c *Container) IsRunning() bool {
+	return statusUp.MatchString(c.Status)
+}
+
 type Docker struct {
 	client *docker.Client
 }
@@ -33,35 +43,66 @@ func NewDocker(endpoint string) *Docker {
 	return &Docker{client: c}
 }
 
-func (d *Docker) List(owner, repository string) []ImageId {
+func (d *Docker) Deploy(owner, repository, commit string, dockerfile []byte) error {
+	if err := d.Clean(owner, repository, commit); err != nil {
+		return err
+	}
+
+	if err := d.BuildImage(owner, repository, commit, dockerfile); err != nil {
+		return err
+	}
+
+	return d.Run(owner, repository, commit)
+}
+
+func (d *Docker) Clean(owner, repository, commit string) error {
+	l := d.ListContainers(owner, repository)
+	for _, c := range l {
+		if c.IsRunning() && c.Image.IsCommit(commit) {
+			return errors.New("Current commits is already running")
+		}
+	}
+
+	for _, c := range l {
+		err := d.KillAndRemove(c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *Docker) ListContainers(owner, repository string) []*Container {
 	l, _ := d.client.ListContainers(docker.ListContainersOptions{
 		All: true,
 	})
 
-	r := make([]ImageId, 0)
+	r := make([]*Container, 0)
 	for _, c := range l {
 		i := ImageId(c.Image)
-		if statusUp.MatchString(c.Status) && i.BelongsTo(owner, repository) {
-			r = append(r, i)
+		if i.BelongsTo(owner, repository) {
+			r = append(r, &Container{Image: i, APIContainers: c})
 		}
 	}
 
 	return r
 }
 
-func (d *Docker) Deploy(owner, repository, commit string, dockerfile []byte) error {
-	for _, i := range d.List(owner, repository) {
-		if i.IsCommit(commit) {
-			panic("Container is running")
-		}
-	}
+func (d *Docker) KillAndRemove(c *Container) error {
+	fmt.Println(c.Image)
 
-	err := d.BuildImage(owner, repository, commit, dockerfile)
-	if err != nil {
+	kopts := docker.KillContainerOptions{ID: c.ID}
+	if err := d.client.KillContainer(kopts); err != nil {
 		return err
 	}
 
-	return d.Run(owner, repository, commit)
+	ropts := docker.RemoveContainerOptions{ID: c.ID}
+	if err := d.client.RemoveContainer(ropts); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *Docker) BuildImage(owner, repository, commit string, dockerfile []byte) error {

@@ -19,6 +19,10 @@ func (i ImageId) BelongsTo(owner, repository string) bool {
 	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", owner, repository))
 }
 
+func (i ImageId) IsCommit(commit string) bool {
+	return strings.HasSuffix(string(i), commit)
+}
+
 type Docker struct {
 	client *docker.Client
 }
@@ -43,6 +47,21 @@ func (d *Docker) List(owner, repository string) []ImageId {
 	}
 
 	return r
+}
+
+func (d *Docker) Deploy(owner, repository, commit string, dockerfile []byte) error {
+	for _, i := range d.List(owner, repository) {
+		if i.IsCommit(commit) {
+			panic("Container is running")
+		}
+	}
+
+	err := d.BuildImage(owner, repository, commit, dockerfile)
+	if err != nil {
+		return err
+	}
+
+	return d.Run(owner, repository, commit)
 }
 
 func (d *Docker) BuildImage(owner, repository, commit string, dockerfile []byte) error {

@@ -4,10 +4,20 @@ import (
 	"archive/tar"
 	"bytes"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
 )
+
+var statusUp = regexp.MustCompile("^Up (.*)")
+
+type ImageId string
+
+func (i ImageId) BelongsTo(owner, repository string) bool {
+	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", owner, repository))
+}
 
 type Docker struct {
 	client *docker.Client
@@ -17,6 +27,22 @@ func NewDocker(endpoint string) *Docker {
 	c, _ := docker.NewClient(endpoint)
 
 	return &Docker{client: c}
+}
+
+func (d *Docker) List(owner, repository string) []ImageId {
+	l, _ := d.client.ListContainers(docker.ListContainersOptions{
+		All: true,
+	})
+
+	r := make([]ImageId, 0)
+	for _, c := range l {
+		i := ImageId(c.Image)
+		if statusUp.MatchString(c.Status) && i.BelongsTo(owner, repository) {
+			r = append(r, i)
+		}
+	}
+
+	return r
 }
 
 func (d *Docker) BuildImage(owner, repository, commit string, dockerfile []byte) error {

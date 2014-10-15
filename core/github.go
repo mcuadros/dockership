@@ -19,34 +19,34 @@ func NewGithub(token string) *Github {
 	}
 }
 
-func (g *Github) GetDockerFile(owner, repository, branch, dockerfile string) (content []byte, commit string, err error) {
-	commit, err = g.getLastCommit(owner, repository, branch)
+func (g *Github) GetDockerFile(p *Project) (content []byte, commit string, err error) {
+	commit, err = g.GetLastCommit(p)
 	if err != nil {
 		return
 	}
 
-	content, err = g.getFileContent(owner, repository, dockerfile, commit)
+	content, err = g.getFileContent(p, commit)
 	return
 }
 
-func (g *Github) getFileContent(owner, repository, dockerfile, commit string) ([]byte, error) {
-	opts := &github.RepositoryContentGetOptions{
-		Ref: commit,
-	}
-
-	f, _, _, err := g.client.Repositories.GetContents(owner, repository, dockerfile, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return f.Decode()
-}
-
-func (g *Github) getLastCommit(owner, repository, branch string) (string, error) {
-	c, _, err := g.client.Repositories.GetBranch(owner, repository, branch)
+func (g *Github) GetLastCommit(p *Project) (string, error) {
+	c, _, err := g.client.Repositories.GetBranch(p.Owner, p.Repository, p.Branch)
 	if err != nil {
 		return "", err
 	}
 
 	return *c.Commit.SHA, nil
+}
+
+func (g *Github) getFileContent(p *Project, commit string) ([]byte, error) {
+	opts := &github.RepositoryContentGetOptions{
+		Ref: commit,
+	}
+
+	f, _, _, err := g.client.Repositories.GetContents(p.Owner, p.Repository, p.Dockerfile, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return f.Decode()
 }

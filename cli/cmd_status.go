@@ -27,7 +27,7 @@ func (c *CmdStatus) Run(args []string) int {
 	var config core.Config
 	config.LoadFile("config.ini")
 
-	table := termtable.NewTable(nil, nil)
+	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
 	table.SetHeader([]string{"Project", "Last Commit", "Containers", "Status"})
 
 	for _, p := range config.Project {

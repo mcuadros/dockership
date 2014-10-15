@@ -2,12 +2,7 @@ package core
 
 import (
 	"fmt"
-	"os"
-	"text/tabwriter"
-	"time"
 
-	"github.com/docker/docker/pkg/units"
-	"github.com/docker/docker/utils"
 	"gopkg.in/inconshreveable/log15.v2"
 )
 
@@ -72,34 +67,9 @@ func (p *Project) Status() (*ProjectStatus, error) {
 	return s, nil
 }
 
-func (p *Project) List() error {
+func (p *Project) List() ([]*Container, error) {
 	d := NewDocker(p.DockerEndPoint)
-	l, err := d.ListContainers(p)
-	if err != nil {
-		return err
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-	fmt.Fprint(w, "REPOSITORY\tCOMMIT\tCONTAINER ID\tCOMMAND\tCREATED\tSTATUS\tPORTS\n")
-
-	for _, c := range l {
-		owner, repository, commit := c.Image.GetInfo()
-		fmt.Fprintf(w, "%s/%s\t%s\t%s\t%s\t%s ago\t%s\t%s\t\n",
-			owner,
-			repository,
-			utils.TruncateID(commit),
-			utils.TruncateID(c.ID),
-			c.Command,
-			units.HumanDuration(time.Now().UTC().Sub(time.Unix(c.Created, 0))),
-			c.Status,
-			c.GetPorts(),
-		)
-
-	}
-
-	w.Flush()
-
-	return nil
+	return d.ListContainers(p)
 }
 
 func (p *Project) String() string {

@@ -12,8 +12,9 @@ func main() {
 	c := cli.NewCLI("app", "1.0.0")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
-		"status": NewCmdStatus,
-		"deploy": NewCmdDeploy,
+		"status":     NewCmdStatus,
+		"deploy":     NewCmdDeploy,
+		"containers": NewCmdContainers,
 	}
 
 	exitStatus, err := c.Run()

@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 
-	"gopkg.in/inconshreveable/log15.v2"
+	. "github.com/mcuadros/dockership/logger"
 )
 
 type Project struct {
@@ -17,17 +17,17 @@ type Project struct {
 }
 
 func (p *Project) Deploy() error {
-	log15.Warn("Retrieving last dockerfile ...", "project", p)
+	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
 	file, commit, err := c.GetDockerFile(p)
 	if err != nil {
-		log15.Error(err.Error(), "project", p)
+		Critical(err.Error(), "project", p)
 	}
 
 	d := NewDocker(p.DockerEndPoint)
 	if err := d.Deploy(p, commit, file); err != nil {
-		log15.Error(err.Error(), "project", p, "commit", commit)
+		Critical(err.Error(), "project", p, "commit", commit)
 		return err
 	}
 

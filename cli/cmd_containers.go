@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mcuadros/dockership/core"
@@ -16,14 +17,6 @@ type CmdContainers struct{}
 
 func NewCmdContainers() (cli.Command, error) {
 	return &CmdContainers{}, nil
-}
-
-func (c *CmdContainers) Help() string {
-	return "Help"
-}
-
-func (c *CmdContainers) Synopsis() string {
-	return "Synopsis"
 }
 
 func (c *CmdContainers) Run(args []string) int {
@@ -55,4 +48,22 @@ func (c *CmdContainers) Run(args []string) int {
 
 	fmt.Println(table.Render())
 	return 0
+}
+
+func (c *CmdContainers) Synopsis() string {
+	return "List the containers deployed by this tool."
+}
+
+func (c *CmdContainers) Help() string {
+	helpText := `
+Usage: dockership deploy [options]
+  List the containers deployed by this tool.
+
+
+Options:
+  -project=""                Just show the containers for this project.
+
+`
+
+	return strings.TrimSpace(helpText)
 }

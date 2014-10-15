@@ -1,62 +1,38 @@
 package logger
 
 import (
-	"fmt"
-	"log"
 	"os"
+
+	"gopkg.in/inconshreveable/log15.v2"
 )
 
-type LoggerConfig struct {
-	Level  string
-	Format string
-	File   string
-}
-
-var colorFormat = "[\x1b[%dm%s\x1b[0m]"
+var Log = log15.New()
 
 func init() {
-	config := LoggerConfig{Format: "stdout", Level: "debug"}
-	NewLogger(&config)
+	Log.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, log15.StdoutHandler))
 }
 
-func NewLogger(config *LoggerConfig) {
-	if config.Level == "debug" {
-		log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-	} else {
-		log.SetFlags(log.Ldate | log.Ltime)
-	}
-
-	if config.Format == "log" {
-		f, err := os.OpenFile(config.File, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			Critical("error opening file: %v", err)
-		}
-
-		log.SetOutput(f)
-		defer f.Close()
-	}
+func Verbose() {
+	Log.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
 }
 
-func Debug(line string, args ...interface{}) {
-	log.Printf(formatLogLine("DEBG", line, 36), args...)
+func Debug(msg string, ctx ...interface{}) {
+	Log.Debug(msg, ctx...)
 }
 
-func Info(line string, args ...interface{}) {
-	log.Printf(formatLogLine("INFO", line, 32), args...)
+func Info(msg string, ctx ...interface{}) {
+	Log.Info(msg, ctx...)
 }
 
-func Warning(line string, args ...interface{}) {
-	log.Printf(formatLogLine("WARN", line, 31), args...)
+func Warning(msg string, ctx ...interface{}) {
+	Log.Warn(msg, ctx...)
 }
 
-func Error(line string, args ...interface{}) {
-	log.Printf(formatLogLine("ERRO", line, 31), args...)
+func Error(msg string, ctx ...interface{}) {
+	Log.Error(msg, ctx...)
 }
 
-func Critical(line string, args ...interface{}) {
-	log.Fatalf(formatLogLine("CRIT", line, 31), args...)
-}
-
-func formatLogLine(level, line string, color int) string {
-	return fmt.Sprintf(colorFormat, color, level) + " " + line
+func Critical(msg string, ctx ...interface{}) {
+	Log.Crit(msg, ctx...)
+	os.Exit(1)
 }

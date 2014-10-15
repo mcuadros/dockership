@@ -10,23 +10,18 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
-	"gopkg.in/inconshreveable/log15.v2"
+	. "github.com/mcuadros/dockership/logger"
 )
 
 var statusUp = regexp.MustCompile("^Up (.*)")
 var imageIdRe = regexp.MustCompile("^(.*)/(.*):(.*)")
-
-func init() {
-	log15.LvlFilterHandler(log.Error, log.StdoutHandler)
-
-}
 
 type Docker struct {
 	client *docker.Client
 }
 
 func NewDocker(endpoint string) *Docker {
-	log15.Debug("Connected to docker endpoint", "endpoint", endpoint)
+	Debug("Connected to docker endpoint", "endpoint", endpoint)
 
 	c, _ := docker.NewClient(endpoint)
 
@@ -34,7 +29,7 @@ func NewDocker(endpoint string) *Docker {
 }
 
 func (d *Docker) Deploy(p *Project, commit string, dockerfile []byte) error {
-	log15.Info("Deploying dockerfile", "project", p, "commit", commit)
+	Info("Deploying dockerfile", "project", p, "commit", commit)
 	if err := d.Clean(p, commit); err != nil {
 		return err
 	}
@@ -58,9 +53,9 @@ func (d *Docker) Clean(p *Project, commit string) error {
 		}
 	}
 
-	log15.Info("Cleaning all containers", "project", p)
+	Info("Cleaning all containers", "project", p)
 	for _, c := range l {
-		log15.Info("Killing and removing image", "project", p, "image", c.GetShortId())
+		Info("Killing and removing image", "project", p, "image", c.GetShortId())
 		err := d.killAndRemove(c)
 		if err != nil {
 			return err
@@ -71,7 +66,7 @@ func (d *Docker) Clean(p *Project, commit string) error {
 }
 
 func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
-	log15.Debug("Retrieving current containers", "project", p)
+	Debug("Retrieving current containers", "project", p)
 
 	l, err := d.client.ListContainers(docker.ListContainersOptions{
 		All: true,
@@ -107,7 +102,7 @@ func (d *Docker) killAndRemove(c *Container) error {
 }
 
 func (d *Docker) BuildImage(p *Project, commit string, dockerfile []byte) error {
-	log15.Info("Building image", "project", p, "commit", commit)
+	Info("Building image", "project", p, "commit", commit)
 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	d.buildTar(dockerfile, inputbuf)
@@ -123,15 +118,16 @@ func (d *Docker) BuildImage(p *Project, commit string, dockerfile []byte) error 
 }
 
 func (d *Docker) Run(p *Project, commit string) error {
-	log15.Debug("Creating container from image", "project", p, "commit", commit)
+	Debug("Creating container from image", "project", p, "commit", commit)
 	c, err := d.createContainer(d.getImageName(p, commit))
 	if err != nil {
 		return err
 	}
 
-	log15.Info("Running new container",
+	Info("Running new container",
 		"project", p,
 		"commit", commit,
+		"image", c.Image,
 		"container", c.GetShortId(),
 	)
 

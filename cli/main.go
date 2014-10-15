@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	c := cli.NewCLI("app", "1.0.0")
+	c := cli.NewCLI("dockership", "0.0.1")
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"status":     NewCmdStatus,

@@ -20,7 +20,7 @@ func NewGithub(token string) *Github {
 }
 
 func (g *Github) GetDockerFile(owner, repository, branch, dockerfile string) (content []byte, commit string, err error) {
-	commit, err = g.getLastCommit(branch)
+	commit, err = g.getLastCommit(owner, repository, branch)
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func (g *Github) getFileContent(owner, repository, dockerfile, commit string) ([
 	return f.Decode()
 }
 
-func (g *Github) getLastCommit(branch string) (string, error) {
+func (g *Github) getLastCommit(owner, repository, branch string) (string, error) {
 	c, _, err := g.client.Repositories.GetBranch(owner, repository, branch)
 	if err != nil {
 		return "", err

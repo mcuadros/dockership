@@ -13,6 +13,7 @@ import (
 )
 
 var statusUp = regexp.MustCompile("^Up (.*)")
+var imageIdRe = regexp.MustCompile("^(.*)/(.*):(.*)")
 
 type ImageId string
 
@@ -24,6 +25,13 @@ func (i ImageId) IsCommit(commit string) bool {
 	return strings.HasSuffix(string(i), commit)
 }
 
+func (i ImageId) GetInfo() (owner, repository, commit string) {
+	m := imageIdRe.FindStringSubmatch(string(i))
+	owner, repository, commit = m[1], m[2], m[3]
+
+	return
+}
+
 type Container struct {
 	Image ImageId
 	docker.APIContainers
@@ -31,6 +39,18 @@ type Container struct {
 
 func (c *Container) IsRunning() bool {
 	return statusUp.MatchString(c.Status)
+}
+
+func (c *Container) GetPorts() string {
+	result := []string{}
+	for _, port := range c.Ports {
+		if port.IP == "" {
+			result = append(result, fmt.Sprintf("%d/%s", port.PrivatePort, port.Type))
+		} else {
+			result = append(result, fmt.Sprintf("%s:%d->%d/%s", port.IP, port.PublicPort, port.PrivatePort, port.Type))
+		}
+	}
+	return strings.Join(result, ", ")
 }
 
 type Docker struct {
@@ -56,7 +76,11 @@ func (d *Docker) Deploy(owner, repository, commit string, dockerfile []byte) err
 }
 
 func (d *Docker) Clean(owner, repository, commit string) error {
-	l := d.ListContainers(owner, repository)
+	l, err := d.ListContainers(owner, repository)
+	if err != nil {
+		return err
+	}
+
 	for _, c := range l {
 		if c.IsRunning() && c.Image.IsCommit(commit) {
 			return errors.New("Current commits is already running")
@@ -73,10 +97,14 @@ func (d *Docker) Clean(owner, repository, commit string) error {
 	return nil
 }
 
-func (d *Docker) ListContainers(owner, repository string) []*Container {
-	l, _ := d.client.ListContainers(docker.ListContainersOptions{
+func (d *Docker) ListContainers(owner, repository string) ([]*Container, error) {
+	l, err := d.client.ListContainers(docker.ListContainersOptions{
 		All: true,
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	r := make([]*Container, 0)
 	for _, c := range l {
@@ -86,7 +114,7 @@ func (d *Docker) ListContainers(owner, repository string) []*Container {
 		}
 	}
 
-	return r
+	return r, nil
 }
 
 func (d *Docker) KillAndRemove(c *Container) error {

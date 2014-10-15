@@ -23,12 +23,14 @@ func (c *CmdDeploy) Synopsis() string {
 
 func (c *CmdDeploy) Run(args []string) int {
 	var config core.Config
-	config.LoadFile("config.ini")
+	if err := config.LoadFile("config.ini"); err != nil {
+		Critical(err.Error())
+	}
 
 	for _, p := range config.Project {
 		err := p.Deploy()
 		if err != nil {
-			Critical(err.Error())
+			return 1
 		}
 	}
 

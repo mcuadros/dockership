@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -10,6 +11,8 @@ type LoggerConfig struct {
 	Format string
 	File   string
 }
+
+var colorFormat = "[\x1b[%dm%s\x1b[0m]"
 
 func init() {
 	config := LoggerConfig{Format: "stdout", Level: "debug"}
@@ -35,25 +38,25 @@ func NewLogger(config *LoggerConfig) {
 }
 
 func Debug(line string, args ...interface{}) {
-	log.Printf(formatLogLine("DEBG", line), args...)
+	log.Printf(formatLogLine("DEBG", line, 36), args...)
 }
 
 func Info(line string, args ...interface{}) {
-	log.Printf(formatLogLine("INFO", line), args...)
+	log.Printf(formatLogLine("INFO", line, 32), args...)
 }
 
 func Warning(line string, args ...interface{}) {
-	log.Printf(formatLogLine("WARN", line), args...)
+	log.Printf(formatLogLine("WARN", line, 31), args...)
 }
 
 func Error(line string, args ...interface{}) {
-	log.Printf(formatLogLine("ERRO", line), args...)
+	log.Printf(formatLogLine("ERRO", line, 31), args...)
 }
 
 func Critical(line string, args ...interface{}) {
-	log.Fatalf(formatLogLine("CRIT", line), args...)
+	log.Fatalf(formatLogLine("CRIT", line, 31), args...)
 }
 
-func formatLogLine(level string, line string) string {
-	return level + ": " + line
+func formatLogLine(level, line string, color int) string {
+	return fmt.Sprintf(colorFormat, color, level) + " " + line
 }

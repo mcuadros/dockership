@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/pkg/units"
 	"github.com/docker/docker/utils"
+	"gopkg.in/inconshreveable/log15.v2"
 )
 
 type Project struct {
@@ -21,11 +22,17 @@ type Project struct {
 }
 
 func (p *Project) Deploy() error {
+	log15.Warn("Retrieving last dockerfile ...", "project", p)
+
 	c := NewGithub(p.GithubToken)
-	file, commit, _ := c.GetDockerFile(p.Owner, p.Repository, p.Branch, p.Dockerfile)
+	file, commit, err := c.GetDockerFile(p.Owner, p.Repository, p.Branch, p.Dockerfile)
+	if err != nil {
+		log15.Error(err.Error(), "project", p)
+	}
 
 	d := NewDocker(p.DockerEndPoint)
-	if err := d.Deploy(p.Owner, p.Repository, commit, file); err != nil {
+	if err := d.Deploy(p, commit, file); err != nil {
+		log15.Error(err.Error(), "project", p, "commit", commit)
 		return err
 	}
 
@@ -34,7 +41,7 @@ func (p *Project) Deploy() error {
 
 func (p *Project) Status() error {
 	d := NewDocker(p.DockerEndPoint)
-	l, err := d.ListContainers(p.Owner, p.Repository)
+	l, err := d.ListContainers(p)
 	if err != nil {
 		return err
 	}
@@ -60,4 +67,8 @@ func (p *Project) Status() error {
 	w.Flush()
 
 	return nil
+}
+
+func (p *Project) String() string {
+	return fmt.Sprintf("%s/%s@%s", p.Owner, p.Repository, p.Branch)
 }

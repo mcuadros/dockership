@@ -13,13 +13,14 @@ type Config struct {
 	Project map[string]*Project
 }
 
-func (c *Config) LoadFile(filename string) {
+func (c *Config) LoadFile(filename string) error {
 	err := gcfg.ReadFileInto(c, filename)
 	if err != nil {
-		Critical("erro:", err)
+		return err
 	}
 
 	c.loadDefaults()
+	return nil
 }
 
 func (c *Config) loadDefaults() {

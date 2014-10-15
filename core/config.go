@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"code.google.com/p/gcfg"

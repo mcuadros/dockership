@@ -16,6 +16,11 @@ import (
 var statusUp = regexp.MustCompile("^Up (.*)")
 var imageIdRe = regexp.MustCompile("^(.*)/(.*):(.*)")
 
+func init() {
+	log15.LvlFilterHandler(log.Error, log.StdoutHandler)
+
+}
+
 type Docker struct {
 	client *docker.Client
 }

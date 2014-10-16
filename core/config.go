@@ -1,6 +1,8 @@
 package core
 
 import (
+	. "github.com/mcuadros/dockership/logger"
+
 	"code.google.com/p/gcfg"
 	"github.com/mcuadros/go-defaults"
 )
@@ -11,7 +13,9 @@ type Config struct {
 		GithubToken     string
 		DockerEndPoint  string
 	}
-	Project map[string]*Project
+
+	Projects    map[string]*Project    `gcfg:"Project"`
+	Enviroments map[string]*Enviroment `gcfg:"Enviroment"`
 }
 
 func (c *Config) LoadFile(filename string) error {
@@ -21,19 +25,37 @@ func (c *Config) LoadFile(filename string) error {
 	}
 
 	c.loadDefaults()
+	c.loadEnviroments()
 	return nil
 }
 
 func (c *Config) loadDefaults() {
 	defaults.SetDefaults(c)
-	for _, p := range c.Project {
+	for _, p := range c.Projects {
 		defaults.SetDefaults(p)
 		if p.GithubToken == "" {
 			p.GithubToken = c.Main.GithubToken
 		}
 
-		if p.DockerEndPoint == "" {
-			p.DockerEndPoint = c.Main.DockerEndPoint
+		p.UseShortCommits = c.Main.UseShortCommits
+	}
+}
+
+func (c *Config) loadEnviroments() {
+	for _, p := range c.Projects {
+		p.Enviroments = make(map[string]*Enviroment, 0)
+		for _, e := range p.EnviromentNames {
+			p.Enviroments[e] = c.mustGetEnviroment(e)
 		}
 	}
+}
+
+func (c *Config) mustGetEnviroment(name string) *Enviroment {
+	if e, ok := c.Enviroments[name]; ok {
+		e.Name = name
+		return e
+	}
+
+	Critical("Undefined enviroment", "enviroment", name)
+	return nil
 }

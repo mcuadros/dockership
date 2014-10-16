@@ -8,16 +8,17 @@ import (
 
 type Project struct {
 	GithubToken     string
-	DockerEndPoint  string
 	Owner           string
 	Repository      string
 	Branch          string `default:"master"`
 	Dockerfile      string `default:"Dockerfile"`
 	NoCache         bool
-	UseShortCommits bool `default:"true"`
+	UseShortCommits bool     `default:"true"`
+	EnviromentNames []string `gcfg:"Enviroment"`
+	Enviroments     map[string]*Enviroment
 }
 
-func (p *Project) Deploy(force bool) error {
+func (p *Project) Deploy(force bool, enviroment string) error {
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
@@ -26,7 +27,7 @@ func (p *Project) Deploy(force bool) error {
 		Critical(err.Error(), "project", p)
 	}
 
-	d := NewDocker(p.DockerEndPoint)
+	d := NewDocker(p.mustGetEnviroment(enviroment))
 	if err := d.Deploy(p, commit, file, force); err != nil {
 		Critical(err.Error(), "project", p, "commit", commit)
 		return err
@@ -36,13 +37,27 @@ func (p *Project) Deploy(force bool) error {
 }
 
 type ProjectStatus struct {
+	Enviroment        *Enviroment
 	LastCommit        Commit
 	RunningContainers []*Container
 	Containers        []*Container
 }
 
-func (p *Project) Status() (*ProjectStatus, error) {
-	s := &ProjectStatus{}
+func (p *Project) Status() ([]*ProjectStatus, error) {
+	r := make([]*ProjectStatus, 0)
+	for _, e := range p.Enviroments {
+		if s, err := p.StatusByEnviroment(e); err != nil {
+			return nil, err
+		} else {
+			r = append(r, s)
+		}
+	}
+
+	return r, nil
+}
+
+func (p *Project) StatusByEnviroment(enviroment *Enviroment) (*ProjectStatus, error) {
+	s := &ProjectStatus{Enviroment: enviroment}
 
 	c := NewGithub(p.GithubToken)
 	if commit, err := c.GetLastCommit(p); err != nil {
@@ -51,7 +66,7 @@ func (p *Project) Status() (*ProjectStatus, error) {
 		s.LastCommit = commit
 	}
 
-	d := NewDocker(p.DockerEndPoint)
+	d := NewDocker(enviroment)
 	if l, err := d.ListContainers(p); err != nil {
 		return nil, err
 	} else {
@@ -69,8 +84,26 @@ func (p *Project) Status() (*ProjectStatus, error) {
 }
 
 func (p *Project) List() ([]*Container, error) {
-	d := NewDocker(p.DockerEndPoint)
-	return d.ListContainers(p)
+	r := make([]*Container, 0)
+	for _, e := range p.Enviroments {
+		d := NewDocker(e)
+		if l, err := d.ListContainers(p); err != nil {
+			return nil, err
+		} else {
+			r = append(r, l...)
+		}
+	}
+
+	return r, nil
+}
+
+func (p *Project) mustGetEnviroment(name string) *Enviroment {
+	if e, ok := p.Enviroments[name]; ok {
+		return e
+	}
+
+	Critical("Enviroment not defined in project", "project", p, "enviroment", name)
+	return nil
 }
 
 func (p *Project) String() string {

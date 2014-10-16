@@ -18,15 +18,15 @@ var statusUp = regexp.MustCompile("^Up (.*)")
 var imageIdRe = regexp.MustCompile("^(.*)/(.*):(.*)")
 
 type Docker struct {
-	client *docker.Client
+	enviroment *Enviroment
+	client     *docker.Client
 }
 
-func NewDocker(endpoint string) *Docker {
-	Debug("Connected to docker endpoint", "endpoint", endpoint)
+func NewDocker(enviroment *Enviroment) *Docker {
+	Debug("Connected to docker", "enviroment", enviroment)
+	c, _ := docker.NewClient(enviroment.DockerEndPoint)
 
-	c, _ := docker.NewClient(endpoint)
-
-	return &Docker{client: c}
+	return &Docker{client: c, enviroment: enviroment}
 }
 
 func (d *Docker) Deploy(p *Project, commit Commit, dockerfile []byte, force bool) error {
@@ -84,7 +84,11 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 	for _, c := range l {
 		i := ImageId(c.Image)
 		if i.BelongsTo(p) {
-			r = append(r, &Container{Image: i, APIContainers: c})
+			r = append(r, &Container{
+				Image:         i,
+				APIContainers: c,
+				Enviroment:    d.enviroment,
+			})
 		}
 	}
 
@@ -218,7 +222,8 @@ func (i ImageId) GetInfo() (owner, repository string, commit Commit) {
 }
 
 type Container struct {
-	Image ImageId
+	Enviroment *Enviroment
+	Image      ImageId
 	docker.APIContainers
 }
 
@@ -245,4 +250,13 @@ func (c *Container) GetPorts() string {
 		}
 	}
 	return strings.Join(result, ", ")
+}
+
+type Enviroment struct {
+	DockerEndPoint string
+	Name           string
+}
+
+func (e *Enviroment) String() string {
+	return e.Name
 }

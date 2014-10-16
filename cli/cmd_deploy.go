@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/mcuadros/dockership/core"
+	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/mitchellh/cli"
 )
@@ -15,33 +16,37 @@ type CmdDeploy struct {
 
 func NewCmdDeploy() (cli.Command, error) {
 	var config core.Config
-	config.LoadFile("config.ini")
+	if err := config.LoadFile("config.ini"); err != nil {
+		Critical(err.Error(), "file", "config.ini")
+	}
 
 	return &CmdDeploy{config: &config}, nil
 }
 
 func (c *CmdDeploy) Run(args []string) int {
-	var project string
+	var project, enviroment string
 	var force bool
 	cmdFlags := flag.NewFlagSet("deploy", flag.ContinueOnError)
 	cmdFlags.StringVar(&project, "project", "", "")
+	cmdFlags.StringVar(&enviroment, "env", "", "")
 	cmdFlags.BoolVar(&force, "force", false, "")
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
 
-	for name, p := range c.config.Project {
-		if project != "" && project != name {
-			continue
-		}
-
-		err := p.Deploy(force)
+	Info("Deploying ...", "project", project, "enviroment", enviroment, "force", force)
+	if p, ok := c.config.Projects[project]; ok {
+		err := p.Deploy(force, enviroment)
 		if err != nil {
 			return 1
 		}
+
+		return 0
 	}
 
-	return 0
+	Critical("Unable to find project", "project", project)
+
+	return 1
 }
 
 func (c *CmdDeploy) Synopsis() string {
@@ -59,9 +64,9 @@ Usage: dockership deploy [options]
 
 Options:
   -project=""                Just deploy the given project.
+  -env=""                    Target enviroment.
   -force                     Deploy even a container is allready running.
 
 `
-
 	return strings.TrimSpace(helpText)
 }

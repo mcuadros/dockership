@@ -23,9 +23,9 @@ func (c *CmdContainers) Run(args []string) int {
 	config.LoadFile("config.ini")
 
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
-	table.SetHeader([]string{"Repository", "Commit", "Container ID", "Created", "Command", "Status", "Ports"})
+	table.SetHeader([]string{"Enviroment", "Repository", "Commit", "Container ID", "Created", "Command", "Status", "Ports"})
 
-	for _, p := range config.Project {
+	for _, p := range config.Projects {
 		l, err := p.List()
 		if err != nil {
 			continue
@@ -34,6 +34,7 @@ func (c *CmdContainers) Run(args []string) int {
 		for _, c := range l {
 			_, _, commit := c.Image.GetInfo()
 			table.AddRow([]string{
+				c.Enviroment.String(),
 				p.String(),
 				commit.GetShort(),
 				c.GetShortId(),

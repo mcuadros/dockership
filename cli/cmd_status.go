@@ -31,32 +31,34 @@ func (c *CmdStatus) Run(args []string) int {
 	}
 
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
-	table.SetHeader([]string{"Project", "Last Commit", "Containers", "Status"})
+	table.SetHeader([]string{"Enviroment", "Project", "Last Commit", "Containers", "Status"})
 
-	for name, p := range c.config.Project {
+	for name, p := range c.config.Projects {
 		if project != "" && project != name {
 			continue
 		}
 
-		s, err := p.Status()
+		sl, err := p.Status()
 		if err != nil {
 			table.AddRow([]string{p.String(), "-", "-", err.Error()})
 			continue
 
 		}
 
-		status := "Down"
-		if len(s.RunningContainers) > 0 {
-			status = s.RunningContainers[0].Status
+		for _, s := range sl {
+			status := "Down"
+			if len(s.RunningContainers) > 0 {
+				status = s.RunningContainers[0].Status
+			}
+
+			table.AddRow([]string{
+				s.Enviroment.String(),
+				p.String(),
+				s.LastCommit.GetShort(),
+				fmt.Sprintf("%d", len(s.Containers)),
+				status,
+			})
 		}
-
-		table.AddRow([]string{
-			p.String(),
-			s.LastCommit.GetShort(),
-			fmt.Sprintf("%d", len(s.Containers)),
-			status,
-		})
-
 	}
 
 	fmt.Println(table.Render())

@@ -10,6 +10,7 @@ import (
 )
 
 type Project struct {
+	Name            string
 	GithubToken     string
 	Owner           string
 	Repository      string

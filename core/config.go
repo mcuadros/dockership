@@ -31,7 +31,8 @@ func (c *Config) LoadFile(filename string) error {
 
 func (c *Config) loadDefaults() {
 	defaults.SetDefaults(c)
-	for _, p := range c.Projects {
+	for name, p := range c.Projects {
+		p.Name = name
 		defaults.SetDefaults(p)
 		if p.GithubToken == "" {
 			p.GithubToken = c.Main.GithubToken

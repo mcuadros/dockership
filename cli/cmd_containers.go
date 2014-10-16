@@ -8,7 +8,6 @@ import (
 	"github.com/mcuadros/dockership/core"
 
 	"github.com/docker/docker/pkg/units"
-	"github.com/docker/docker/utils"
 	"github.com/mitchellh/cli"
 	"github.com/stevedomin/termtable"
 )
@@ -36,8 +35,8 @@ func (c *CmdContainers) Run(args []string) int {
 			_, _, commit := c.Image.GetInfo()
 			table.AddRow([]string{
 				p.String(),
-				utils.TruncateID(commit),
-				utils.TruncateID(c.ID),
+				commit.GetShort(),
+				c.GetShortId(),
 				c.Command,
 				units.HumanDuration(time.Now().UTC().Sub(time.Unix(c.Created, 0))),
 				c.Status,

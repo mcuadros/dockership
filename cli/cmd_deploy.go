@@ -22,8 +22,10 @@ func NewCmdDeploy() (cli.Command, error) {
 
 func (c *CmdDeploy) Run(args []string) int {
 	var project string
+	var force bool
 	cmdFlags := flag.NewFlagSet("deploy", flag.ContinueOnError)
 	cmdFlags.StringVar(&project, "project", "", "")
+	cmdFlags.BoolVar(&force, "force", false, "")
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
@@ -33,7 +35,7 @@ func (c *CmdDeploy) Run(args []string) int {
 			continue
 		}
 
-		err := p.Deploy()
+		err := p.Deploy(force)
 		if err != nil {
 			return 1
 		}
@@ -57,6 +59,7 @@ Usage: dockership deploy [options]
 
 Options:
   -project=""                Just deploy the given project.
+  -force                     Deploy even a container is allready running.
 
 `
 

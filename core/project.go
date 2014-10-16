@@ -7,16 +7,17 @@ import (
 )
 
 type Project struct {
-	GithubToken       string
-	DockerEndPoint    string
-	Owner             string
-	Repository        string
-	Branch            string `default:"master"`
-	Dockerfile        string `default:"Dockerfile"`
-	DockerfileContent []byte
+	GithubToken     string
+	DockerEndPoint  string
+	Owner           string
+	Repository      string
+	Branch          string `default:"master"`
+	Dockerfile      string `default:"Dockerfile"`
+	NoCache         bool
+	UseShortCommits bool `default:"true"`
 }
 
-func (p *Project) Deploy() error {
+func (p *Project) Deploy(force bool) error {
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
@@ -26,7 +27,7 @@ func (p *Project) Deploy() error {
 	}
 
 	d := NewDocker(p.DockerEndPoint)
-	if err := d.Deploy(p, commit, file); err != nil {
+	if err := d.Deploy(p, commit, file, force); err != nil {
 		Critical(err.Error(), "project", p, "commit", commit)
 		return err
 	}
@@ -35,7 +36,7 @@ func (p *Project) Deploy() error {
 }
 
 type ProjectStatus struct {
-	LastCommit        string
+	LastCommit        Commit
 	RunningContainers []*Container
 	Containers        []*Container
 }

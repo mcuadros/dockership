@@ -7,8 +7,9 @@ import (
 
 type Config struct {
 	Main struct {
-		GithubToken    string
-		DockerEndPoint string
+		UseShortCommits bool `default:"true"`
+		GithubToken     string
+		DockerEndPoint  string
 	}
 	Project map[string]*Project
 }
@@ -24,6 +25,7 @@ func (c *Config) LoadFile(filename string) error {
 }
 
 func (c *Config) loadDefaults() {
+	defaults.SetDefaults(c)
 	for _, p := range c.Project {
 		defaults.SetDefaults(p)
 		if p.GithubToken == "" {

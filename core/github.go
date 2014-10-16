@@ -21,7 +21,7 @@ func NewGithub(token string) *Github {
 	}
 }
 
-func (g *Github) GetDockerFile(p *Project) (content []byte, commit string, err error) {
+func (g *Github) GetDockerFile(p *Project) (content []byte, commit Commit, err error) {
 	commit, err = g.GetLastCommit(p)
 	if err != nil {
 		return
@@ -31,7 +31,7 @@ func (g *Github) GetDockerFile(p *Project) (content []byte, commit string, err e
 	return
 }
 
-func (g *Github) GetLastCommit(p *Project) (string, error) {
+func (g *Github) GetLastCommit(p *Project) (Commit, error) {
 	Debug("Retrieving last commit", "project", p)
 
 	c, r, err := g.client.Repositories.GetBranch(p.Owner, p.Repository, p.Branch)
@@ -43,14 +43,14 @@ func (g *Github) GetLastCommit(p *Project) (string, error) {
 		Warning("Low Github request level", "remaining", r.Remaining, "limit", r.Limit)
 	}
 
-	return *c.Commit.SHA, nil
+	return Commit(*c.Commit.SHA), nil
 }
 
-func (g *Github) getFileContent(p *Project, commit string) ([]byte, error) {
+func (g *Github) getFileContent(p *Project, commit Commit) ([]byte, error) {
 	Debug("Retrieving dockerfile commit", "project", p, "commit", commit)
 
 	opts := &github.RepositoryContentGetOptions{
-		Ref: commit,
+		Ref: string(commit),
 	}
 
 	f, _, r, err := g.client.Repositories.GetContents(p.Owner, p.Repository, p.Dockerfile, opts)
@@ -63,4 +63,20 @@ func (g *Github) getFileContent(p *Project, commit string) ([]byte, error) {
 	}
 
 	return f.Decode()
+}
+
+type Commit string
+
+func (c Commit) GetShort() string {
+	commit := string(c)
+	shortLen := 12
+	if len(commit) < shortLen {
+		shortLen = len(commit)
+	}
+
+	return commit[:shortLen]
+}
+
+func (c Commit) String() string {
+	return c.GetShort()
 }

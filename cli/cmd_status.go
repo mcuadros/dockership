@@ -52,7 +52,7 @@ func (c *CmdStatus) Run(args []string) int {
 
 		table.AddRow([]string{
 			p.String(),
-			s.LastCommit,
+			s.LastCommit.GetShort(),
 			fmt.Sprintf("%d", len(s.Containers)),
 			status,
 		})

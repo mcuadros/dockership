@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -28,9 +29,9 @@ func NewDocker(endpoint string) *Docker {
 	return &Docker{client: c}
 }
 
-func (d *Docker) Deploy(p *Project, commit string, dockerfile []byte) error {
+func (d *Docker) Deploy(p *Project, commit Commit, dockerfile []byte, force bool) error {
 	Info("Deploying dockerfile", "project", p, "commit", commit)
-	if err := d.Clean(p, commit); err != nil {
+	if err := d.Clean(p, commit, force); err != nil {
 		return err
 	}
 
@@ -41,21 +42,24 @@ func (d *Docker) Deploy(p *Project, commit string, dockerfile []byte) error {
 	return d.Run(p, commit)
 }
 
-func (d *Docker) Clean(p *Project, commit string) error {
+func (d *Docker) Clean(p *Project, commit Commit, force bool) error {
 	l, err := d.ListContainers(p)
 	if err != nil {
 		return err
 	}
 
-	for _, c := range l {
-		if c.IsRunning() && c.Image.IsCommit(commit) {
-			return errors.New("Current commit is already running")
+	if !force {
+		for _, c := range l {
+			if c.IsRunning() && c.Image.IsCommit(commit) {
+				return errors.New("Current commit is already running")
+
+			}
 		}
 	}
 
 	Info("Cleaning all containers", "project", p)
 	for _, c := range l {
-		Info("Killing and removing image", "project", p, "image", c.GetShortId())
+		Info("Killing and removing image", "project", p, "container", c.GetShortId())
 		err := d.killAndRemove(c)
 		if err != nil {
 			return err
@@ -98,26 +102,34 @@ func (d *Docker) killAndRemove(c *Container) error {
 		return err
 	}
 
+	if err := d.client.RemoveImage(string(c.Image)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (d *Docker) BuildImage(p *Project, commit string, dockerfile []byte) error {
+func (d *Docker) BuildImage(p *Project, commit Commit, dockerfile []byte) error {
 	Info("Building image", "project", p, "commit", commit)
 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
+	outputbuf.WriteTo(os.Stdout)
+
 	d.buildTar(dockerfile, inputbuf)
 
 	image := d.getImageName(p, commit)
 	opts := docker.BuildImageOptions{
-		Name:         string(image),
-		InputStream:  inputbuf,
-		OutputStream: outputbuf,
+		Name:           string(image),
+		NoCache:        p.NoCache,
+		RmTmpContainer: p.NoCache,
+		InputStream:    inputbuf,
+		OutputStream:   outputbuf,
 	}
 
 	return d.client.BuildImage(opts)
 }
 
-func (d *Docker) Run(p *Project, commit string) error {
+func (d *Docker) Run(p *Project, commit Commit) error {
 	Debug("Creating container from image", "project", p, "commit", commit)
 	c, err := d.createContainer(d.getImageName(p, commit))
 	if err != nil {
@@ -134,8 +146,13 @@ func (d *Docker) Run(p *Project, commit string) error {
 	return d.startContainer(c)
 }
 
-func (d *Docker) getImageName(p *Project, commit string) ImageId {
-	return ImageId(fmt.Sprintf("%s/%s:%s", p.Owner, p.Repository, commit))
+func (d *Docker) getImageName(p *Project, commit Commit) ImageId {
+	c := string(commit)
+	if p.UseShortCommits {
+		c = commit.GetShort()
+	}
+
+	return ImageId(fmt.Sprintf("%s/%s:%s", p.Owner, p.Repository, c))
 }
 
 func (d *Docker) createContainer(image ImageId) (*Container, error) {
@@ -187,13 +204,15 @@ func (i ImageId) BelongsTo(p *Project) bool {
 	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", p.Owner, p.Repository))
 }
 
-func (i ImageId) IsCommit(commit string) bool {
-	return strings.HasSuffix(string(i), commit)
+func (i ImageId) IsCommit(commit Commit) bool {
+	s := strings.Split(string(i), ":")
+	return strings.HasPrefix(s[1], commit.GetShort())
 }
 
-func (i ImageId) GetInfo() (owner, repository, commit string) {
+func (i ImageId) GetInfo() (owner, repository string, commit Commit) {
 	m := imageIdRe.FindStringSubmatch(string(i))
-	owner, repository, commit = m[1], m[2], m[3]
+	owner, repository = m[1], m[2]
+	commit = Commit(m[3])
 
 	return
 }

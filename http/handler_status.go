@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/mcuadros/dockership/core"
 
 	"github.com/gin-gonic/gin"
@@ -31,11 +30,11 @@ func NewHandlerStatus() (*HandlerStatus, error) {
 	return &HandlerStatus{config: &config}, nil
 }
 
-func (c *HandlerStatus) Run(ctx *gin.Context) {
+func (h *HandlerStatus) Run(ctx *gin.Context) {
 	project := ctx.Params.ByName("project")[1:]
 
 	r := make(map[string]*StatusRecord, 0)
-	for name, p := range c.config.Projects {
+	for name, p := range h.config.Projects {
 		if project != "" && project != name {
 			continue
 		}

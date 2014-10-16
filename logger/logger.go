@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 
 	"gopkg.in/inconshreveable/log15.v2"
@@ -14,6 +15,15 @@ func init() {
 
 func Verbose() {
 	Log.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
+}
+
+func Streaming(w io.Writer) {
+	Log.SetHandler(
+		log15.LvlFilterHandler(
+			log15.LvlDebug,
+			log15.StreamHandler(w, log15.JsonFormat()),
+		),
+	)
 }
 
 func Debug(msg string, ctx ...interface{}) {

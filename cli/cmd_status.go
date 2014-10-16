@@ -40,7 +40,7 @@ func (c *CmdStatus) Run(args []string) int {
 
 		sl, err := p.Status()
 		if err != nil {
-			table.AddRow([]string{p.String(), "-", "-", err.Error()})
+			table.AddRow([]string{"-", p.String(), "-", "-", err.Error()})
 			continue
 
 		}

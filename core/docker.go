@@ -147,7 +147,7 @@ func (d *Docker) Run(p *Project, commit Commit) error {
 		"container", c.GetShortId(),
 	)
 
-	return d.startContainer(c)
+	return d.startContainer(p, c)
 }
 
 func (d *Docker) getImageName(p *Project, commit Commit) ImageId {
@@ -173,15 +173,52 @@ func (d *Docker) createContainer(image ImageId) (*Container, error) {
 	return &Container{Image: image, APIContainers: docker.APIContainers{ID: c.ID}}, nil
 }
 
-func (d *Docker) startContainer(c *Container) error {
+func (d *Docker) startContainer(p *Project, c *Container) error {
+	ports, err := d.formatPorts(p.Ports)
+	if err != nil {
+		return err
+	}
+
 	return d.client.StartContainer(c.ID, &docker.HostConfig{
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"80/tcp": []docker.PortBinding{docker.PortBinding{
-				HostIp:   "0.0.0.0",
-				HostPort: "212",
-			}},
-		},
+		PortBindings: ports,
 	})
+}
+
+func (d *Docker) formatPorts(ports []string) (map[docker.Port][]docker.PortBinding, error) {
+	r := make(map[docker.Port][]docker.PortBinding, 0)
+	for _, p := range ports {
+		guest, host, err := d.formatPort(p)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := r[guest]; !ok {
+			r[guest] = make([]docker.PortBinding, 0)
+		}
+
+		r[guest] = append(r[guest], host)
+	}
+
+	return r, nil
+}
+
+// <host_interface>:<host_port>:<container_port>/<proto>
+func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBinding, err error) {
+	p1 := strings.SplitN(port, "/", 2)
+	p2 := strings.SplitN(p1[0], ":", 3)
+
+	if len(p1) != 2 || len(p2) != 3 {
+		err = errors.New(fmt.Sprintf("Malformed port %q", port))
+		return
+	}
+
+	guest = docker.Port(fmt.Sprintf("%s/%s", p2[2], p1[1]))
+	host = docker.PortBinding{
+		HostIp:   p2[0],
+		HostPort: p2[1],
+	}
+
+	return
 }
 
 func (d *Docker) buildTar(dockerfile []byte, buf *bytes.Buffer) *tar.Writer {

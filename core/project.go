@@ -1,9 +1,12 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 
 	. "github.com/mcuadros/dockership/logger"
+
+	"github.com/mcuadros/go-command"
 )
 
 type Project struct {
@@ -13,9 +16,11 @@ type Project struct {
 	Branch          string `default:"master"`
 	Dockerfile      string `default:"Dockerfile"`
 	NoCache         bool
+	Ports           []string `gcfg:"Port"`
 	UseShortCommits bool     `default:"true"`
 	EnviromentNames []string `gcfg:"Enviroment"`
 	Enviroments     map[string]*Enviroment
+	TestCommand     string
 }
 
 func (p *Project) Deploy(force bool, enviroment string) error {
@@ -34,6 +39,42 @@ func (p *Project) Deploy(force bool, enviroment string) error {
 	}
 
 	return nil
+}
+
+func (p *Project) Test(enviroment string) {
+	Info("Executing Test command", "project", p, "script", p.TestCommand)
+	json, err := json.Marshal(p)
+	if err != nil {
+		Critical(err.Error(), "project", p)
+	}
+
+	cmd := command.NewCommand(fmt.Sprintf("%s %s %s", p.TestCommand, enviroment, json))
+	if err := cmd.Run(); err != nil {
+		Critical(err.Error(), "project", p, "script", p.TestCommand)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		Critical(err.Error(), "project", p, "script", p.TestCommand)
+	}
+	response := cmd.GetResponse()
+
+	if response.Failed {
+		fmt.Printf("stdout>\n%s", response.Stdout)
+		fmt.Printf("stderr>\n%s", response.Stderr)
+		Critical("Test command failed",
+			"project", p,
+			"script", p.TestCommand,
+			"exitcode", response.ExitCode,
+			"elapsed", response.RealTime,
+		)
+	} else {
+		Info("Test command executed successfully",
+			"project", p,
+			"script", p.TestCommand,
+			"exitcode", response.ExitCode,
+			"elapsed", response.RealTime,
+		)
+	}
 }
 
 type ProjectStatus struct {

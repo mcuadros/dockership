@@ -34,13 +34,16 @@ func (c *CmdDeploy) Run(args []string) int {
 		return 1
 	}
 
-	Info("Deploying ...", "project", project, "enviroment", enviroment, "force", force)
 	if p, ok := c.config.Projects[project]; ok {
+		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
 		err := p.Deploy(force, enviroment)
 		if err != nil {
+			Critical(err.Error(), "project", project)
 			return 1
 		}
 
+		p.Test(enviroment)
+		Info("Deploy success", "project", p, "enviroment", enviroment)
 		return 0
 	}
 

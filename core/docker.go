@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -119,7 +121,9 @@ func (d *Docker) BuildImage(p *Project, commit Commit, dockerfile []byte) error 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	outputbuf.WriteTo(os.Stdout)
 
-	d.buildTar(dockerfile, inputbuf)
+	if err := d.buildTar(p, dockerfile, inputbuf); err != nil {
+		return err
+	}
 
 	image := d.getImageName(p, commit)
 	opts := docker.BuildImageOptions{
@@ -221,7 +225,7 @@ func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBin
 	return
 }
 
-func (d *Docker) buildTar(dockerfile []byte, buf *bytes.Buffer) *tar.Writer {
+func (d *Docker) buildTar(p *Project, dockerfile []byte, buf *bytes.Buffer) error {
 	t := time.Now()
 
 	tr := tar.NewWriter(buf)
@@ -233,10 +237,47 @@ func (d *Docker) buildTar(dockerfile []byte, buf *bytes.Buffer) *tar.Writer {
 		ChangeTime: t,
 	})
 
-	tr.Write(dockerfile)
+	if _, err := tr.Write(dockerfile); err != nil {
+		return err
+	}
+
+	for _, file := range p.Files {
+		if err := d.addFileToTar(file, tr); err != nil {
+			return err
+		}
+	}
+
 	tr.Close()
 
-	return tr
+	return nil
+}
+
+func (d *Docker) addFileToTar(file string, tr *tar.Writer) error {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	fInfo, err := os.Lstat(file)
+	if err != nil {
+		return err
+	}
+
+	h, err := tar.FileInfoHeader(fInfo, "")
+	h.Name = path.Base(file)
+	if err != nil {
+		return err
+	}
+
+	if err := tr.WriteHeader(h); err != nil {
+		return err
+	}
+
+	if _, err := tr.Write(content); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type ImageId string

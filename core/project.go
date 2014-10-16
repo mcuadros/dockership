@@ -21,6 +21,7 @@ type Project struct {
 	EnviromentNames []string `gcfg:"Enviroment"`
 	Enviroments     map[string]*Enviroment
 	TestCommand     string
+	Files           []string
 }
 
 func (p *Project) Deploy(force bool, enviroment string) error {

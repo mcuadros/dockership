@@ -44,19 +44,21 @@
             <thead>
               <tr>
                 <th class="col-md-2">Enviroment</th>
+                <th class="col-md-2">Last Commit</th>
                 <th class="col-md-2">Server</th>
-                <th class="col-md-2">Docker</th>
+                <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
-                <th class="col-md-4">Containers</th>
+                <th class="col-md-2">Containers</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat='s in p.Status' ng-class="isDeployable(s) ? 'warning': ''">
                 <td><b>{{s.Enviroment.Name}}</b>
                 </td>
+                <td>{{s.LastCommit.slice(0,10)}}</td>
                 <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
-                  <a href="#" class="success" ng-click="open(g.Project)">
+                  <a href="#" class="success" ng-click="open(p.Project)">
                     <span class="badge success">{{s.Containers.length}}</span>
                   </a>
                 </td>
@@ -125,8 +127,7 @@
           </table>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" ng-click="ok()">OK</button>
-            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+            <button class="btn btn-info" ng-click="cancel()">Close</button>
         </div>
     </script>
   </body>

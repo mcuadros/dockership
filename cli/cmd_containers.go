@@ -19,6 +19,7 @@ func NewCmdContainers() (cli.Command, error) {
 }
 
 func (c *CmdContainers) Run(args []string) int {
+	Verbose()
 	var config core.Config
 	config.LoadFile("config.ini")
 

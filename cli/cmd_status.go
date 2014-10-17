@@ -23,6 +23,7 @@ func NewCmdStatus() (cli.Command, error) {
 }
 
 func (c *CmdStatus) Run(args []string) int {
+	Verbose()
 	var project string
 	cmdFlags := flag.NewFlagSet("status", flag.ContinueOnError)
 	cmdFlags.StringVar(&project, "project", "", "")

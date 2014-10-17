@@ -3,24 +3,20 @@
   <head>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.js"></script>
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.2.js"></script>
+    <script src="https://cdn.rawgit.com/jimhigson/oboe.js/master/dist/oboe-browser.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.16/angular-animate.js"></script>
+    <script src="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.js"></script>
     <script src="/app.js"></script>
-    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/darkly/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.css" rel="stylesheet">
     <style>
-      html, body { height: 100%; }
-      #main {
-        padding:0 60px 0 60px;
-        min-height: 100%;
-        height: auto !important;
-        height: 100%;
-        margin-bottom: -120px;
-      }
-      #footer { height: 60px; }
-      #footer { background-color: #f5f5f5; }
-      #main > .container { padding-top: 60px; }
-      .container .credit { margin: 20px 0 20px -90px; }
+        html, body { padding:0 60px 0 60px;}
+        .deploy-log {  max-height: 420px; overflow-y: auto; }
+        #loading-bar .bar { background: #0ce3ac; }
+        #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff; }
     </style>
   </head>
-  <body>
+  <body ng-cloak>
     <div ng-controller="MainCtrl" id="main">
         <div class="page-header">
           <div class="row">
@@ -52,13 +48,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat='s in p.Status' ng-class="isDeployable(s) ? 'warning': ''">
+              <tr ng-repeat='s in p.Status' ng-class="
+                s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
                 <td><b>{{s.Enviroment.Name}}</b>
                 </td>
                 <td>{{s.LastCommit.slice(0,10)}}</td>
                 <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
-                  <a href="#" class="success" ng-click="open(p.Project)">
+                  <a href="#" class="success" ng-click="openContainers(p.Project)">
                     <span class="badge success">{{s.Containers.length}}</span>
                   </a>
                 </td>
@@ -66,19 +63,21 @@
                   <span ng-if="s.RunningContainers.length != 0">
                     {{s.RunningContainers[0].Status}}
                   </span>
-                  <span ng-if="s.RunningContainers.length == 0" class="text-danger">
+                  <span ng-if="s.RunningContainers.length == 0">
                     Down
                   </span>
                 </td>
                 <td>
                   <button ng-if="!isDeployable(s)"
                     type="button"
+                    ng-click="openDeploy(p, s.Enviroment)"
                     class="btn btn-success btn-xs">
                        <span class="glyphicon glyphicon-saved"></span>
                        Up-to-date
                   </button>
                   <button ng-if="isDeployable(s)"
                     type="button"
+                    ng-click="openDeploy(p, s.Enviroment)"
                     class="btn btn-primary btn-xs">
                        <span class="glyphicon glyphicon-import"></span>
                        Deploy {{s.LastCommit.slice(0,12)}}
@@ -89,14 +88,13 @@
           </table>
         </div>
     </div>
-    <div id="footer">
-      <div class="container">
+    <div id="footer" ng-cloack>
         <p class="muted credit">Powered by <a href="https://github.com/mcuadros/dockership">Dockership</a> MIT License</p></p>
       </div>
     </div>
     <script type="text/ng-template" id="ContainersContent.html">
         <div class="modal-header">
-            <h3 class="modal-title">Project <b>{{project.Name}}</b></h3>
+            <h3 class="modal-title">Containers <b>{{project.Name}}</b></h3>
         </div>
         <div class="modal-body">
           <table class="table">
@@ -121,6 +119,51 @@
                   <span ng-repeat='p in c.Container.Ports'>
                     {{p.IP}}:{{p.PublicPort}}:{{p.PrivatePort}}/{{p.Type}}
                   </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-info" ng-click="cancel()">Close</button>
+        </div>
+    </script>
+    <script type="text/ng-template" id="DeployContent.html">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                Deploying <b>{{project.Project.Name}}</b> @ <b>{{enviroment.Name}}</b>
+                <small>
+                    Commit <b>{{project.Status[enviroment.Name].LastCommit}}</b>
+                </small>
+            </h3>
+        </div>
+        <div class="modal-body deploy-log">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-md-1">Level</th>
+                <th class="col-md-2">Time</th>
+                <th class="col-md-4">Message</th>
+                <th class="col-md-5">Params</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat='line in data track by $index'>
+                <td>
+                    <span class="label label-primary" ng-if="line.lvl == 0">Critical</span>
+                    <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
+                    <span class="label label-warning" ng-if="line.lvl == 2">Warning</span>
+                    <span class="label label-info" ng-if="line.lvl == 3">Info</span>
+                    <span class="label label-default" ng-if="line.lvl == 4">Debug</span>
+                </td>
+                <td><small>{{line.t.slice(0,19)}}</small></td>
+                <td><b>{{line.msg}}</b></td>
+                <td>
+                  <p
+                    ng-repeat='(n, p) in line'
+                    ng-if='n != "t" && n != "msg" && n != "lvl"'>
+                    <span class="label label-default">{{n}}: {{p}}</span>
+                  </p>
                 </td>
               </tr>
             </tbody>

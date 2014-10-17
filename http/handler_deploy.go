@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
@@ -28,7 +29,14 @@ func NewHandlerDeploy() (*HandlerDeploy, error) {
 }
 
 func (h *HandlerDeploy) Run(ctx *gin.Context) {
-	//Streaming(ctx.Writer)
+	go func() {
+		for {
+			ctx.Writer.Flush()
+			time.Sleep(1 * time.Millisecond)
+		}
+	}()
+
+	Streaming(ctx.Writer)
 
 	force := true
 	project := ctx.Params.ByName("project")

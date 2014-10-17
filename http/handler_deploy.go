@@ -28,7 +28,7 @@ func NewHandlerDeploy() (*HandlerDeploy, error) {
 }
 
 func (h *HandlerDeploy) Run(ctx *gin.Context) {
-	Streaming(ctx.Writer)
+	//Streaming(ctx.Writer)
 
 	force := true
 	project := ctx.Params.ByName("project")

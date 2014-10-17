@@ -1,44 +1,133 @@
 <!doctype html>
-<html ng-app="ui.bootstrap.demo">
+<html ng-app="dockership">
   <head>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.js"></script>
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.2.js"></script>
-    <script>
-
-angular.module('ui.bootstrap.demo', ['ui.bootstrap']);
-
-
-    </script>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
-
+    <script src="/app.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
     <style>
-    body{
-          padding:60px;
-        }
-   
-        </style>
+      html, body { height: 100%; }
+      #main {
+        padding:0 60px 0 60px;
+        min-height: 100%;
+        height: auto !important;
+        height: 100%;
+        margin-bottom: -120px;
+      }
+      #footer { height: 60px; }
+      #footer { background-color: #f5f5f5; }
+      #main > .container { padding-top: 60px; }
+      .container .credit { margin: 20px 0 20px -90px; }
+    </style>
   </head>
   <body>
-    <nav class="navbar navbar-default" role="navigation">
-      <!-- We use the fluid option here to avoid overriding the fixed width of a normal container within the narrow content columns. -->
-        <div class="container-fluid">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">dockership</a>
+    <div ng-controller="MainCtrl" id="main">
+        <div class="page-header">
+          <div class="row">
+            <div class="col-lg-12">
+              <h1 id="buttons"><span class="glyphicon glyphicon-import"></span> Dockership</h1>
+            </div>
+          </div>
         </div>
+        <div class="panel panel-default" ng-repeat='p in groups'>
+          <div class="panel-heading">
+              <b>{{p.Project.Name}}</b>&nbsp;&nbsp;
+              <span class="label label-info">
+                {{p.Project.Owner}}/{{p.Project.Repository}}
+              </span>&nbsp;
+              <span class="label label-info">
+                {{p.Project.Branch}}
+              </span>
+          </div>
 
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-8">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">Link</a></li>
-            <li><a href="#">Link</a></li>
-          </ul>
-        </div><!-- /.navbar-collapse -->
-      </div>
-    </nav>
-
-    <div ng-controller="AccordionDemoCtrl">
-
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-md-2">Enviroment</th>
+                <th class="col-md-2">Server</th>
+                <th class="col-md-2">Docker</th>
+                <th class="col-md-2">Status</th>
+                <th class="col-md-4">Containers</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat='s in p.Status' ng-class="isDeployable(s) ? 'warning': ''">
+                <td><b>{{s.Enviroment.Name}}</b>
+                </td>
+                <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
+                <td>
+                  <a href="#" class="success" ng-click="open(g.Project)">
+                    <span class="badge success">{{s.Containers.length}}</span>
+                  </a>
+                </td>
+                <td>
+                  <span ng-if="s.RunningContainers.length != 0">
+                    {{s.RunningContainers[0].Status}}
+                  </span>
+                  <span ng-if="s.RunningContainers.length == 0" class="text-danger">
+                    Down
+                  </span>
+                </td>
+                <td>
+                  <button ng-if="!isDeployable(s)"
+                    type="button"
+                    class="btn btn-success btn-xs">
+                       <span class="glyphicon glyphicon-saved"></span>
+                       Up-to-date
+                  </button>
+                  <button ng-if="isDeployable(s)"
+                    type="button"
+                    class="btn btn-primary btn-xs">
+                       <span class="glyphicon glyphicon-import"></span>
+                       Deploy {{s.LastCommit.slice(0,12)}}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
+    <div id="footer">
+      <div class="container">
+        <p class="muted credit">Powered by <a href="https://github.com/mcuadros/dockership">Dockership</a> MIT License</p></p>
+      </div>
+    </div>
+    <script type="text/ng-template" id="ContainersContent.html">
+        <div class="modal-header">
+            <h3 class="modal-title">Project <b>{{project.Name}}</b></h3>
+        </div>
+        <div class="modal-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-md-2">Commit</th>
+                <th class="col-md-2">Container ID</th>
+                <th class="col-md-2">Created</th>
+                <th class="col-md-2">Command</th>
+                <th class="col-md-2">Status</th>
+                <th class="col-md-2">Ports</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat='c in containers'>
+                <td><b>{{c.Container.Image}}</b></td>
+                <td>{{c.Container.Id.slice(0, 12)}}</td>
+                <td>{{c.Container.Created}}</td>
+                <td>{{c.Container.Command}}</td>
+                <td>{{c.Container.Status}}</td>
+                <td>
+                  <span ng-repeat='p in c.Container.Ports'>
+                    {{p.IP}}:{{p.PublicPort}}:{{p.PrivatePort}}/{{p.Type}}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
   </body>
 </html>

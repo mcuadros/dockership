@@ -29,14 +29,10 @@ func NewHandlerDeploy() (*HandlerDeploy, error) {
 }
 
 func (h *HandlerDeploy) Run(ctx *gin.Context) {
-	go func() {
-		for {
-			ctx.Writer.Flush()
-			time.Sleep(1 * time.Millisecond)
-		}
-	}()
+	w := NewAutoFlusherWriter(ctx.Writer, 100*time.Millisecond)
+	defer w.Close()
 
-	Streaming(ctx.Writer)
+	Streaming(w)
 
 	force := true
 	project := ctx.Params.ByName("project")

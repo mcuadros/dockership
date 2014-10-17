@@ -35,6 +35,9 @@ angular.module('dockership').controller(
                     },
                     enviroment: function () {
                         return enviroment;
+                    },
+                    loadStatus: function () {
+                        return $scope.loadStatus;
                     }
                 }
             });
@@ -92,7 +95,7 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'DeployCtrl',
-    function ($scope, $modalInstance, $http, oboe, project, enviroment) {
+    function ($scope, $modalInstance, $http, oboe, project, enviroment, loadStatus) {
         $scope.project = project;
         $scope.enviroment = enviroment;
 
@@ -107,6 +110,7 @@ angular.module('dockership').controller(
         };
 
         $scope.cancel = function () {
+            loadStatus()
             $modalInstance.dismiss('cancel');
         };
     }

@@ -29,7 +29,7 @@ func (c *CmdStatus) Run(args []string) int {
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
 	}
-
+	fmt.a
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
 	table.SetHeader([]string{"Enviroment", "Project", "Last Commit", "Containers", "Status"})
 

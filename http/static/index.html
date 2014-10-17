@@ -41,6 +41,7 @@
               <tr>
                 <th class="col-md-2">Enviroment</th>
                 <th class="col-md-2">Last Commit</th>
+                <th class="col-md-2">Last Commit</th>
                 <th class="col-md-2">Server</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
@@ -52,7 +53,8 @@
                 s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
                 <td><b>{{s.Enviroment.Name}}</b>
                 </td>
-                <td>{{s.LastCommit.slice(0,10)}}</td>
+                <td>{{s.LastCommit.slice(0,12)}}</td>
+                <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
                 <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
                   <a href="#" class="success" ng-click="openContainers(p.Project)">

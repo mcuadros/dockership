@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/mcuadros/dockership/core"
+	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,6 +32,7 @@ func NewHandlerStatus() (*HandlerStatus, error) {
 }
 
 func (h *HandlerStatus) Run(ctx *gin.Context) {
+	Verbose()
 	project := ctx.Params.ByName("project")[1:]
 
 	r := make(map[string]*StatusRecord, 0)

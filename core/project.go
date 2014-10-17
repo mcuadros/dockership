@@ -44,6 +44,11 @@ func (p *Project) Deploy(force bool, enviroment string) error {
 }
 
 func (p *Project) Test(enviroment string) {
+	if p.TestCommand == "" {
+		Warning("No Test command", "project", p)
+		return
+	}
+
 	Info("Executing Test command", "project", p, "script", p.TestCommand)
 	json, err := json.Marshal(p)
 	if err != nil {

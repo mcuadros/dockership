@@ -8,6 +8,7 @@ import (
 )
 
 var Log = log15.New()
+var Exit = true
 
 func init() {
 	Log.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, log15.StdoutHandler))
@@ -18,6 +19,7 @@ func Verbose() {
 }
 
 func Streaming(w io.Writer) {
+	Exit = false
 	Log.SetHandler(
 		log15.LvlFilterHandler(
 			log15.LvlDebug,
@@ -44,5 +46,7 @@ func Error(msg string, ctx ...interface{}) {
 
 func Critical(msg string, ctx ...interface{}) {
 	Log.Crit(msg, ctx...)
-	os.Exit(1)
+	if Exit {
+		os.Exit(1)
+	}
 }

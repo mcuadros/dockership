@@ -45,7 +45,7 @@ angular.module('dockership').controller(
             var commit = status.LastCommit;
             for (var i = running.length - 1; i >= 0; i--) {
                 var tmp = running[i].Image.split(':');
-                if (commit.slice(0, tmp[0].length+1) == tmp[1]) {
+                if (commit.slice(0, tmp[1].length) == tmp[1]) {
                     return false;
                 }
             };
@@ -53,18 +53,22 @@ angular.module('dockership').controller(
             return true;
         };
 
-        $http.get('/status/').then(function(res) {
-            $scope.groups = res.data;
-            for (var i in res.data.Errors) {
-                $scope.log(res.data.Errors[i]);
-            }
-        }, function(msg) {
-            $scope.log(msg.data);
-        });
+        $scope.loadStatus = function() {
+            $http.get('/status/').then(function(res) {
+                $scope.groups = res.data;
+                for (var i in res.data.Errors) {
+                    $scope.log(res.data.Errors[i]);
+                }
+            }, function(msg) {
+                $scope.log(msg.data);
+            });
+        }
 
         $scope.log = function(msg) {
             $scope.errors.push(msg);
         };
+
+        $scope.loadStatus()
     }
 );
 

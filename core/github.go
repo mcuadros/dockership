@@ -2,6 +2,9 @@ package core
 
 import (
 	"code.google.com/p/goauth2/oauth"
+	"fmt"
+	"sync"
+
 	"github.com/google/go-github/github"
 
 	. "github.com/mcuadros/dockership/logger"
@@ -9,6 +12,7 @@ import (
 
 type Github struct {
 	client *github.Client
+	sync.WaitGroup
 }
 
 func NewGithub(token string) *Github {
@@ -32,9 +36,39 @@ func (g *Github) GetDockerFile(p *Project) (content []byte, commit Commit, err e
 }
 
 func (g *Github) GetLastCommit(p *Project) (Commit, error) {
+	Verbose()
 	Debug("Retrieving last commit", "project", p)
 
-	c, r, err := g.client.Repositories.GetBranch(p.Owner, p.Repository, p.Branch)
+	c := make(chan string)
+	h := func(owner, repository, branch string) {
+		commit, err := g.doGetLastCommit(owner, repository, branch)
+		if err != nil {
+			panic(err)
+		}
+		c <- commit
+		g.Done()
+	}
+
+	g.Add(1)
+	go h(p.Owner, p.Repository, p.Branch)
+	g.Wait()
+
+	stack := make([]string, 0)
+	for commit := range c {
+		fmt.Println(commit)
+		stack = append(stack, commit)
+	}
+
+	fmt.Println(stack)
+
+	return Commit(stack[0]), nil
+}
+
+func (g *Github) doGetLastCommit(owner, repository, branch string) (string, error) {
+
+	Debug("Retrieving last commit", "project", owner, "repository", repository, "branch", branch)
+
+	c, r, err := g.client.Repositories.GetBranch(owner, repository, branch)
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +77,7 @@ func (g *Github) GetLastCommit(p *Project) (Commit, error) {
 		Warning("Low Github request level", "remaining", r.Remaining, "limit", r.Limit)
 	}
 
-	return Commit(*c.Commit.SHA), nil
+	return string(*c.Commit.SHA), nil
 }
 
 func (g *Github) getFileContent(p *Project, commit Commit) ([]byte, error) {

@@ -10,19 +10,20 @@ import (
 )
 
 type Project struct {
-	Name            string
-	GithubToken     string
-	Owner           string
-	Repository      string
-	Branch          string `default:"master"`
-	Dockerfile      string `default:"Dockerfile"`
-	NoCache         bool
-	Ports           []string `gcfg:"Port"`
-	UseShortCommits bool     `default:"true"`
-	EnviromentNames []string `gcfg:"Enviroment"`
-	Enviroments     map[string]*Enviroment
-	TestCommand     string
-	Files           []string
+	Name                string
+	GithubToken         string
+	Owner               string
+	Repository          string
+	Branch              string `default:"master"`
+	Dockerfile          string `default:"Dockerfile"`
+	NoCache             bool
+	Ports               []string `gcfg:"Port"`
+	UseShortCommits     bool     `default:"true"`
+	EnviromentNames     []string `gcfg:"Enviroment"`
+	Enviroments         map[string]*Enviroment
+	TestCommand         string
+	Files               []string `gcfg:"File"`
+	RelatedRepositories []string `gcfg:"RelatedRepository"`
 }
 
 func (p *Project) Deploy(force bool, enviroment string) error {

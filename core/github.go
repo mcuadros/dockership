@@ -1,10 +1,10 @@
 package core
 
 import (
-	"code.google.com/p/goauth2/oauth"
-	"fmt"
+	"net/http"
 	"sync"
 
+	"code.google.com/p/goauth2/oauth"
 	"github.com/google/go-github/github"
 
 	. "github.com/mcuadros/dockership/logger"
@@ -16,59 +16,88 @@ type Github struct {
 }
 
 func NewGithub(token string) *Github {
-	t := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: token},
+	var client *http.Client
+
+	if token != "" {
+		t := &oauth.Transport{
+			Token: &oauth.Token{AccessToken: token},
+		}
+
+		client = t.Client()
 	}
 
 	return &Github{
-		client: github.NewClient(t.Client()),
+		client: github.NewClient(client),
 	}
 }
 
-func (g *Github) GetDockerFile(p *Project) (content []byte, commit Commit, err error) {
-	commit, err = g.GetLastCommit(p)
+func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
+	info, err := p.Repository.Info()
 	if err != nil {
 		return
 	}
 
-	content, err = g.getFileContent(p, commit)
+	commit, err := g.doGetLastCommit(info)
+	if err != nil {
+		return
+	}
+
+	content, err = g.doGetFileContent(info, commit, p.Dockerfile)
 	return
 }
 
 func (g *Github) GetLastCommit(p *Project) (Commit, error) {
-	Verbose()
-	Debug("Retrieving last commit", "project", p)
-
-	c := make(chan string)
-	h := func(owner, repository, branch string) {
-		commit, err := g.doGetLastCommit(owner, repository, branch)
-		if err != nil {
-			panic(err)
-		}
-		c <- commit
-		g.Done()
+	info, err := p.Repository.Info()
+	if err != nil {
+		return "", err
 	}
 
-	g.Add(1)
-	go h(p.Owner, p.Repository, p.Branch)
-	g.Wait()
-
-	stack := make([]string, 0)
-	for commit := range c {
-		fmt.Println(commit)
-		stack = append(stack, commit)
-	}
-
-	fmt.Println(stack)
-
-	return Commit(stack[0]), nil
+	return g.doGetLastCommit(info)
 }
 
-func (g *Github) doGetLastCommit(owner, repository, branch string) (string, error) {
+func (g *Github) GetLastRevision(p *Project) (Revision, error) {
+	Verbose()
+	repos := p.RelatedRepositories
+	repos = append(repos, p.Repository)
+	count := len(repos)
 
-	Debug("Retrieving last commit", "project", owner, "repository", repository, "branch", branch)
+	type msg struct {
+		repository VCS
+		commit     Commit
+		err        error
+	}
 
-	c, r, err := g.client.Repositories.GetBranch(owner, repository, branch)
+	c := make(chan msg, count)
+	defer close(c)
+
+	for _, repository := range repos {
+		g.Add(1)
+		go func(repository VCS) {
+			defer g.Done()
+			info, err := repository.Info()
+			commit, err := g.doGetLastCommit(info)
+			c <- msg{repository, commit, err}
+		}(repository)
+	}
+
+	g.Wait()
+
+	revision := make(Revision, 0)
+	for i := 0; i < count; i++ {
+		m := <-c
+		if m.err != nil {
+			return nil, m.err
+		}
+
+		revision[m.repository] = m.commit
+	}
+
+	return revision, nil
+}
+
+func (g *Github) doGetLastCommit(vcs *VCSInfo) (Commit, error) {
+	Debug("Retrieving last commit", "repository", vcs.Origin)
+	c, r, err := g.client.Repositories.GetBranch(vcs.Username, vcs.Name, vcs.Branch)
 	if err != nil {
 		return "", err
 	}
@@ -77,17 +106,16 @@ func (g *Github) doGetLastCommit(owner, repository, branch string) (string, erro
 		Warning("Low Github request level", "remaining", r.Remaining, "limit", r.Limit)
 	}
 
-	return string(*c.Commit.SHA), nil
+	return Commit(*c.Commit.SHA), nil
 }
 
-func (g *Github) getFileContent(p *Project, commit Commit) ([]byte, error) {
-	Debug("Retrieving dockerfile commit", "project", p, "commit", commit)
-
+func (g *Github) doGetFileContent(vcs *VCSInfo, commit Commit, file string) ([]byte, error) {
+	Debug("Retrieving dockerfile commit", "repository", vcs.Origin, "commit", commit)
 	opts := &github.RepositoryContentGetOptions{
 		Ref: string(commit),
 	}
 
-	f, _, r, err := g.client.Repositories.GetContents(p.Owner, p.Repository, p.Dockerfile, opts)
+	f, _, r, err := g.client.Repositories.GetContents(vcs.Username, vcs.Name, file, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -97,20 +125,4 @@ func (g *Github) getFileContent(p *Project, commit Commit) ([]byte, error) {
 	}
 
 	return f.Decode()
-}
-
-type Commit string
-
-func (c Commit) GetShort() string {
-	commit := string(c)
-	shortLen := 12
-	if len(commit) < shortLen {
-		shortLen = len(commit)
-	}
-
-	return commit[:shortLen]
-}
-
-func (c Commit) String() string {
-	return c.GetShort()
 }

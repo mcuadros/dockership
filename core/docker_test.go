@@ -84,15 +84,15 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	c.Assert(request.URL.Query().Get("rm"), Equals, "1")
 }
 
-func (s *CoreSuite) TestDocker_Run(c *C) {
+func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, commit Commit) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 
-	e := &Enviroment{DockerEndPoint: m.URL()}
-	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortCommits: true}
+	e = &Enviroment{DockerEndPoint: m.URL()}
+	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortCommits: true}
 
 	buildImage(d, "foo/bar:79bee4004ff1")
-	commit := Commit("79bee4004ff184589afb4b547c77e88b")
+	commit = Commit("79bee4004ff184589afb4b547c77e88b")
 	err := NewDocker(e).Run(p, commit)
 	c.Assert(err, Equals, nil)
 
@@ -100,6 +100,23 @@ func (s *CoreSuite) TestDocker_Run(c *C) {
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.IsCommit(commit), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
+
+	return
+}
+
+func (s *CoreSuite) TestDocker_Clean(c *C) {
+	p, e, commit := s.TestDocker_Run(c)
+	err := NewDocker(e).Clean(p, commit, false)
+	c.Assert(err, Not(Equals), nil)
+}
+
+func (s *CoreSuite) TestDocker_CleanWithForce(c *C) {
+	p, e, commit := s.TestDocker_Run(c)
+	err := NewDocker(e).Clean(p, commit, true)
+	c.Assert(err, Equals, nil)
+
+	l, _ := NewDocker(e).ListContainers(p)
+	c.Assert(l, HasLen, 0)
 }
 
 func buildImage(client *docker.Client, name string) {

@@ -32,11 +32,7 @@ func NewGithub(token string) *Github {
 }
 
 func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
-	info, err := p.Repository.Info()
-	if err != nil {
-		return
-	}
-
+	info := p.Repository.Info()
 	commit, err := g.doGetLastCommit(info)
 	if err != nil {
 		return
@@ -47,12 +43,7 @@ func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
 }
 
 func (g *Github) GetLastCommit(p *Project) (Commit, error) {
-	info, err := p.Repository.Info()
-	if err != nil {
-		return "", err
-	}
-
-	return g.doGetLastCommit(info)
+	return g.doGetLastCommit(p.Repository.Info())
 }
 
 func (g *Github) GetLastRevision(p *Project) (Revision, error) {
@@ -74,8 +65,7 @@ func (g *Github) GetLastRevision(p *Project) (Revision, error) {
 		g.Add(1)
 		go func(repository VCS) {
 			defer g.Done()
-			info, err := repository.Info()
-			commit, err := g.doGetLastCommit(info)
+			commit, err := g.doGetLastCommit(repository.Info())
 			c <- msg{repository, commit, err}
 		}(repository)
 	}

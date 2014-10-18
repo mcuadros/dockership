@@ -19,11 +19,16 @@ type VCSInfo struct {
 }
 
 func (v VCS) IsValid() bool {
-	_, err := v.Info()
+	_, err := v.parse()
 	return err == nil
 }
 
-func (v VCS) Info() (*VCSInfo, error) {
+func (v VCS) Info() *VCSInfo {
+	info, _ := v.parse()
+	return info
+}
+
+func (v VCS) parse() (*VCSInfo, error) {
 	origin := string(v)
 	branch := DEFAULT_BRANCH
 	data := strings.SplitN(origin, "!", 2)

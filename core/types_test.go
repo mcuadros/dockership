@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -9,7 +10,9 @@ import (
 
 func Test(t *testing.T) { TestingT(t) }
 
-type CoreSuite struct{}
+type CoreSuite struct {
+	sync.WaitGroup
+}
 
 var _ = Suite(&CoreSuite{})
 
@@ -26,26 +29,17 @@ func (s *CoreSuite) TestVCS_NotIsValid(c *C) {
 func (s *CoreSuite) TestVCS_Info(c *C) {
 	vcs := VCS("git@github.com:mcuadros/dockership.git")
 
-	info, _ := vcs.Info()
-	c.Assert(info.Name, Equals, "dockership")
-	c.Assert(info.Username, Equals, "mcuadros")
-	c.Assert(info.Branch, Equals, "master")
+	c.Assert(vcs.Info().Name, Equals, "dockership")
+	c.Assert(vcs.Info().Username, Equals, "mcuadros")
+	c.Assert(vcs.Info().Branch, Equals, "master")
 }
 
 func (s *CoreSuite) TestVCS_InfoBranch(c *C) {
 	vcs := VCS("git@github.com:mcuadros/dockership.git!branch")
 
-	info, _ := vcs.Info()
-	c.Assert(info.Name, Equals, "dockership")
-	c.Assert(info.Username, Equals, "mcuadros")
-	c.Assert(info.Branch, Equals, "branch")
-}
-
-func (s *CoreSuite) TestVCS_InfoFromInvalid(c *C) {
-	vcs := VCS("foo!branch")
-
-	_, err := vcs.Info()
-	c.Assert(err, Not(Equals), nil)
+	c.Assert(vcs.Info().Name, Equals, "dockership")
+	c.Assert(vcs.Info().Username, Equals, "mcuadros")
+	c.Assert(vcs.Info().Branch, Equals, "branch")
 }
 
 func (s *CoreSuite) TestCommit_GetShort(c *C) {

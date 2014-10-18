@@ -16,9 +16,6 @@ import (
 	. "github.com/mcuadros/dockership/logger"
 )
 
-var statusUp = regexp.MustCompile("^Up (.*)")
-var imageIdRe = regexp.MustCompile("^(.*)/(.*):(.*)")
-
 type Docker struct {
 	enviroment *Enviroment
 	client     *docker.Client
@@ -160,7 +157,8 @@ func (d *Docker) getImageName(p *Project, commit Commit) ImageId {
 		c = commit.GetShort()
 	}
 
-	return ImageId(fmt.Sprintf("%s/%s:%s", p.Owner, p.Repository, c))
+	info := p.Repository.Info()
+	return ImageId(fmt.Sprintf("%s/%s:%s", info.Username, info.Name, c))
 }
 
 func (d *Docker) createContainer(image ImageId) (*Container, error) {
@@ -248,7 +246,6 @@ func (d *Docker) buildTar(p *Project, dockerfile []byte, buf *bytes.Buffer) erro
 	}
 
 	tr.Close()
-
 	return nil
 }
 
@@ -283,7 +280,8 @@ func (d *Docker) addFileToTar(file string, tr *tar.Writer) error {
 type ImageId string
 
 func (i ImageId) BelongsTo(p *Project) bool {
-	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", p.Owner, p.Repository))
+	info := p.Repository.Info()
+	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", info.Username, info.Name))
 }
 
 func (i ImageId) IsCommit(commit Commit) bool {
@@ -291,13 +289,12 @@ func (i ImageId) IsCommit(commit Commit) bool {
 	return strings.HasPrefix(s[1], commit.GetShort())
 }
 
-func (i ImageId) GetInfo() (owner, repository string, commit Commit) {
-	m := imageIdRe.FindStringSubmatch(string(i))
-	owner, repository = m[1], m[2]
-	commit = Commit(m[3])
-
-	return
+func (i ImageId) GetCommit() Commit {
+	tmp := strings.SplitN(string(i), ":", 2)
+	return Commit(tmp[1])
 }
+
+var statusUp = regexp.MustCompile("^Up (.*)")
 
 type Container struct {
 	Enviroment *Enviroment

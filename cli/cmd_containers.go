@@ -32,16 +32,15 @@ func (c *CmdContainers) Run(args []string) int {
 		}
 
 		for _, c := range l {
-			_, _, commit := c.Image.GetInfo()
 			table.AddRow([]string{
 				c.Enviroment.String(),
 				p.String(),
-				commit.GetShort(),
+				c.Image.GetRevisionString(),
 				c.GetShortId(),
 				c.Command,
 				units.HumanDuration(time.Now().UTC().Sub(time.Unix(c.Created, 0))),
 				c.Status,
-				c.GetPorts(),
+				c.GetPortsString(),
 			})
 		}
 	}

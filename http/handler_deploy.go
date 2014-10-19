@@ -40,13 +40,11 @@ func (h *HandlerDeploy) Run(ctx *gin.Context) {
 
 	if p, ok := h.config.Projects[project]; ok {
 		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
-		err := p.Deploy(force, enviroment)
+		_, err := p.Deploy(enviroment, force)
 		if err != nil {
 			Critical(err.Error(), "project", project)
-
 		}
 
-		p.Test(enviroment)
 		Info("Deploy success", "project", p, "enviroment", enviroment)
 
 	} else {

@@ -10,7 +10,7 @@ import (
 	"path"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/fsouza/go-dockerclient/testing"
+	"github.com/mcuadros/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
 )
 

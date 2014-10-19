@@ -14,30 +14,23 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func (s *CoreSuite) TestImageId_IsCommit(c *C) {
-	i := ImageId("foo/bar:qux")
+func (s *CoreSuite) TestDocker_Deploy(c *C) {
+	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 
-	c.Assert(i.IsCommit(Commit("qux")), Equals, true)
-	c.Assert(i.IsCommit(Commit("bar")), Equals, false)
-
-}
-
-func (s *CoreSuite) TestImageId_BelongsTo(c *C) {
-	i := ImageId("foo/bar:qux")
-
-	c.Assert(i.BelongsTo(&Project{
+	e := &Enviroment{DockerEndPoint: m.URL()}
+	p := &Project{
 		Repository: "git@github.com:foo/bar.git",
-	}), Equals, true)
+		Ports:      []string{"0.0.0.0:8080:80/tcp"},
+	}
 
-	c.Assert(i.BelongsTo(&Project{
-		Repository: "git@github.com:qux/bar.git",
-	}), Equals, false)
-}
+	rev := Revision{"foo": "bar"}
+	err := NewDocker(e).Deploy(p, rev, []byte("FROM base\n"), false)
+	c.Assert(err, Equals, nil)
 
-func (s *CoreSuite) TestImageId_GetCommit(c *C) {
-	i := ImageId("foo/bar:qux")
-
-	c.Assert(i.GetCommit(), Equals, Commit("qux"))
+	l, _ := NewDocker(e).ListContainers(p)
+	c.Assert(l, HasLen, 1)
+	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
+	c.Assert(l[0].IsRunning(), Equals, true)
 }
 
 func (s *CoreSuite) TestDocker_BuildImage(c *C) {
@@ -72,33 +65,33 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	}
 
 	s.Add(1)
-	err := NewDocker(e).BuildImage(p, Commit("foo"), []byte("FROM base\n"))
+	err := NewDocker(e).BuildImage(p, Revision{"key": "qux"}, []byte("FROM base\n"))
 	s.Wait()
 
 	c.Assert(err, Equals, nil)
 	c.Assert(files, HasLen, 2)
 	c.Assert(files["Dockerfile"], Equals, "FROM base\n")
 	c.Assert(files[path.Base(file)], Equals, "qux")
-	c.Assert(request.URL.Query().Get("t"), Equals, "foo/bar:foo")
+	c.Assert(request.URL.Query().Get("t"), Equals, "foo/bar:qux")
 	c.Assert(request.URL.Query().Get("nocache"), Equals, "1")
 	c.Assert(request.URL.Query().Get("rm"), Equals, "1")
 }
 
-func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, commit Commit) {
+func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, rev Revision) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 
 	e = &Enviroment{DockerEndPoint: m.URL()}
 	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortCommits: true}
 
-	buildImage(d, "foo/bar:79bee4004ff1")
-	commit = Commit("79bee4004ff184589afb4b547c77e88b")
-	err := NewDocker(e).Run(p, commit)
+	buildImage(d, "foo/bar:qux")
+	rev = Revision{"foo/bar": "qux"}
+	err := NewDocker(e).Run(p, rev)
 	c.Assert(err, Equals, nil)
 
 	l, _ := NewDocker(e).ListContainers(p)
 	c.Assert(l, HasLen, 1)
-	c.Assert(l[0].Image.IsCommit(commit), Equals, true)
+	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
 
 	return
@@ -117,6 +110,23 @@ func (s *CoreSuite) TestDocker_CleanWithForce(c *C) {
 
 	l, _ := NewDocker(e).ListContainers(p)
 	c.Assert(l, HasLen, 0)
+}
+
+func (s *CoreSuite) TestDocker_formatPorts(c *C) {
+	p := []string{
+		"0.0.0.0:8080:80/tcp",
+		"0.0.0.0:8080:80/udp",
+		"0.0.0.0:42:42/tcp",
+		"1.1.1.1:42:80/tcp",
+	}
+
+	r, _ := NewDocker(&Enviroment{}).formatPorts(p)
+	c.Assert(r, HasLen, 3)
+	c.Assert(r["80/tcp"], HasLen, 2)
+	c.Assert(r["80/tcp"][0].HostIp, Equals, "0.0.0.0")
+	c.Assert(r["80/tcp"][0].HostPort, Equals, "8080")
+	c.Assert(r["80/udp"], HasLen, 1)
+	c.Assert(r["42/tcp"], HasLen, 1)
 }
 
 func buildImage(client *docker.Client, name string) {

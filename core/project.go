@@ -36,14 +36,14 @@ func (p *Project) Deploy(force bool, enviroment string) error {
 		Critical(err.Error(), "project", p)
 	}
 
-	commit, err := c.GetLastCommit(p)
+	rev, err := c.GetLastRevision(p)
 	if err != nil {
 		Critical(err.Error(), "project", p)
 	}
 
 	d := NewDocker(p.mustGetEnviroment(enviroment))
-	if err := d.Deploy(p, commit, file, force); err != nil {
-		Critical(err.Error(), "project", p, "commit", commit)
+	if err := d.Deploy(p, rev, file, force); err != nil {
+		Critical(err.Error(), "project", p, "revision", rev)
 		return err
 	}
 

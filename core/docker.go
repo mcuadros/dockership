@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -28,20 +27,20 @@ func NewDocker(enviroment *Enviroment) *Docker {
 	return &Docker{client: c, enviroment: enviroment}
 }
 
-func (d *Docker) Deploy(p *Project, commit Commit, dockerfile []byte, force bool) error {
-	Info("Deploying dockerfile", "project", p, "commit", commit)
-	if err := d.Clean(p, commit, force); err != nil {
+func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) error {
+	Info("Deploying dockerfile", "project", p, "revision", rev)
+	if err := d.Clean(p, rev, force); err != nil {
 		return err
 	}
 
-	if err := d.BuildImage(p, commit, dockerfile); err != nil {
+	if err := d.BuildImage(p, rev, dockerfile); err != nil {
 		return err
 	}
 
-	return d.Run(p, commit)
+	return d.Run(p, rev)
 }
 
-func (d *Docker) Clean(p *Project, commit Commit, force bool) error {
+func (d *Docker) Clean(p *Project, rev Revision, force bool) error {
 	l, err := d.ListContainers(p)
 	if err != nil {
 		return err
@@ -49,8 +48,8 @@ func (d *Docker) Clean(p *Project, commit Commit, force bool) error {
 
 	if !force {
 		for _, c := range l {
-			if c.IsRunning() && c.Image.IsCommit(commit) {
-				return errors.New("Current commit is already running")
+			if c.IsRunning() && c.Image.IsRevision(rev) {
+				return errors.New("Current revision is already running")
 
 			}
 		}
@@ -112,8 +111,8 @@ func (d *Docker) killAndRemove(c *Container) error {
 	return nil
 }
 
-func (d *Docker) BuildImage(p *Project, commit Commit, dockerfile []byte) error {
-	Info("Building image", "project", p, "commit", commit)
+func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
+	Info("Building image", "project", p, "revision", rev)
 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	outputbuf.WriteTo(os.Stdout)
@@ -122,7 +121,7 @@ func (d *Docker) BuildImage(p *Project, commit Commit, dockerfile []byte) error 
 		return err
 	}
 
-	image := d.getImageName(p, commit)
+	image := d.getImageName(p, rev)
 	opts := docker.BuildImageOptions{
 		Name:           string(image),
 		NoCache:        p.NoCache,
@@ -134,16 +133,16 @@ func (d *Docker) BuildImage(p *Project, commit Commit, dockerfile []byte) error 
 	return d.client.BuildImage(opts)
 }
 
-func (d *Docker) Run(p *Project, commit Commit) error {
-	Debug("Creating container from image", "project", p, "commit", commit)
-	c, err := d.createContainer(d.getImageName(p, commit))
+func (d *Docker) Run(p *Project, rev Revision) error {
+	Debug("Creating container from image", "project", p, "revision", rev)
+	c, err := d.createContainer(d.getImageName(p, rev))
 	if err != nil {
 		return err
 	}
 
 	Info("Running new container",
 		"project", p,
-		"commit", commit,
+		"revision", rev,
 		"image", c.Image,
 		"container", c.GetShortId(),
 	)
@@ -151,10 +150,10 @@ func (d *Docker) Run(p *Project, commit Commit) error {
 	return d.startContainer(p, c)
 }
 
-func (d *Docker) getImageName(p *Project, commit Commit) ImageId {
-	c := string(commit)
+func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
+	c := rev.String()
 	if p.UseShortCommits {
-		c = commit.GetShort()
+		c = rev.GetShort()
 	}
 
 	info := p.Repository.Info()
@@ -275,63 +274,4 @@ func (d *Docker) addFileToTar(file string, tr *tar.Writer) error {
 	}
 
 	return nil
-}
-
-type ImageId string
-
-func (i ImageId) BelongsTo(p *Project) bool {
-	info := p.Repository.Info()
-	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", info.Username, info.Name))
-}
-
-func (i ImageId) IsCommit(commit Commit) bool {
-	s := strings.Split(string(i), ":")
-	return strings.HasPrefix(s[1], commit.GetShort())
-}
-
-func (i ImageId) GetCommit() Commit {
-	tmp := strings.SplitN(string(i), ":", 2)
-	return Commit(tmp[1])
-}
-
-var statusUp = regexp.MustCompile("^Up (.*)")
-
-type Container struct {
-	Enviroment *Enviroment
-	Image      ImageId
-	docker.APIContainers
-}
-
-func (c *Container) IsRunning() bool {
-	return statusUp.MatchString(c.Status)
-}
-
-func (c *Container) GetShortId() string {
-	shortLen := 12
-	if len(c.ID) < shortLen {
-		shortLen = len(c.ID)
-	}
-
-	return c.ID[:shortLen]
-}
-
-func (c *Container) GetPorts() string {
-	result := []string{}
-	for _, port := range c.Ports {
-		if port.IP == "" {
-			result = append(result, fmt.Sprintf("%d/%s", port.PrivatePort, port.Type))
-		} else {
-			result = append(result, fmt.Sprintf("%s:%d->%d/%s", port.IP, port.PublicPort, port.PrivatePort, port.Type))
-		}
-	}
-	return strings.Join(result, ", ")
-}
-
-type Enviroment struct {
-	DockerEndPoint string
-	Name           string
-}
-
-func (e *Enviroment) String() string {
-	return e.Name
 }

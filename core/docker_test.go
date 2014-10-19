@@ -82,7 +82,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, rev Revisio
 	d, _ := docker.NewClient(m.URL())
 
 	e = &Enviroment{DockerEndPoint: m.URL()}
-	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortCommits: true}
+	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
 	buildImage(d, "foo/bar:qux")
 	rev = Revision{"foo/bar": "qux"}

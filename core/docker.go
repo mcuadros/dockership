@@ -152,7 +152,7 @@ func (d *Docker) Run(p *Project, rev Revision) error {
 
 func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
 	c := rev.String()
-	if p.UseShortCommits {
+	if p.UseShortRevisions {
 		c = rev.GetShort()
 	}
 

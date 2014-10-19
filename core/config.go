@@ -8,10 +8,9 @@ import (
 )
 
 type Config struct {
-	Main struct {
-		UseShortCommits bool `default:"true"`
-		GithubToken     string
-		DockerEndPoint  string
+	Global struct {
+		UseShortRevisions bool `default:"true"`
+		GithubToken       string
 	}
 
 	Projects    map[string]*Project    `gcfg:"Project"`
@@ -24,21 +23,21 @@ func (c *Config) LoadFile(filename string) error {
 		return err
 	}
 
-	c.loadDefaults()
+	c.loadProjects()
 	c.loadEnviroments()
 	return nil
 }
 
-func (c *Config) loadDefaults() {
+func (c *Config) loadProjects() {
 	defaults.SetDefaults(c)
 	for name, p := range c.Projects {
 		p.Name = name
 		defaults.SetDefaults(p)
 		if p.GithubToken == "" {
-			p.GithubToken = c.Main.GithubToken
+			p.GithubToken = c.Global.GithubToken
 		}
 
-		p.UseShortCommits = c.Main.UseShortCommits
+		p.UseShortRevisions = c.Global.UseShortRevisions
 	}
 }
 

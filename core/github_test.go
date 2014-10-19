@@ -54,3 +54,18 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 	c.Assert(err, Equals, nil)
 	c.Assert(string(content), Equals, "#!/usr/bin/env ruby\n\n`mkdir -p #{ARGV.last}`\n")
 }
+
+func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {
+	if !*githubFlag {
+		c.Skip("-noGithub not provided")
+	}
+
+	p := &Project{
+		Repository: "git@github.com:github/gem-builder.git",
+		Dockerfile: "foo",
+	}
+
+	g := NewGithub("")
+	_, err := g.GetDockerFile(p)
+	c.Assert(err, Not(Equals), nil)
+}

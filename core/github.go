@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -112,6 +114,10 @@ func (g *Github) doGetFileContent(vcs *VCSInfo, commit Commit, file string) ([]b
 
 	if r.Remaining < 100 {
 		Warning("Low Github request level", "remaining", r.Remaining, "limit", r.Limit)
+	}
+
+	if f == nil {
+		return nil, errors.New(fmt.Sprintf("Unable to find %q file", file))
 	}
 
 	return f.Decode()

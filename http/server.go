@@ -6,57 +6,68 @@ import (
 
 	"github.com/codegangsta/martini-contrib/render"
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/sessions"
 )
 
-var m = martini.Classic()
-
 func main() {
-	s := &server{}
+	s := &server{martini: martini.Classic()}
+	s.readConfig()
 	s.configure()
+	s.configureAuth()
 	s.run()
 }
 
 type server struct {
-	config config
+	martini *martini.ClassicMartini
+	config  config
 }
 
 func (s *server) configure() {
 	// status
-	m.Get("/status", s.HandleStatus)
-	m.Get("/status/:project", s.HandleStatus)
+	s.martini.Get("/status", s.HandleStatus)
+	s.martini.Get("/status/:project", s.HandleStatus)
 
 	// containers
-	m.Get("/containers", s.HandleContainers)
-	m.Get("/containers/:project", s.HandleContainers)
+	s.martini.Get("/containers", s.HandleContainers)
+	s.martini.Get("/containers/:project", s.HandleContainers)
 
 	// deploy
-	m.Get("/deploy/:project/:enviroment", s.HandleDeploy)
+	s.martini.Get("/deploy/:project/:enviroment", s.HandleDeploy)
 
 	// assets
-	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	s.martini.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")
 	})
 
-	m.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
+	s.martini.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/app.js")
 	})
 
+	s.martini.Get("/logout", func(sess sessions.Session) string {
+		sess.Clear()
+		return "cleared!"
+	})
+
 	// dic
-	m.Use(render.Renderer(render.Options{}))
+	s.martini.Use(render.Renderer(render.Options{}))
 }
 
-func (s *server) run() {
+func (s *server) readConfig() {
 	if err := s.config.LoadFile("config.ini"); err != nil {
 		panic(err)
 	}
 
-	m.Map(s.config)
+	s.martini.Map(s.config)
+}
 
-	if err := http.ListenAndServe(s.config.HTTP.Listen, m); err != nil {
+func (s *server) run() {
+
+	if err := http.ListenAndServe(s.config.HTTP.Listen, s.martini); err != nil {
 		panic(err)
 	}
 }
 
+// AutoFlusherWrite
 type AutoFlusherWriter struct {
 	writer     http.ResponseWriter
 	autoFlush  *time.Ticker

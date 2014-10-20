@@ -9,7 +9,10 @@ import (
 
 type config struct {
 	HTTP struct {
-		Listen string `default:":8080"`
+		Listen             string `default:":8080"`
+		GithubID           string
+		GithubSecret       string
+		GithubOrganization string
 	}
 	core.Config
 }

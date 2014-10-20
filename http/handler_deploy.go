@@ -23,7 +23,9 @@ type HandlerDeploy struct {
 
 func NewHandlerDeploy() (*HandlerDeploy, error) {
 	var config core.Config
-	config.LoadFile("config.ini")
+	if err := config.LoadFile("config.ini"); err != nil {
+		panic(err)
+	}
 
 	return &HandlerDeploy{config: &config}, nil
 }

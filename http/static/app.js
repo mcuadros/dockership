@@ -45,10 +45,10 @@ angular.module('dockership').controller(
 
         $scope.isDeployable = function(status) {
             var running = status.RunningContainers;
-            var commit = status.LastCommit;
+            var revision = status.LastRevisionLabel;
             for (var i = running.length - 1; i >= 0; i--) {
                 var tmp = running[i].Image.split(':');
-                if (commit.slice(0, tmp[1].length) == tmp[1]) {
+                if (revision.slice(0, tmp[1].length) == tmp[1]) {
                     return false;
                 }
             };

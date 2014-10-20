@@ -17,13 +17,13 @@ type Project struct {
 	Branch              string `default:"master"`
 	Dockerfile          string `default:"Dockerfile"`
 	NoCache             bool
-	UseShortRevisions   bool     `default:"true"`
-	Ports               []string `gcfg:"Port"`
-	Files               []string `gcfg:"File"`
-	Enviroments         map[string]*Enviroment
-	EnviromentNames     []string `gcfg:"Enviroment"`
+	UseShortRevisions   bool                   `default:"true"`
+	Ports               []string               `gcfg:"Port"`
+	Files               []string               `gcfg:"File"`
+	Enviroments         map[string]*Enviroment `json:"-"`
+	EnviromentNames     []string               `gcfg:"Enviroment"`
 	TestCommand         string
-	GithubToken         string
+	GithubToken         string `json:"-"`
 }
 
 func (p *Project) Deploy(enviroment string, force bool) (*ProjectDeployResult, error) {

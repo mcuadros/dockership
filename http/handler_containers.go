@@ -26,8 +26,7 @@ type ContainersRecord struct {
 
 func NewHandlerContaienrs() (*HandlerContainers, error) {
 	var config core.Config
-	err := config.LoadFile("config.ini")
-	if err != nil {
+	if err := config.LoadFile("config.ini"); err != nil {
 		panic(err)
 	}
 

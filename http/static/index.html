@@ -29,7 +29,7 @@
           <div class="panel-heading">
               <b>{{p.Project.Name}}</b>&nbsp;&nbsp;
               <span class="label label-info">
-                {{p.Project.Owner}}/{{p.Project.Repository}}
+                {{p.Project.Repository}}
               </span>&nbsp;
               <span class="label label-info">
                 {{p.Project.Branch}}
@@ -40,8 +40,8 @@
             <thead>
               <tr>
                 <th class="col-md-2">Enviroment</th>
-                <th class="col-md-2">Last Commit</th>
-                <th class="col-md-2">Running Commit</th>
+                <th class="col-md-2">Last Revision</th>
+                <th class="col-md-2">Running Revision</th>
                 <th class="col-md-2">Server</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
@@ -53,7 +53,7 @@
                 s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
                 <td><b>{{s.Enviroment.Name}}</b>
                 </td>
-                <td>{{s.LastCommit.slice(0,12)}}</td>
+                <td>{{s.LastRevisionLabel.slice(0,12)}}</td>
                 <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
                 <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
@@ -82,7 +82,7 @@
                     ng-click="openDeploy(p, s.Enviroment)"
                     class="btn btn-primary btn-xs">
                        <span class="glyphicon glyphicon-import"></span>
-                       Deploy {{s.LastCommit.slice(0,12)}}
+                       Deploy {{s.LastRevisionLabel.slice(0,12)}}
                   </button>
                 </td>
               </tr>
@@ -102,7 +102,7 @@
           <table class="table">
             <thead>
               <tr>
-                <th class="col-md-2">Commit</th>
+                <th class="col-md-2">Revision</th>
                 <th class="col-md-2">Container ID</th>
                 <th class="col-md-2">Created</th>
                 <th class="col-md-2">Command</th>
@@ -135,7 +135,7 @@
             <h3 class="modal-title">
                 Deploying <b>{{project.Project.Name}}</b> @ <b>{{enviroment.Name}}</b>
                 <small>
-                    Commit <b>{{project.Status[enviroment.Name].LastCommit}}</b>
+                    Revision <b>{{project.Status[enviroment.Name].LastRevisionLabel}}</b>
                 </small>
             </h3>
         </div>

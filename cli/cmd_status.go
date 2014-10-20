@@ -1,32 +1,22 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"strings"
-
-	"github.com/mcuadros/dockership/core"
 
 	"github.com/mitchellh/cli"
 	"github.com/stevedomin/termtable"
 )
 
-type CmdStatus struct {
-	config *core.Config
-}
+type CmdStatus struct{ cmd }
 
 func NewCmdStatus() (cli.Command, error) {
-	var config core.Config
-	config.LoadFile("config.ini")
-
-	return &CmdStatus{config: &config}, nil
+	return &CmdStatus{}, nil
 }
 
 func (c *CmdStatus) Run(args []string) int {
-	var project string
-	cmdFlags := flag.NewFlagSet("status", flag.ContinueOnError)
-	cmdFlags.StringVar(&project, "project", "", "")
-	if err := cmdFlags.Parse(args); err != nil {
+	c.buildFlags(c)
+	if err := c.parse(args); err != nil {
 		return 1
 	}
 
@@ -34,7 +24,7 @@ func (c *CmdStatus) Run(args []string) int {
 	table.SetHeader([]string{"Enviroment", "Project", "Last Commit", "Containers", "Status"})
 
 	for name, p := range c.config.Projects {
-		if project != "" && project != name {
+		if c.project != "" && c.project != name {
 			continue
 		}
 

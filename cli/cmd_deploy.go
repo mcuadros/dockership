@@ -1,52 +1,53 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"strings"
 
-	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/mitchellh/cli"
 )
 
 type CmdDeploy struct {
-	config *core.Config
+	enviroment string
+	force      bool
+	cmd
 }
 
 func NewCmdDeploy() (cli.Command, error) {
-	var config core.Config
-	if err := config.LoadFile("config.ini"); err != nil {
-		Critical(err.Error(), "file", "config.ini")
-	}
+	return &CmdDeploy{}, nil
+}
 
-	return &CmdDeploy{config: &config}, nil
+func (c *CmdDeploy) parse(args []string) error {
+	c.flags.StringVar(&c.enviroment, "env", "", "")
+	c.flags.BoolVar(&c.force, "force", false, "")
+	err := c.cmd.parse(args)
+
+	fmt.Println(args)
+
+	return err
 }
 
 func (c *CmdDeploy) Run(args []string) int {
-	var project, enviroment string
-	var force bool
-	cmdFlags := flag.NewFlagSet("deploy", flag.ContinueOnError)
-	cmdFlags.StringVar(&project, "project", "", "")
-	cmdFlags.StringVar(&enviroment, "env", "", "")
-	cmdFlags.BoolVar(&force, "force", false, "")
-	if err := cmdFlags.Parse(args); err != nil {
+	c.buildFlags(c)
+	if err := c.parse(args); err != nil {
 		return 1
 	}
 
-	if p, ok := c.config.Projects[project]; ok {
-		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
-		_, err := p.Deploy(enviroment, force)
+	if p, ok := c.config.Projects[c.project]; ok {
+		Info("Starting deploy", "project", p, "enviroment", c.enviroment, "force", c.force)
+		_, err := p.Deploy(c.enviroment, c.force)
 		if err != nil {
-			Critical(err.Error(), "project", project)
+			Critical(err.Error(), "project", c.project)
 			return 1
 		}
 
-		Info("Deploy success", "project", p, "enviroment", enviroment)
+		Info("Deploy success", "project", p, "enviroment", c.enviroment)
 		return 0
 	}
 
-	Critical("Unable to find project", "project", project)
+	Critical("Unable to find project", "project", c.project)
 
 	return 1
 }

@@ -5,27 +5,31 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mcuadros/dockership/core"
-
 	"github.com/docker/docker/pkg/units"
 	"github.com/mitchellh/cli"
 	"github.com/stevedomin/termtable"
 )
 
-type CmdContainers struct{}
+type CmdContainers struct{ cmd }
 
 func NewCmdContainers() (cli.Command, error) {
 	return &CmdContainers{}, nil
 }
 
 func (c *CmdContainers) Run(args []string) int {
-	var config core.Config
-	config.LoadFile("config.ini")
+	c.buildFlags(c)
+	if err := c.parse(args); err != nil {
+		return 1
+	}
 
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
 	table.SetHeader([]string{"Enviroment", "Repository", "Commit", "Container ID", "Created", "Command", "Status", "Ports"})
 
-	for _, p := range config.Projects {
+	for name, p := range c.config.Projects {
+		if c.project != "" && c.project != name {
+			continue
+		}
+
 		l, err := p.List()
 		if err != nil {
 			continue

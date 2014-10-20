@@ -22,7 +22,7 @@ func Streaming(w io.Writer) {
 	Exit = false
 	Log.SetHandler(
 		log15.LvlFilterHandler(
-			log15.LvlDebug,
+			log15.LvlInfo,
 			log15.StreamHandler(w, log15.JsonFormat()),
 		),
 	)

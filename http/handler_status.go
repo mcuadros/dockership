@@ -6,19 +6,9 @@ import (
 	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/gin-gonic/gin"
+	"github.com/codegangsta/martini-contrib/render"
+	"github.com/go-martini/martini"
 )
-
-func init() {
-	router.GET("/status/*project", func(ctx *gin.Context) {
-		h, _ := NewHandlerStatus()
-		h.Run(ctx)
-	})
-}
-
-type HandlerStatus struct {
-	config *core.Config
-}
 
 type StatusResult struct {
 	Project *core.Project
@@ -31,25 +21,13 @@ type StatusRecord struct {
 	*core.ProjectStatus
 }
 
-func NewHandlerStatus() (*HandlerStatus, error) {
-	var config core.Config
-	if err := config.LoadFile("config.ini"); err != nil {
-		panic(err)
-	}
-
-	for k, p := range config.Projects {
-		fmt.Println("config", k, p.Name)
-	}
-
-	return &HandlerStatus{config: &config}, nil
-}
-
-func (h *HandlerStatus) Run(ctx *gin.Context) {
+func (s *server) HandleStatus(config config, params martini.Params, render render.Render) {
 	Verbose()
-	project := ctx.Params.ByName("project")[1:]
+	project := params["project"]
+	fmt.Println(project)
 
 	r := make(map[string]*StatusResult, 0)
-	for name, p := range h.config.Projects {
+	for name, p := range config.Projects {
 		if project != "" && project != name {
 			continue
 		}
@@ -68,5 +46,5 @@ func (h *HandlerStatus) Run(ctx *gin.Context) {
 		r[p.Name] = record
 	}
 
-	ctx.JSON(200, r)
+	render.JSON(200, r)
 }

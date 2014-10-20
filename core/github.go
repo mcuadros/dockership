@@ -49,7 +49,6 @@ func (g *Github) GetLastCommit(p *Project) (Commit, error) {
 }
 
 func (g *Github) GetLastRevision(p *Project) (Revision, error) {
-	Verbose()
 	repos := p.RelatedRepositories
 	repos = append(repos, p.Repository)
 	count := len(repos)

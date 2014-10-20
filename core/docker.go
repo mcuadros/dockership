@@ -47,14 +47,14 @@ func (d *Docker) Clean(p *Project) error {
 		return err
 	}
 
-	count := len(l)
-	if count < 1 {
-		return nil
-	}
-
 	keep := d.enviroment.History
 	if keep < 1 {
 		keep = 1
+	}
+
+	count := len(l)
+	if count < keep {
+		return nil
 	}
 
 	Info("Removing old containers", "project", p, "count", count)

@@ -4,19 +4,9 @@ import (
 	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/gin-gonic/gin"
+	"github.com/codegangsta/martini-contrib/render"
+	"github.com/go-martini/martini"
 )
-
-func init() {
-	router.GET("/containers/*project", func(ctx *gin.Context) {
-		h, _ := NewHandlerContaienrs()
-		h.Run(ctx)
-	})
-}
-
-type HandlerContainers struct {
-	config *core.Config
-}
 
 type ContainersRecord struct {
 	Project   *core.Project
@@ -24,21 +14,12 @@ type ContainersRecord struct {
 	Error     string
 }
 
-func NewHandlerContaienrs() (*HandlerContainers, error) {
-	var config core.Config
-	if err := config.LoadFile("config.ini"); err != nil {
-		panic(err)
-	}
-
-	return &HandlerContainers{config: &config}, nil
-}
-
-func (h *HandlerContainers) Run(ctx *gin.Context) {
+func (s *server) HandleContainers(config config, params martini.Params, render render.Render) {
 	Verbose()
-	project := ctx.Params.ByName("project")[1:]
+	project := params["project"]
 
 	r := make(map[string]*ContainersRecord, 0)
-	for name, p := range h.config.Projects {
+	for name, p := range config.Projects {
 		if project != "" && project != name {
 			continue
 		}
@@ -53,5 +34,5 @@ func (h *HandlerContainers) Run(ctx *gin.Context) {
 		}
 	}
 
-	ctx.JSON(200, r)
+	render.JSON(200, r)
 }

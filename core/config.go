@@ -23,12 +23,12 @@ func (c *Config) LoadFile(filename string) error {
 		return err
 	}
 
-	c.loadProjects()
-	c.loadEnviroments()
+	c.LoadProjects()
+	c.LoadEnviroments()
 	return nil
 }
 
-func (c *Config) loadProjects() {
+func (c *Config) LoadProjects() {
 	defaults.SetDefaults(c)
 	for name, p := range c.Projects {
 		p.Name = name
@@ -41,7 +41,7 @@ func (c *Config) loadProjects() {
 	}
 }
 
-func (c *Config) loadEnviroments() {
+func (c *Config) LoadEnviroments() {
 	for _, p := range c.Projects {
 		p.Enviroments = make(map[string]*Enviroment, 0)
 		for _, e := range p.EnviromentNames {

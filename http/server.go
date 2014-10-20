@@ -1,33 +1,70 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
+
+	"github.com/codegangsta/martini-contrib/render"
+	"github.com/go-martini/martini"
 )
 
-var router = gin.Default()
+var m = martini.Classic()
 
 func main() {
-	router.GET("/", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "static/index.html")
+	s := &server{}
+	s.configure()
+	s.run()
+}
+
+type server struct {
+	config config
+}
+
+func (s *server) configure() {
+	// status
+	m.Get("/status", s.HandleStatus)
+	m.Get("/status/:project", s.HandleStatus)
+
+	// containers
+	m.Get("/containers", s.HandleContainers)
+	m.Get("/containers/:project", s.HandleContainers)
+
+	// deploy
+	m.Get("/deploy/:project/:enviroment", s.HandleDeploy)
+
+	// assets
+	m.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/index.html")
 	})
 
-	router.GET("/app.js", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "static/app.js")
+	m.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/app.js")
 	})
 
-	router.Run(":8080")
+	// dic
+	m.Use(render.Renderer(render.Options{}))
+}
+
+func (s *server) run() {
+	if err := s.config.LoadFile("config.ini"); err != nil {
+		panic(err)
+	}
+
+	m.Map(s.config)
+
+	if err := http.ListenAndServe(s.config.HTTP.Listen, m); err != nil {
+		panic(err)
+	}
 }
 
 type AutoFlusherWriter struct {
-	writer     gin.ResponseWriter
+	writer     http.ResponseWriter
 	autoFlush  *time.Ticker
 	closeChan  chan bool
 	closedChan chan bool
 }
 
-func NewAutoFlusherWriter(writer gin.ResponseWriter, duration time.Duration) *AutoFlusherWriter {
+func NewAutoFlusherWriter(writer http.ResponseWriter, duration time.Duration) *AutoFlusherWriter {
 	a := &AutoFlusherWriter{
 		writer:     writer,
 		autoFlush:  time.NewTicker(duration),
@@ -43,9 +80,9 @@ func (a *AutoFlusherWriter) loop() {
 	for {
 		select {
 		case <-a.autoFlush.C:
-			a.writer.Flush()
+			a.writer.(http.Flusher).Flush()
 		case <-a.closeChan:
-			a.writer.Flush()
+			a.writer.(http.Flusher).Flush()
 			close(a.closedChan)
 			return
 		}

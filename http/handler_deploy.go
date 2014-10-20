@@ -2,55 +2,39 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/gin-gonic/gin"
+	"github.com/codegangsta/martini-contrib/render"
+	"github.com/go-martini/martini"
 )
 
-func init() {
-	router.GET("/deploy/:project/:enviroment", func(ctx *gin.Context) {
-		h, _ := NewHandlerDeploy()
-		h.Run(ctx)
-	})
-}
-
-type HandlerDeploy struct {
-	config *core.Config
-}
-
-func NewHandlerDeploy() (*HandlerDeploy, error) {
-	var config core.Config
-	if err := config.LoadFile("config.ini"); err != nil {
-		panic(err)
-	}
-
-	return &HandlerDeploy{config: &config}, nil
-}
-
-func (h *HandlerDeploy) Run(ctx *gin.Context) {
-	w := NewAutoFlusherWriter(ctx.Writer, 100*time.Millisecond)
+func (s *server) HandleDeploy(
+	config config,
+	params martini.Params,
+	render render.Render,
+	writer http.ResponseWriter,
+) {
+	w := NewAutoFlusherWriter(writer, 100*time.Millisecond)
 	defer w.Close()
-
 	Streaming(w)
 
 	force := true
-	project := ctx.Params.ByName("project")
-	enviroment := ctx.Params.ByName("enviroment")
+	project := params["project"]
+	enviroment := params["enviroment"]
 
-	if p, ok := h.config.Projects[project]; ok {
+	if p, ok := config.Projects[project]; ok {
 		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
 		_, err := p.Deploy(enviroment, force)
 		if err != nil {
 			Critical(err.Error(), "project", project)
 		}
 
+		time.Sleep(time.Second)
 		Info("Deploy success", "project", p, "enviroment", enviroment)
-
 	} else {
-		ctx.JSON(404, fmt.Sprintf("Project %q not found", project))
+		render.JSON(404, fmt.Sprintf("Project %q not found", project))
 	}
-
 }

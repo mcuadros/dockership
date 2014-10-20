@@ -3,16 +3,21 @@ package core
 import (
 	"archive/tar"
 	"bytes"
+	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/mcuadros/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
 )
+
+var slowFlag = flag.Bool("slow", false, "Skips Slow tests")
 
 func (s *CoreSuite) TestDocker_Deploy(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
@@ -98,18 +103,44 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, rev Revisio
 }
 
 func (s *CoreSuite) TestDocker_Clean(c *C) {
-	p, e, commit := s.TestDocker_Run(c)
-	err := NewDocker(e).Clean(p, commit, false)
-	c.Assert(err, Not(Equals), nil)
-}
+	if !*slowFlag {
+		c.Skip("-slowFlag not provided")
+	}
 
-func (s *CoreSuite) TestDocker_CleanWithForce(c *C) {
-	p, e, commit := s.TestDocker_Run(c)
-	err := NewDocker(e).Clean(p, commit, true)
+	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+	d, _ := docker.NewClient(m.URL())
+	e := &Enviroment{DockerEndPoint: m.URL()}
+	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+	docker := NewDocker(e)
+
+	for i := 0; i < 5; i++ {
+		time.Sleep(1 * time.Second)
+		buildImage(d, fmt.Sprintf("foo/bar:%d", i))
+		docker.Run(p, Revision{"foo/bar": Commit(fmt.Sprintf("%d", i))})
+	}
+
+	l, _ := docker.ListContainers(p)
+	c.Assert(l, HasLen, 5)
+	c.Assert(l[0].Image.GetRevisionString(), Equals, "0")
+	c.Assert(l[4].Image.GetRevisionString(), Equals, "4")
+
+	e.History = 3
+	err := docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
-	l, _ := NewDocker(e).ListContainers(p)
-	c.Assert(l, HasLen, 0)
+	l, _ = docker.ListContainers(p)
+	c.Assert(l, HasLen, 3)
+	c.Assert(l[0].Image.GetRevisionString(), Equals, "2")
+	c.Assert(l[1].Image.GetRevisionString(), Equals, "3")
+	c.Assert(l[2].Image.GetRevisionString(), Equals, "4")
+
+	e.History = 0
+	err = docker.Clean(p)
+	c.Assert(err, Equals, nil)
+
+	l, _ = docker.ListContainers(p)
+	c.Assert(l, HasLen, 1)
+	c.Assert(l[0].Image.GetRevisionString(), Equals, "4")
 }
 
 func (s *CoreSuite) TestDocker_formatPorts(c *C) {

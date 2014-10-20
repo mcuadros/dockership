@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"testing"
 
@@ -127,6 +128,19 @@ func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
 	}}
 
 	c.Assert(co.GetPortsString(), Equals, "0.0.0.0:84->42/tcp, 42/tcp")
+}
+
+func (s *CoreSuite) TestSortByCreated_Sort(c *C) {
+	list := []*Container{
+		&Container{APIContainers: docker.APIContainers{Created: 3}},
+		&Container{APIContainers: docker.APIContainers{Created: 1}},
+		&Container{APIContainers: docker.APIContainers{Created: 2}},
+	}
+
+	sort.Sort(SortByCreated(list))
+
+	c.Assert(list[0].Created, Equals, int64(1))
+	c.Assert(list[2].Created, Equals, int64(3))
 }
 
 func (s *CoreSuite) TestEnviroment_String(c *C) {

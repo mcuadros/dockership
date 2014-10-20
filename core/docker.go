@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -29,7 +30,7 @@ func NewDocker(enviroment *Enviroment) *Docker {
 
 func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) error {
 	Info("Deploying dockerfile", "project", p, "revision", rev)
-	if err := d.Clean(p, rev, force); err != nil {
+	if err := d.Clean(p); err != nil {
 		return err
 	}
 
@@ -40,23 +41,24 @@ func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool)
 	return d.Run(p, rev)
 }
 
-func (d *Docker) Clean(p *Project, rev Revision, force bool) error {
+func (d *Docker) Clean(p *Project) error {
 	l, err := d.ListContainers(p)
 	if err != nil {
 		return err
 	}
 
-	if !force {
-		for _, c := range l {
-			if c.IsRunning() && c.Image.IsRevision(rev) {
-				return errors.New("Current revision is already running")
-
-			}
-		}
+	count := len(l)
+	if count < 1 {
+		return nil
 	}
 
-	Info("Cleaning all containers", "project", p)
-	for _, c := range l {
+	keep := d.enviroment.History
+	if keep < 1 {
+		keep = 1
+	}
+
+	Info("Removing old containers", "project", p, "count", count)
+	for _, c := range l[:count-keep] {
 		Info("Killing and removing image", "project", p, "container", c.GetShortId())
 		err := d.killAndRemove(c)
 		if err != nil {
@@ -77,7 +79,6 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	r := make([]*Container, 0)
 	for _, c := range l {
 		i := ImageId(c.Image)
@@ -89,6 +90,8 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 			})
 		}
 	}
+
+	sort.Sort(SortByCreated(r))
 
 	return r, nil
 }

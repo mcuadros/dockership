@@ -126,9 +126,16 @@ func (c *Container) GetShortId() string {
 	return c.ID[:shortLen]
 }
 
+type SortByCreated []*Container
+
+func (c SortByCreated) Len() int           { return len(c) }
+func (c SortByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c SortByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
+
 type Enviroment struct {
 	DockerEndPoint string
 	Name           string
+	History        int `default:"3"`
 }
 
 func (e *Enviroment) String() string {

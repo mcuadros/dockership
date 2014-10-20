@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	. "github.com/mcuadros/dockership/logger"
 
 	"code.google.com/p/gcfg"
@@ -26,7 +25,6 @@ func (c *Config) LoadFile(filename string) error {
 
 	c.loadProjects()
 	c.loadEnviroments()
-	fmt.Println(c)
 	return nil
 }
 
@@ -34,7 +32,6 @@ func (c *Config) loadProjects() {
 	defaults.SetDefaults(c)
 	for name, p := range c.Projects {
 		p.Name = name
-		fmt.Println(p.Name)
 		defaults.SetDefaults(p)
 		if p.GithubToken == "" {
 			p.GithubToken = c.Global.GithubToken
@@ -55,6 +52,7 @@ func (c *Config) loadEnviroments() {
 
 func (c *Config) mustGetEnviroment(name string) *Enviroment {
 	if e, ok := c.Enviroments[name]; ok {
+		defaults.SetDefaults(e)
 		e.Name = name
 		return e
 	}

@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/codegangsta/martini-contrib/render"
 	"github.com/go-martini/martini"
-	"github.com/martini-contrib/sessions"
+	"github.com/martini-contrib/render"
 )
 
 func main() {
@@ -24,15 +23,20 @@ type server struct {
 
 func (s *server) configure() {
 	// status
-	s.martini.Get("/status", s.HandleStatus)
-	s.martini.Get("/status/:project", s.HandleStatus)
+	s.martini.Get("/rest/status", s.HandleStatus)
+	s.martini.Get("/rest/status/:project", s.HandleStatus)
 
 	// containers
-	s.martini.Get("/containers", s.HandleContainers)
-	s.martini.Get("/containers/:project", s.HandleContainers)
+	s.martini.Get("/rest/containers", s.HandleContainers)
+	s.martini.Get("/rest/containers/:project", s.HandleContainers)
 
 	// deploy
-	s.martini.Get("/deploy/:project/:enviroment", s.HandleDeploy)
+	s.martini.Get("/rest/deploy/:project/:enviroment", s.HandleDeploy)
+
+	// logged-user
+	s.martini.Get("/rest/user", func(user UserContainer, render render.Render) {
+		render.JSON(200, user.GetUser())
+	})
 
 	// assets
 	s.martini.Get("/", func(w http.ResponseWriter, r *http.Request) {
@@ -41,11 +45,6 @@ func (s *server) configure() {
 
 	s.martini.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/app.js")
-	})
-
-	s.martini.Get("/logout", func(sess sessions.Session) string {
-		sess.Clear()
-		return "cleared!"
 	})
 
 	// dic

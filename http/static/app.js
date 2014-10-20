@@ -5,7 +5,7 @@ angular.module('dockership').controller(
         'use strict';
 
         $scope.openContainers = function (project) {
-            $http.get('/containers/' + project.Name).then(function(res) {
+            $http.get('/rest/containers/' + project.Name).then(function(res) {
                 var modalInstance = $modal.open({
                     templateUrl: 'ContainersContent.html',
                     controller: 'ContainersCtrl',
@@ -57,11 +57,19 @@ angular.module('dockership').controller(
         };
 
         $scope.loadStatus = function() {
-            $http.get('/status/').then(function(res) {
+            $http.get('/rest/status/').then(function(res) {
                 $scope.groups = res.data;
                 for (var i in res.data.Errors) {
                     $scope.log(res.data.Errors[i]);
                 }
+            }, function(msg) {
+                $scope.log(msg.data);
+            });
+        }
+
+        $scope.loadUser = function() {
+            $http.get('/rest/user/').then(function(res) {
+                $scope.user = res.data;
             }, function(msg) {
                 $scope.log(msg.data);
             });
@@ -72,6 +80,7 @@ angular.module('dockership').controller(
         };
 
         $scope.loadStatus()
+        $scope.loadUser()
     }
 );
 
@@ -101,7 +110,7 @@ angular.module('dockership').controller(
 
         $scope.data = [];
         $scope.data = oboe({
-            url: '/deploy/' + project.Project.Name + '/' + enviroment.Name,
+            url: '/rest/deploy/' + project.Project.Name + '/' + enviroment.Name,
             pattern: '{msg}',
             pagesize: 1
         });

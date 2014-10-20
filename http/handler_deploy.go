@@ -7,8 +7,8 @@ import (
 
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/codegangsta/martini-contrib/render"
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
 )
 
 func (s *server) HandleDeploy(

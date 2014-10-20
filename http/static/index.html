@@ -1,6 +1,7 @@
 <!doctype html>
 <html ng-app="dockership">
   <head>
+    <title>Dockership</title>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.js"></script>
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.2.js"></script>
     <script src="https://cdn.rawgit.com/jimhigson/oboe.js/master/dist/oboe-browser.min.js"></script>
@@ -11,17 +12,25 @@
     <link href="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.css" rel="stylesheet">
     <style>
         html, body { padding:0 60px 0 60px;}
-        .deploy-log {  max-height: 420px; overflow-y: auto; }
+        .deploy-log { max-height: 420px; overflow-y: auto; }
+        .avatar  {padding-top:10px;}
+        .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%; border-color: #0ce3ac; border-width:10px; }
         #loading-bar .bar { background: #0ce3ac; }
-        #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff; }
+        #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff;}
     </style>
   </head>
   <body ng-cloak>
     <div ng-controller="MainCtrl" id="main">
         <div class="page-header">
           <div class="row">
-            <div class="col-lg-12">
+            <div class="col-lg-6">
               <h1 id="buttons"><span class="glyphicon glyphicon-import"></span> Dockership</h1>
+            </div>
+            <div class="col-lg-6">
+              <p class="navbar-text navbar-right avatar">
+                Signed in as <a href="/logout" class="navbar-link">{{user.Fullname}}</a>
+                <img ng-src="{{user.Avatar}}" />
+              </p>
             </div>
           </div>
         </div>

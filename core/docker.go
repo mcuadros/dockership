@@ -57,11 +57,22 @@ func (d *Docker) Clean(p *Project) error {
 		return nil
 	}
 
-	Info("Removing old containers", "project", p, "count", count)
+	Info("Stoping containers", "project", p, "count", count)
+	for _, c := range l {
+		if !c.IsRunning() {
+			continue
+		}
+
+		Debug("Stoping container and image", "project", p, "container", c.GetShortId())
+		if err := d.killContainer(c); err != nil {
+			return err
+		}
+	}
+
+	Info("Removing old containers", "project", p, "count", count-keep)
 	for _, c := range l[:count-keep] {
-		Info("Killing and removing image", "project", p, "container", c.GetShortId())
-		err := d.killAndRemove(c)
-		if err != nil {
+		Debug("Removing container and image", "project", p, "container", c.GetShortId())
+		if err := d.removeContainerAndImage(c); err != nil {
 			return err
 		}
 	}
@@ -96,18 +107,22 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 	return r, nil
 }
 
-func (d *Docker) killAndRemove(c *Container) error {
-	kopts := docker.KillContainerOptions{ID: c.ID}
-	if err := d.client.KillContainer(kopts); err != nil {
-		return err
-	}
-
+func (d *Docker) removeContainerAndImage(c *Container) error {
 	ropts := docker.RemoveContainerOptions{ID: c.ID}
 	if err := d.client.RemoveContainer(ropts); err != nil {
 		return err
 	}
 
 	if err := d.client.RemoveImage(string(c.Image)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Docker) killContainer(c *Container) error {
+	kopts := docker.KillContainerOptions{ID: c.ID}
+	if err := d.client.KillContainer(kopts); err != nil {
 		return err
 	}
 

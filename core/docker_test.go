@@ -123,6 +123,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	c.Assert(l, HasLen, 5)
 	c.Assert(l[0].Image.GetRevisionString(), Equals, "0")
 	c.Assert(l[4].Image.GetRevisionString(), Equals, "4")
+	c.Assert(l[4].IsRunning(), Equals, true)
 
 	e.History = 3
 	err := docker.Clean(p)
@@ -133,6 +134,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	c.Assert(l[0].Image.GetRevisionString(), Equals, "2")
 	c.Assert(l[1].Image.GetRevisionString(), Equals, "3")
 	c.Assert(l[2].Image.GetRevisionString(), Equals, "4")
+	c.Assert(l[0].IsRunning(), Equals, false)
 
 	e.History = 0
 	err = docker.Clean(p)
@@ -141,6 +143,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	l, _ = docker.ListContainers(p)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.GetRevisionString(), Equals, "4")
+	c.Assert(l[0].IsRunning(), Equals, false)
 }
 
 func (s *CoreSuite) TestDocker_formatPorts(c *C) {

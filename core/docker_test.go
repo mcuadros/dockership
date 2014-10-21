@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/mcuadros/go-dockerclient/testing"
+	"github.com/fsouza/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
 )
 

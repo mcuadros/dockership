@@ -3,7 +3,7 @@ package core
 import (
 	"strings"
 
-	"github.com/mcuadros/go-dockerclient/testing"
+	"github.com/fsouza/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
 )
 

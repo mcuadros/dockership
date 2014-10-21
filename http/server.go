@@ -40,11 +40,16 @@ func (s *server) configure() {
 
 	// assets
 	s.martini.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/index.html")
+		w.Header().Set("Content-Type", "text/html")
+		content, _ := Asset("static/index.html")
+		w.Write(content)
 	})
 
 	s.martini.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/app.js")
+		w.Header().Set("Content-Type", "application/javascript")
+		content, _ := Asset("static/app.js")
+		w.Write(content)
 	})
 
 	// dic

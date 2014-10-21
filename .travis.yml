@@ -5,4 +5,4 @@ go:
  - tip
 
 script:
- - go test -v ./... --github --slow
+ - make test

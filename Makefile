@@ -2,6 +2,7 @@
 DEPENDENCIES = gopkg.in/check.v1 \
 code.google.com/p/go.tools/cmd/cover \
 github.com/jteeuwen/go-bindata/... \
+github.com/gorilla/mux \
 github.com/laher/goxc
 
 # Environment

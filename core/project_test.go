@@ -23,10 +23,10 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	}
 
 	err := p.Deploy("foo", false)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, HasLen, 0)
 
 	l, err := p.List()
-	c.Assert(err, Equals, nil)
+	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].DockerEndPoint, Equals, e.DockerEndPoints[0])
 }
@@ -81,7 +81,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	db.Deploy(p, Revision{}, []byte{}, false)
 
 	r, err := p.Status()
-	c.Assert(err, Equals, nil)
+	c.Assert(err, HasLen, 0)
 	c.Assert(r, HasLen, 2)
 	c.Assert(r[0].Enviroment, Equals, envs["a"])
 	c.Assert(r[0].LastRevision.GetShort(), Equals, "d170057eca46")

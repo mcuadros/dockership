@@ -24,28 +24,29 @@ type Project struct {
 	EnviromentNames     []string               `gcfg:"Enviroment"`
 	TestCommand         string
 	GithubToken         string `json:"-"`
+	History             int    `default:"3"`
 }
 
-func (p *Project) Deploy(enviroment string, force bool) (*ProjectDeployResult, error) {
+func (p *Project) Deploy(enviroment string, force bool) []error {
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
 	file, err := c.GetDockerFile(p)
 	if err != nil {
-		return nil, err
+		return []error{err}
 	}
 
 	rev, err := c.GetLastRevision(p)
 	if err != nil {
-		return nil, err
+		return []error{err}
 	}
 
-	d := NewDocker(p.mustGetEnviroment(enviroment))
-	if err := d.Deploy(p, rev, file, force); err != nil {
-		return nil, err
+	d, err := NewDockerGroup(p.mustGetEnviroment(enviroment))
+	if err != nil {
+		return []error{err}
 	}
 
-	return p.Test(enviroment)
+	return d.Deploy(p, rev, file, force)
 }
 
 func (p *Project) mustGetEnviroment(name string) *Enviroment {
@@ -98,31 +99,36 @@ type ProjectStatus struct {
 	Containers        []*Container
 }
 
-func (p *Project) Status() ([]*ProjectStatus, error) {
+func (p *Project) Status() ([]*ProjectStatus, []error) {
+	e := make([]error, 0)
 	r := make([]*ProjectStatus, 0)
-	for _, e := range p.Enviroments {
-		if s, err := p.StatusByEnviroment(e); err != nil {
-			return nil, err
+	for _, env := range p.Enviroments {
+		if s, err := p.StatusByEnviroment(env); err != nil {
+			e = append(e, err...)
 		} else {
 			r = append(r, s)
 		}
 	}
 
-	return r, nil
+	return r, e
 }
 
-func (p *Project) StatusByEnviroment(enviroment *Enviroment) (*ProjectStatus, error) {
-	s := &ProjectStatus{Enviroment: enviroment}
+func (p *Project) StatusByEnviroment(e *Enviroment) (*ProjectStatus, []error) {
+	s := &ProjectStatus{Enviroment: e}
 
 	c := NewGithub(p.GithubToken)
 	if rev, err := c.GetLastRevision(p); err != nil {
-		return nil, err
+		return nil, []error{err}
 	} else {
 		s.LastRevision = rev
 	}
 
-	d := NewDocker(enviroment)
-	if l, err := d.ListContainers(p); err != nil {
+	d, err := NewDockerGroup(e)
+	if err != nil {
+		return nil, []error{err}
+	}
+
+	if l, err := d.ListContainers(p); len(err) != 0 {
 		return nil, err
 	} else {
 		s.Containers = l
@@ -138,18 +144,23 @@ func (p *Project) StatusByEnviroment(enviroment *Enviroment) (*ProjectStatus, er
 	return s, nil
 }
 
-func (p *Project) List() ([]*Container, error) {
+func (p *Project) List() ([]*Container, []error) {
+	e := make([]error, 0)
 	r := make([]*Container, 0)
-	for _, e := range p.Enviroments {
-		d := NewDocker(e)
-		if l, err := d.ListContainers(p); err != nil {
-			return nil, err
+	for _, env := range p.Enviroments {
+		d, err := NewDockerGroup(env)
+		if err != nil {
+			e = append(e, err)
 		} else {
-			r = append(r, l...)
+			if l, err := d.ListContainers(p); len(err) != 0 {
+				e = append(e, err...)
+			} else {
+				r = append(r, l...)
+			}
 		}
 	}
 
-	return r, nil
+	return r, e
 }
 
 func (p *Project) String() string {

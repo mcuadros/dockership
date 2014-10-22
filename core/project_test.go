@@ -13,7 +13,7 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	}
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-	e := &Enviroment{Name: "a", DockerEndPoint: m.URL()}
+	e := &Enviroment{Name: "a", DockerEndPoints: []string{m.URL()}}
 	p := &Project{
 		Repository:  "git@github.com:github/gem-builder.git",
 		Branch:      DEFAULT_BRANCH,
@@ -22,13 +22,13 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 		GithubToken: "05bed21c257d935017d85d3398b46ac81035756f",
 	}
 
-	_, err := p.Deploy("foo", false)
+	err := p.Deploy("foo", false)
 	c.Assert(err, Equals, nil)
 
 	l, err := p.List()
 	c.Assert(err, Equals, nil)
 	c.Assert(l, HasLen, 1)
-	c.Assert(l[0].Enviroment.DockerEndPoint, Equals, e.DockerEndPoint)
+	c.Assert(l[0].DockerEndPoint, Equals, e.DockerEndPoints[0])
 }
 
 func (s *CoreSuite) TestProject_Test(c *C) {
@@ -64,8 +64,8 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	envs := map[string]*Enviroment{
-		"a": &Enviroment{Name: "a", DockerEndPoint: mA.URL()},
-		"b": &Enviroment{Name: "b", DockerEndPoint: mB.URL()},
+		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
 	}
 
 	p := &Project{
@@ -75,8 +75,10 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 		Dockerfile:  "git_mock",
 	}
 
-	NewDocker(envs["a"]).Deploy(p, Revision{}, []byte{}, false)
-	NewDocker(envs["b"]).Deploy(p, Revision{}, []byte{}, false)
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
+	da.Deploy(p, Revision{}, []byte{}, false)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
+	db.Deploy(p, Revision{}, []byte{}, false)
 
 	r, err := p.Status()
 	c.Assert(err, Equals, nil)
@@ -92,8 +94,8 @@ func (s *CoreSuite) TestProject_List(c *C) {
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	envs := map[string]*Enviroment{
-		"a": &Enviroment{Name: "a", DockerEndPoint: mA.URL()},
-		"b": &Enviroment{Name: "b", DockerEndPoint: mB.URL()},
+		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
 	}
 
 	p := &Project{
@@ -102,13 +104,15 @@ func (s *CoreSuite) TestProject_List(c *C) {
 		Enviroments: envs,
 	}
 
-	NewDocker(envs["a"]).Deploy(p, Revision{}, []byte{}, false)
-	NewDocker(envs["b"]).Deploy(p, Revision{}, []byte{}, false)
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
+	da.Deploy(p, Revision{}, []byte{}, false)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
+	db.Deploy(p, Revision{}, []byte{}, false)
 
 	l, err := p.List()
-	c.Assert(err, Equals, nil)
+	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 2)
-	c.Assert(l[0].Enviroment.DockerEndPoint, Equals, envs["a"].DockerEndPoint)
-	c.Assert(l[1].Enviroment.DockerEndPoint, Equals, envs["b"].DockerEndPoint)
+	c.Assert(l[0].DockerEndPoint, Equals, envs["a"].DockerEndPoints[0])
+	c.Assert(l[1].DockerEndPoint, Equals, envs["b"].DockerEndPoints[0])
 
 }

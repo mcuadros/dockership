@@ -11,7 +11,7 @@ var Log = log15.New()
 var Exit = true
 
 func init() {
-	Log.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, log15.StdoutHandler))
+	Log.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
 }
 
 func Verbose() {

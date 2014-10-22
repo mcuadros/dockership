@@ -37,9 +37,9 @@ func (c *CmdDeploy) Run(args []string) int {
 
 	if p, ok := c.config.Projects[c.project]; ok {
 		Info("Starting deploy", "project", p, "enviroment", c.enviroment, "force", c.force)
-		_, err := p.Deploy(c.enviroment, c.force)
-		if err != nil {
-			Critical(err.Error(), "project", c.project)
+		err := p.Deploy(c.enviroment, c.force)
+		if len(err) != 0 {
+			Critical(err[0].Error(), "project", c.project)
 			return 1
 		}
 

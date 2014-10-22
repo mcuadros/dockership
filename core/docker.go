@@ -17,19 +17,22 @@ import (
 )
 
 type Docker struct {
-	enviroment *Enviroment
-	client     *docker.Client
+	endPoint string
+	client   *docker.Client
 }
 
-func NewDocker(enviroment *Enviroment) *Docker {
-	Debug("Connected to docker", "enviroment", enviroment)
-	c, _ := docker.NewClient(enviroment.DockerEndPoint)
+func NewDocker(endPoint string) (*Docker, error) {
+	Debug("Connected to docker", "end-point", endPoint)
+	c, err := docker.NewClient(endPoint)
+	if err != nil {
+		return nil, err
+	}
 
-	return &Docker{client: c, enviroment: enviroment}
+	return &Docker{client: c, endPoint: endPoint}, nil
 }
 
 func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) error {
-	Info("Deploying dockerfile", "project", p, "revision", rev)
+	Debug("Deploying dockerfile", "project", p, "revision", rev, "end-point", d.endPoint)
 	if err := d.Clean(p); err != nil {
 		return err
 	}
@@ -47,7 +50,7 @@ func (d *Docker) Clean(p *Project) error {
 		return err
 	}
 
-	keep := d.enviroment.History
+	keep := p.History
 	if keep < 1 {
 		keep = 1
 	}
@@ -57,31 +60,37 @@ func (d *Docker) Clean(p *Project) error {
 		return nil
 	}
 
-	Info("Stoping containers", "project", p, "count", count)
+	Debug("Stoping containers", "project", p, "count", count, "end-point", d.endPoint)
 	for _, c := range l {
 		if !c.IsRunning() {
 			continue
 		}
 
-		Debug("Stoping container and image", "project", p, "container", c.GetShortId())
+		Debug("Stoping container and image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
 		if err := d.killContainer(c); err != nil {
 			return err
 		}
 	}
 
-	Info("Removing old containers", "project", p, "count", count-keep)
+	Debug("Removing old containers", "project", p, "count", count-keep, "end-point", d.endPoint)
 	for _, c := range l[:count-keep] {
-		Debug("Removing container and image", "project", p, "container", c.GetShortId())
-		if err := d.removeContainerAndImage(c); err != nil {
+		Debug("Removing container", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
+		if err := d.removeContainer(c); err != nil {
 			return err
 		}
 	}
 
+	for _, c := range l[:count-keep] {
+		Debug("Removing image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
+		if err := d.removeImage(c); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
-	Debug("Retrieving current containers", "project", p)
+	Debug("Retrieving current containers", "project", p, "end-point", d.endPoint)
 
 	l, err := d.client.ListContainers(docker.ListContainersOptions{
 		All: true,
@@ -95,9 +104,9 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 		i := ImageId(c.Image)
 		if i.BelongsTo(p) {
 			r = append(r, &Container{
-				Image:         i,
-				APIContainers: c,
-				Enviroment:    d.enviroment,
+				Image:          i,
+				APIContainers:  c,
+				DockerEndPoint: d.endPoint,
 			})
 		}
 	}
@@ -107,12 +116,16 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 	return r, nil
 }
 
-func (d *Docker) removeContainerAndImage(c *Container) error {
+func (d *Docker) removeContainer(c *Container) error {
 	ropts := docker.RemoveContainerOptions{ID: c.ID}
 	if err := d.client.RemoveContainer(ropts); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (d *Docker) removeImage(c *Container) error {
 	if err := d.client.RemoveImage(string(c.Image)); err != nil {
 		return err
 	}
@@ -121,8 +134,7 @@ func (d *Docker) removeContainerAndImage(c *Container) error {
 }
 
 func (d *Docker) killContainer(c *Container) error {
-	kopts := docker.KillContainerOptions{ID: c.ID}
-	if err := d.client.KillContainer(kopts); err != nil {
+	if err := d.client.StopContainer(c.ID, uint(15*time.Second)); err != nil {
 		return err
 	}
 
@@ -130,7 +142,7 @@ func (d *Docker) killContainer(c *Container) error {
 }
 
 func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
-	Info("Building image", "project", p, "revision", rev)
+	Debug("Building image", "project", p, "revision", rev, "end-point", d.endPoint)
 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	outputbuf.WriteTo(os.Stdout)
@@ -152,7 +164,7 @@ func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
 }
 
 func (d *Docker) Run(p *Project, rev Revision) error {
-	Debug("Creating container from image", "project", p, "revision", rev)
+	Debug("Creating container from image", "project", p, "revision", rev, "end-point", d.endPoint)
 	c, err := d.createContainer(d.getImageName(p, rev))
 	if err != nil {
 		return err
@@ -160,9 +172,9 @@ func (d *Docker) Run(p *Project, rev Revision) error {
 
 	Info("Running new container",
 		"project", p,
-		"revision", rev,
-		"image", c.Image,
+		"revision", rev.GetShort(),
 		"container", c.GetShortId(),
+		"end-point", d.endPoint,
 	)
 
 	return d.startContainer(p, c)

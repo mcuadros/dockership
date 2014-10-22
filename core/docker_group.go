@@ -1,0 +1,116 @@
+package core
+
+import (
+	"sync"
+
+	. "github.com/mcuadros/dockership/logger"
+)
+
+type DockerGroup struct {
+	enviroment *Enviroment
+	dockers    map[string]*Docker
+	sync.WaitGroup
+}
+
+func NewDockerGroup(enviroment *Enviroment) (*DockerGroup, error) {
+	dg := &DockerGroup{
+		enviroment: enviroment,
+		dockers:    make(map[string]*Docker, 0),
+	}
+
+	for _, endPoint := range enviroment.DockerEndPoints {
+		if d, err := NewDocker(endPoint); err == nil {
+			dg.dockers[endPoint] = d
+		} else {
+			return nil, err
+		}
+	}
+
+	return dg, nil
+}
+
+func (d *DockerGroup) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) []error {
+	Info("Deploying dockerfile", "project", p, "revision", rev, "end-points", len(d.dockers))
+	return d.batchErrorResult(func(docker *Docker) interface{} {
+		return &errorResult{err: docker.Deploy(p, rev, dockerfile, force)}
+	})
+}
+
+func (d *DockerGroup) Clean(p *Project) []error {
+	Info("Cleaning containers", "project", p, "end-points", len(d.dockers))
+	return d.batchErrorResult(func(docker *Docker) interface{} {
+		return &errorResult{err: docker.Clean(p)}
+	})
+}
+
+type listResult struct {
+	containers []*Container
+	err        error
+}
+
+func (d *DockerGroup) ListContainers(p *Project) ([]*Container, []error) {
+	f := func(docker *Docker) interface{} {
+		c, e := docker.ListContainers(p)
+		return &listResult{c, e}
+	}
+
+	errors := make([]error, 0)
+	containers := make([]*Container, 0)
+	for _, e := range d.batchInterfaceResult(f) {
+		l := e.(*listResult)
+		if l.err != nil {
+			errors = append(errors, l.err)
+		}
+		containers = append(containers, l.containers...)
+	}
+
+	return containers, errors
+}
+
+func (d *DockerGroup) BuildImage(p *Project, rev Revision, dockerfile []byte) []error {
+	Info("Building image", "project", p, "revision", rev, "end-points", len(d.dockers))
+	return d.batchErrorResult(func(docker *Docker) interface{} {
+		return &errorResult{err: docker.BuildImage(p, rev, dockerfile)}
+	})
+}
+
+func (d *DockerGroup) Run(p *Project, rev Revision) []error {
+	return d.batchErrorResult(func(docker *Docker) interface{} {
+		return &errorResult{err: docker.Run(p, rev)}
+	})
+}
+
+type errorResult struct{ err error }
+
+func (d *DockerGroup) batchErrorResult(f func(docker *Docker) interface{}) []error {
+	r := make([]error, 0)
+	for _, e := range d.batchInterfaceResult(f) {
+		if err := e.(*errorResult).err; err != nil {
+			r = append(r, err)
+		}
+	}
+
+	return r
+}
+
+func (d *DockerGroup) batchInterfaceResult(f func(docker *Docker) interface{}) []interface{} {
+	count := len(d.dockers)
+	c := make(chan interface{}, count)
+	defer close(c)
+
+	for _, docker := range d.dockers {
+		d.Add(1)
+		go func(docker *Docker) {
+			defer d.Done()
+			c <- f(docker)
+		}(docker)
+	}
+	d.Wait()
+
+	r := make([]interface{}, 0)
+	for i := 0; i < count; i++ {
+		r = append(r, <-c)
+	}
+
+	return r
+}

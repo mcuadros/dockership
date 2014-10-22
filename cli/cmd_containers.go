@@ -31,13 +31,13 @@ func (c *CmdContainers) Run(args []string) int {
 		}
 
 		l, err := p.List()
-		if err != nil {
+		if len(err) != 0 {
 			continue
 		}
 
 		for _, c := range l {
 			table.AddRow([]string{
-				c.Enviroment.String(),
+				c.DockerEndPoint,
 				p.String(),
 				c.Image.GetRevisionString(),
 				c.GetShortId(),

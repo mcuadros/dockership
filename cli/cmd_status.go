@@ -29,10 +29,11 @@ func (c *CmdStatus) Run(args []string) int {
 		}
 
 		sl, err := p.Status()
-		if err != nil {
-			table.AddRow([]string{"-", p.String(), "-", "-", err.Error()})
+		if len(err) != 0 {
+			for _, e := range err {
+				table.AddRow([]string{"-", p.String(), "-", "-", e.Error()})
+			}
 			continue
-
 		}
 
 		for _, s := range sl {

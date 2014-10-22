@@ -27,13 +27,14 @@ func (s *server) HandleDeploy(
 
 	if p, ok := config.Projects[project]; ok {
 		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
-		_, err := p.Deploy(enviroment, force)
-		if err != nil {
-			Critical(err.Error(), "project", project)
+		err := p.Deploy(enviroment, force)
+		if len(err) != 0 {
+			for _, e := range err {
+				Critical(e.Error(), "project", project)
+			}
+		} else {
+			Info("Deploy success", "project", p, "enviroment", enviroment)
 		}
-
-		time.Sleep(time.Second)
-		Info("Deploy success", "project", p, "enviroment", enviroment)
 	} else {
 		render.JSON(404, fmt.Sprintf("Project %q not found", project))
 	}

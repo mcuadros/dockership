@@ -11,25 +11,25 @@ import (
 type ContainersRecord struct {
 	Project   *core.Project
 	Container *core.Container
-	Error     string
+	Error     []error
 }
 
 func (s *server) HandleContainers(config config, params martini.Params, render render.Render) {
 	Verbose()
 	project := params["project"]
 
-	r := make(map[string]*ContainersRecord, 0)
+	r := make([]*ContainersRecord, 0)
 	for name, p := range config.Projects {
 		if project != "" && project != name {
 			continue
 		}
 
 		l, err := p.List()
-		if err != nil {
-			r[p.Name] = &ContainersRecord{Project: p, Error: err.Error()}
+		if len(err) != 0 {
+			r = append(r, &ContainersRecord{Project: p, Error: err})
 		} else {
 			for _, c := range l {
-				r[p.Name] = &ContainersRecord{Project: p, Container: c}
+				r = append(r, &ContainersRecord{Project: p, Container: c})
 			}
 		}
 	}

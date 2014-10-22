@@ -16,16 +16,15 @@ func (s *CoreSuite) TestConfig_LoadFile(c *C) {
 	c.Assert(project.UseShortRevisions, Equals, true)
 
 	c.Assert(project.Enviroments, HasLen, 2)
-	c.Assert(project.Enviroments["live"].History, Equals, 3)
 
 	c.Assert(
-		project.Enviroments["live"].DockerEndPoint,
+		project.Enviroments["live"].DockerEndPoints[0],
 		Equals,
 		"http://live-docker.my-company.com:4243",
 	)
 
 	c.Assert(
-		project.Enviroments["testing"].DockerEndPoint,
+		project.Enviroments["testing"].DockerEndPoints[0],
 		Equals,
 		"http://testing-docker.my-company.com:4243",
 	)

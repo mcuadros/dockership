@@ -13,7 +13,7 @@ import (
 type StatusResult struct {
 	Project *core.Project
 	Status  map[string]*StatusRecord
-	Error   string
+	Error   []error
 }
 
 type StatusRecord struct {
@@ -34,8 +34,8 @@ func (s *server) HandleStatus(config config, params martini.Params, render rende
 
 		record := &StatusResult{Project: p}
 		sl, err := p.Status()
-		if err != nil {
-			record.Error = err.Error()
+		if len(err) != 0 {
+			record.Error = err
 		} else {
 			record.Status = make(map[string]*StatusRecord, 0)
 			for _, s := range sl {

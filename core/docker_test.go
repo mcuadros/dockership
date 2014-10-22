@@ -22,17 +22,17 @@ var slowFlag = flag.Bool("slow", false, "Skips Slow tests")
 func (s *CoreSuite) TestDocker_Deploy(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 
-	e := &Enviroment{DockerEndPoint: m.URL()}
 	p := &Project{
 		Repository: "git@github.com:foo/bar.git",
 		Ports:      []string{"0.0.0.0:8080:80/tcp"},
 	}
 
+	d, _ := NewDocker(m.URL())
 	rev := Revision{"foo": "bar"}
-	err := NewDocker(e).Deploy(p, rev, []byte("FROM base\n"), false)
+	err := d.Deploy(p, rev, []byte("FROM base\n"), false)
 	c.Assert(err, Equals, nil)
 
-	l, _ := NewDocker(e).ListContainers(p)
+	l, _ := d.ListContainers(p)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
@@ -62,7 +62,6 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	defer ts.Close()
 
 	file := writeRandomFile("qux")
-	e := &Enviroment{DockerEndPoint: ts.URL}
 	p := &Project{
 		Repository: "git@github.com:foo/bar.git",
 		NoCache:    true,
@@ -70,7 +69,8 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	}
 
 	s.Add(1)
-	err := NewDocker(e).BuildImage(p, Revision{"key": "qux"}, []byte("FROM base\n"))
+	d, _ := NewDocker(ts.URL)
+	err := d.BuildImage(p, Revision{"key": "qux"}, []byte("FROM base\n"))
 	s.Wait()
 
 	c.Assert(err, Equals, nil)
@@ -82,19 +82,21 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	c.Assert(request.URL.Query().Get("rm"), Equals, "1")
 }
 
-func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, e *Enviroment, rev Revision) {
-	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, rev Revision) {
+	m, _ = testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 
-	e = &Enviroment{DockerEndPoint: m.URL()}
 	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
 	buildImage(d, "foo/bar:qux")
 	rev = Revision{"foo/bar": "qux"}
-	err := NewDocker(e).Run(p, rev)
+
+	dc, _ := NewDocker(m.URL())
+
+	err := dc.Run(p, rev)
 	c.Assert(err, Equals, nil)
 
-	l, _ := NewDocker(e).ListContainers(p)
+	l, _ := dc.ListContainers(p)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
@@ -109,9 +111,8 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
-	e := &Enviroment{DockerEndPoint: m.URL()}
 	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
-	docker := NewDocker(e)
+	docker, _ := NewDocker(m.URL())
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(1 * time.Second)
@@ -125,7 +126,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	c.Assert(l[4].Image.GetRevisionString(), Equals, "4")
 	c.Assert(l[4].IsRunning(), Equals, true)
 
-	e.History = 3
+	p.History = 3
 	err := docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
@@ -136,7 +137,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	c.Assert(l[2].Image.GetRevisionString(), Equals, "4")
 	c.Assert(l[0].IsRunning(), Equals, false)
 
-	e.History = 0
+	p.History = 0
 	err = docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
@@ -154,7 +155,8 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 		"1.1.1.1:42:80/tcp",
 	}
 
-	r, _ := NewDocker(&Enviroment{}).formatPorts(p)
+	d, _ := NewDocker("")
+	r, _ := d.formatPorts(p)
 	c.Assert(r, HasLen, 3)
 	c.Assert(r["80/tcp"], HasLen, 2)
 	c.Assert(r["80/tcp"][0].HostIp, Equals, "0.0.0.0")

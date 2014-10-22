@@ -96,8 +96,8 @@ func (i ImageId) GetRevisionString() string {
 var statusUp = regexp.MustCompile("^Up (.*)")
 
 type Container struct {
-	Enviroment *Enviroment
-	Image      ImageId
+	DockerEndPoint string
+	Image          ImageId
 	docker.APIContainers
 }
 
@@ -133,9 +133,8 @@ func (c SortByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 func (c SortByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
 
 type Enviroment struct {
-	DockerEndPoint string
-	Name           string
-	History        int `default:"3"`
+	DockerEndPoints []string `gcfg:"DockerEndPoint"`
+	Name            string
 }
 
 func (e *Enviroment) String() string {

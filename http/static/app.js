@@ -68,7 +68,7 @@ angular.module('dockership').controller(
         }
 
         $scope.loadUser = function() {
-            $http.get('/rest/user/').then(function(res) {
+            $http.get('/rest/user').then(function(res) {
                 $scope.user = res.data;
             }, function(msg) {
                 $scope.log(msg.data);

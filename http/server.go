@@ -1,15 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	s := &server{martini: martini.Classic()}
+	s := &server{}
 	s.readConfig()
 	s.configure()
 	s.configureAuth()
@@ -17,57 +17,71 @@ func main() {
 }
 
 type server struct {
-	martini *martini.ClassicMartini
-	config  config
+	mux    *mux.Router
+	oauth  *OAuth
+	config config
 }
 
 func (s *server) configure() {
+	s.mux = mux.NewRouter()
+
 	// status
-	s.martini.Get("/rest/status", s.HandleStatus)
-	s.martini.Get("/rest/status/:project", s.HandleStatus)
+	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(s.HandleStatus)
+	s.mux.Path("/rest/status/{project:.*}").Methods("GET").HandlerFunc(s.HandleStatus)
 
 	// containers
-	s.martini.Get("/rest/containers", s.HandleContainers)
-	s.martini.Get("/rest/containers/:project", s.HandleContainers)
+	s.mux.Path("/rest/containers").Methods("GET").HandlerFunc(s.HandleContainers)
+	s.mux.Path("/rest/containers/{project:.*}").Methods("GET").HandlerFunc(s.HandleContainers)
 
 	// deploy
-	s.martini.Get("/rest/deploy/:project/:enviroment", s.HandleDeploy)
+	s.mux.Path("/rest/deploy/{project:.*}/{enviroment:.*}").Methods("GET").HandlerFunc(s.HandleDeploy)
 
 	// logged-user
-	s.martini.Get("/rest/user", func(user UserContainer, render render.Render) {
-		render.JSON(200, user.GetUser())
+	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, _ := s.oauth.getUser(s.oauth.getToken(r))
+		s.json(w, 200, user)
 	})
 
 	// assets
-	s.martini.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	s.mux.Path("/").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		content, _ := Asset("static/index.html")
 		w.Write(content)
 	})
 
-	s.martini.Get("/app.js", func(w http.ResponseWriter, r *http.Request) {
+	s.mux.Path("/app.js").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/app.js")
 		w.Header().Set("Content-Type", "application/javascript")
 		content, _ := Asset("static/app.js")
 		w.Write(content)
 	})
+}
 
-	// dic
-	s.martini.Use(render.Renderer(render.Options{}))
+func (s *server) configureAuth() {
+	s.oauth = NewOAuth(&s.config)
 }
 
 func (s *server) readConfig() {
 	if err := s.config.LoadFile("config.ini"); err != nil {
 		panic(err)
 	}
-
-	s.martini.Map(s.config)
 }
 
 func (s *server) run() {
-
-	if err := http.ListenAndServe(s.config.HTTP.Listen, s.martini); err != nil {
+	if err := http.ListenAndServe(s.config.HTTP.Listen, s); err != nil {
 		panic(err)
+	}
+}
+
+func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	encoder := json.NewEncoder(w)
+	encoder.Encode(response)
+}
+
+func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if s.oauth.Handler(w, r) {
+		s.mux.ServeHTTP(w, r)
 	}
 }
 
@@ -86,8 +100,8 @@ func NewAutoFlusherWriter(writer http.ResponseWriter, duration time.Duration) *A
 		closeChan:  make(chan bool),
 		closedChan: make(chan bool),
 	}
-	go a.loop()
 
+	go a.loop()
 	return a
 }
 

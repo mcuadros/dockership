@@ -1,11 +1,12 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"github.com/gorilla/mux"
 )
 
 type ContainersRecord struct {
@@ -14,25 +15,26 @@ type ContainersRecord struct {
 	Error     []error
 }
 
-func (s *server) HandleContainers(config config, params martini.Params, render render.Render) {
+func (s *server) HandleContainers(w http.ResponseWriter, r *http.Request) {
 	Verbose()
-	project := params["project"]
+	vars := mux.Vars(r)
+	project := vars["project"]
 
-	r := make([]*ContainersRecord, 0)
-	for name, p := range config.Projects {
+	result := make([]*ContainersRecord, 0)
+	for name, p := range s.config.Projects {
 		if project != "" && project != name {
 			continue
 		}
 
 		l, err := p.List()
 		if len(err) != 0 {
-			r = append(r, &ContainersRecord{Project: p, Error: err})
+			result = append(result, &ContainersRecord{Project: p, Error: err})
 		} else {
 			for _, c := range l {
-				r = append(r, &ContainersRecord{Project: p, Container: c})
+				result = append(result, &ContainersRecord{Project: p, Container: c})
 			}
 		}
 	}
 
-	render.JSON(200, r)
+	s.json(w, 200, result)
 }

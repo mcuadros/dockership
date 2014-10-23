@@ -7,25 +7,20 @@ import (
 
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"github.com/gorilla/mux"
 )
 
-func (s *server) HandleDeploy(
-	config config,
-	params martini.Params,
-	render render.Render,
-	writer http.ResponseWriter,
-) {
-	w := NewAutoFlusherWriter(writer, 100*time.Millisecond)
-	defer w.Close()
-	Streaming(w)
+func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
+	writer := NewAutoFlusherWriter(w, 100*time.Millisecond)
+	defer writer.Close()
+	Streaming(writer)
 
 	force := true
-	project := params["project"]
-	enviroment := params["enviroment"]
+	vars := mux.Vars(r)
+	project := vars["project"]
+	enviroment := vars["enviroment"]
 
-	if p, ok := config.Projects[project]; ok {
+	if p, ok := s.config.Projects[project]; ok {
 		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
 		err := p.Deploy(enviroment, force)
 		if len(err) != 0 {
@@ -36,6 +31,6 @@ func (s *server) HandleDeploy(
 			Info("Deploy success", "project", p, "enviroment", enviroment)
 		}
 	} else {
-		render.JSON(404, fmt.Sprintf("Project %q not found", project))
+		s.json(w, 404, fmt.Sprintf("Project %q not found", project))
 	}
 }

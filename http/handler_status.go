@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"github.com/gorilla/mux"
 )
 
 type StatusResult struct {
@@ -21,13 +21,14 @@ type StatusRecord struct {
 	*core.ProjectStatus
 }
 
-func (s *server) HandleStatus(config config, params martini.Params, render render.Render) {
+func (s *server) HandleStatus(w http.ResponseWriter, r *http.Request) {
 	Verbose()
-	project := params["project"]
+	vars := mux.Vars(r)
+	project := vars["project"]
 	fmt.Println(project)
 
-	r := make(map[string]*StatusResult, 0)
-	for name, p := range config.Projects {
+	result := make(map[string]*StatusResult, 0)
+	for name, p := range s.config.Projects {
 		if project != "" && project != name {
 			continue
 		}
@@ -43,8 +44,8 @@ func (s *server) HandleStatus(config config, params martini.Params, render rende
 			}
 		}
 
-		r[p.Name] = record
+		result[p.Name] = record
 	}
 
-	render.JSON(200, r)
+	s.json(w, 200, result)
 }

@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
@@ -130,20 +129,22 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 
 	err = dc.Run(project, Revision{"foo/bar": "qux"})
 	c.Assert(err, Equals, nil)
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	l, err := dc.ListContainers(project)
 	c.Assert(err, Equals, nil)
 	c.Assert(l[0].IsRunning(), Equals, true)
-	c.Assert(strings.HasSuffix(l[0].Status, "ms"), Equals, true)
+	prev := l[0].ID
 
 	err = dc.Run(linked, Revision{"qux/bar": "qux"})
 	c.Assert(err, Equals, nil)
+	time.Sleep(100 * time.Millisecond)
 
 	l, err = dc.ListContainers(linked)
 	c.Assert(err, Equals, nil)
 	c.Assert(l[0].IsRunning(), Equals, true)
-	c.Assert(strings.HasSuffix(l[0].Status, "us"), Equals, true)
+	c.Assert(l[0].ID, Not(Equals), prev)
+
 	return
 }
 

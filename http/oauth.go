@@ -82,8 +82,7 @@ func (o *OAuth) Handler(w http.ResponseWriter, r *http.Request) bool {
 	token := o.getToken(r)
 	failed := true
 	if token != nil && !token.Expired() {
-		if user, err := o.getUser(token); err == nil {
-			fmt.Println("TODO", user)
+		if _, err := o.getUser(token); err == nil {
 			failed = false
 		} else {
 			w.Write([]byte(err.Error()))

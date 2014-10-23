@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	. "github.com/mcuadros/dockership/logger"
+
 	"github.com/gorilla/mux"
 )
 
@@ -81,6 +83,7 @@ func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.oauth.Handler(w, r) {
+		Debug("Handling request", "url", r.URL)
 		s.mux.ServeHTTP(w, r)
 	}
 }

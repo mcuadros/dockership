@@ -45,22 +45,24 @@ func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool)
 }
 
 func (d *Docker) Clean(p *Project) error {
+	if err := d.cleanContainers(p); err != nil {
+		return err
+	}
+
+	if err := d.cleanImages(p); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Docker) cleanContainers(p *Project) error {
 	l, err := d.ListContainers(p)
 	if err != nil {
 		return err
 	}
 
-	keep := p.History
-	if keep < 1 {
-		keep = 1
-	}
-
-	count := len(l)
-	if count < keep {
-		return nil
-	}
-
-	Debug("Stoping containers", "project", p, "count", count, "end-point", d.endPoint)
+	Debug("Cleaning containers", "project", p, "count", len(l), "end-point", d.endPoint)
 	for _, c := range l {
 		if !c.IsRunning() {
 			continue
@@ -70,22 +72,65 @@ func (d *Docker) Clean(p *Project) error {
 		if err := d.killContainer(c); err != nil {
 			return err
 		}
-	}
 
-	Debug("Removing old containers", "project", p, "count", count-keep, "end-point", d.endPoint)
-	for _, c := range l[:count-keep] {
 		Debug("Removing container", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
 		if err := d.removeContainer(c); err != nil {
 			return err
 		}
 	}
 
-	for _, c := range l[:count-keep] {
-		Debug("Removing image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
-		if err := d.removeImage(c); err != nil {
+	return nil
+}
+
+func (d *Docker) killContainer(c *Container) error {
+	if err := d.client.StopContainer(c.ID, uint(1*time.Second)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Docker) removeContainer(c *Container) error {
+	ropts := docker.RemoveContainerOptions{ID: c.ID}
+	if err := d.client.RemoveContainer(ropts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Docker) cleanImages(p *Project) error {
+	l, err := d.ListImages(p)
+	if err != nil {
+		return err
+	}
+
+	keep := p.History
+	if keep < 0 {
+		keep = 0
+	}
+
+	count := len(l)
+	if count < keep {
+		return nil
+	}
+
+	Debug("Removing old images", "project", p, "count", count-keep, "end-point", d.endPoint)
+	for _, i := range l[:count-keep] {
+		Debug("Removing image", "project", p, "image", i.ID, "end-point", d.endPoint)
+		if err := d.removeImage(i); err != nil {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (d *Docker) removeImage(i *Image) error {
+	if err := d.client.RemoveImage(i.ID); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -99,6 +144,7 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	r := make([]*Container, 0)
 	for _, c := range l {
 		i := ImageId(c.Image)
@@ -111,34 +157,35 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 		}
 	}
 
-	sort.Sort(SortByCreated(r))
+	sort.Sort(ContainersByCreated(r))
 
 	return r, nil
 }
 
-func (d *Docker) removeContainer(c *Container) error {
-	ropts := docker.RemoveContainerOptions{ID: c.ID}
-	if err := d.client.RemoveContainer(ropts); err != nil {
-		return err
+func (d *Docker) ListImages(p *Project) ([]*Image, error) {
+	Debug("Retrieving current containers", "project", p, "end-point", d.endPoint)
+
+	l, err := d.client.ListImages(true)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
-}
+	r := make([]*Image, 0)
+	for _, i := range l {
+		image := &Image{
+			APIImages:      i,
+			DockerEndPoint: d.endPoint,
+		}
 
-func (d *Docker) removeImage(c *Container) error {
-	if err := d.client.RemoveImage(string(c.Image)); err != nil {
-		return err
+		if image.BelongsTo(p) {
+			r = append(r, image)
+		}
 	}
 
-	return nil
-}
+	sort.Sort(ImagesByCreated(r))
 
-func (d *Docker) killContainer(c *Container) error {
-	if err := d.client.StopContainer(c.ID, uint(15*time.Second)); err != nil {
-		return err
-	}
-
-	return nil
+	return r, nil
 }
 
 func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
@@ -192,6 +239,7 @@ func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
 
 func (d *Docker) createContainer(image ImageId) (*Container, error) {
 	c, err := d.client.CreateContainer(docker.CreateContainerOptions{
+		Name: strings.Replace(image.GetProjectString(), "/", "_", -1),
 		Config: &docker.Config{
 			Image: string(image),
 		},

@@ -95,6 +95,28 @@ func (s *CoreSuite) TestImageId_GetRevisionString(c *C) {
 	c.Assert(i.GetRevisionString(), Equals, "qux")
 }
 
+func (s *CoreSuite) TestImage_BelongsTo(c *C) {
+	i := Image{
+		APIImages: docker.APIImages{
+			RepoTags: []string{"foo/bar:qux"},
+		},
+	}
+
+	c.Assert(i.BelongsTo(&Project{
+		Repository: "git@github.com:foo/bar.git",
+	}), Equals, true)
+
+	c.Assert(i.BelongsTo(&Project{
+		Repository: "git@github.com:qux/bar.git",
+	}), Equals, false)
+}
+
+func (s *CoreSuite) TestImageId_GetProjectString(c *C) {
+	i := ImageId("foo/bar:qux")
+
+	c.Assert(i.GetProjectString(), Equals, "foo/bar")
+}
+
 func (s *CoreSuite) TestContainer_IsRunningUp(c *C) {
 	co := Container{APIContainers: docker.APIContainers{Status: "Up foo"}}
 
@@ -130,14 +152,14 @@ func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
 	c.Assert(co.GetPortsString(), Equals, "0.0.0.0:84->42/tcp, 42/tcp")
 }
 
-func (s *CoreSuite) TestSortByCreated_Sort(c *C) {
+func (s *CoreSuite) TestContainersByCreated_Sort(c *C) {
 	list := []*Container{
 		&Container{APIContainers: docker.APIContainers{Created: 3}},
 		&Container{APIContainers: docker.APIContainers{Created: 1}},
 		&Container{APIContainers: docker.APIContainers{Created: 2}},
 	}
 
-	sort.Sort(SortByCreated(list))
+	sort.Sort(ContainersByCreated(list))
 
 	c.Assert(list[0].Created, Equals, int64(1))
 	c.Assert(list[2].Created, Equals, int64(3))

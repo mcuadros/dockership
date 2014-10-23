@@ -91,16 +91,19 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	buildImage(d, "foo/bar:qux")
 	rev = Revision{"foo/bar": "qux"}
 
-	dc, _ := NewDocker(m.URL())
-
-	err := dc.Run(p, rev)
+	dc, err := NewDocker(m.URL())
 	c.Assert(err, Equals, nil)
 
-	l, _ := dc.ListContainers(p)
+	err = dc.Run(p, rev)
+	c.Assert(err, Equals, nil)
+
+	l, err := dc.ListContainers(p)
+	c.Assert(err, Equals, nil)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
-
+	c.Assert(l[0].Names, HasLen, 1)
+	c.Assert(l[0].Names[0], Equals, "foo_bar")
 	return
 }
 
@@ -120,31 +123,57 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 		docker.Run(p, Revision{"foo/bar": Commit(fmt.Sprintf("%d", i))})
 	}
 
-	l, _ := docker.ListContainers(p)
-	c.Assert(l, HasLen, 5)
-	c.Assert(l[0].Image.GetRevisionString(), Equals, "0")
-	c.Assert(l[4].Image.GetRevisionString(), Equals, "4")
-	c.Assert(l[4].IsRunning(), Equals, true)
+	lc, _ := docker.ListContainers(p)
+	c.Assert(lc, HasLen, 5)
+	c.Assert(lc[0].Image.GetRevisionString(), Equals, "0")
+	c.Assert(lc[4].Image.GetRevisionString(), Equals, "4")
+	c.Assert(lc[4].IsRunning(), Equals, true)
+
+	li, _ := docker.ListImages(p)
+	c.Assert(li, HasLen, 5)
 
 	p.History = 3
 	err := docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
-	l, _ = docker.ListContainers(p)
-	c.Assert(l, HasLen, 3)
-	c.Assert(l[0].Image.GetRevisionString(), Equals, "2")
-	c.Assert(l[1].Image.GetRevisionString(), Equals, "3")
-	c.Assert(l[2].Image.GetRevisionString(), Equals, "4")
-	c.Assert(l[0].IsRunning(), Equals, false)
+	lc, _ = docker.ListContainers(p)
+	c.Assert(lc, HasLen, 0)
 
-	p.History = 0
+	li, _ = docker.ListImages(p)
+	c.Assert(li, HasLen, 3)
+
+	for _, i := range li {
+		fmt.Println(i.Created)
+	}
+
+	c.Assert(li[0].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "2")
+	c.Assert(li[1].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "3")
+	c.Assert(li[2].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "4")
+
+	p.History = -10
 	err = docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
-	l, _ = docker.ListContainers(p)
-	c.Assert(l, HasLen, 1)
-	c.Assert(l[0].Image.GetRevisionString(), Equals, "4")
-	c.Assert(l[0].IsRunning(), Equals, false)
+	lc, _ = docker.ListContainers(p)
+	c.Assert(lc, HasLen, 0)
+	li, _ = docker.ListImages(p)
+	c.Assert(li, HasLen, 0)
+}
+
+func (s *CoreSuite) TestDocker_ListImages(c *C) {
+	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+	d, _ := docker.NewClient(m.URL())
+	docker, _ := NewDocker(m.URL())
+	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+
+	buildImage(d, "foo/bar:qux")
+	buildImage(d, "foo/bar:baz")
+	buildImage(d, "foo/qux:baz")
+
+	l, _ := docker.ListImages(p)
+	c.Assert(l, HasLen, 2)
+	c.Assert(l[0].DockerEndPoint, Equals, m.URL())
+	c.Assert(l[1].DockerEndPoint, Equals, m.URL())
 }
 
 func (s *CoreSuite) TestDocker_formatPorts(c *C) {

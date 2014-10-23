@@ -58,7 +58,7 @@ func (s *CoreSuite) TestDockerGroup_Clean(c *C) {
 	}
 }
 
-func (s *CoreSuite) TestDockerGroup_DeployAndListContainers(c *C) {
+func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	dg := &DockerGroup{dockers: make(map[string]*Docker, 0)}
 	for i := 0; i < 5; i++ {
 		m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
@@ -72,11 +72,17 @@ func (s *CoreSuite) TestDockerGroup_DeployAndListContainers(c *C) {
 	errors := dg.Deploy(p, r, []byte(""), true)
 	c.Assert(errors, HasLen, 0)
 
-	result, errors := dg.ListContainers(p)
+	containers, errors := dg.ListContainers(p)
 	c.Assert(errors, HasLen, 0)
-
-	c.Assert(result, HasLen, 5)
-	for _, r := range result {
+	c.Assert(containers, HasLen, 5)
+	for _, r := range containers {
 		c.Assert(r.Image, Equals, ImageId("foo/bar:qux"))
+	}
+
+	images, errors := dg.ListImages(p)
+	c.Assert(errors, HasLen, 0)
+	c.Assert(images, HasLen, 5)
+	for _, r := range images {
+		c.Assert(r.RepoTags[0], Equals, "foo/bar:qux")
 	}
 }

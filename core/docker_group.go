@@ -43,7 +43,7 @@ func (d *DockerGroup) Clean(p *Project) []error {
 	})
 }
 
-type listResult struct {
+type listContainersResult struct {
 	containers []*Container
 	err        error
 }
@@ -51,13 +51,13 @@ type listResult struct {
 func (d *DockerGroup) ListContainers(p *Project) ([]*Container, []error) {
 	f := func(docker *Docker) interface{} {
 		c, e := docker.ListContainers(p)
-		return &listResult{c, e}
+		return &listContainersResult{c, e}
 	}
 
 	errors := make([]error, 0)
 	containers := make([]*Container, 0)
 	for _, e := range d.batchInterfaceResult(f) {
-		l := e.(*listResult)
+		l := e.(*listContainersResult)
 		if l.err != nil {
 			errors = append(errors, l.err)
 		}
@@ -65,6 +65,30 @@ func (d *DockerGroup) ListContainers(p *Project) ([]*Container, []error) {
 	}
 
 	return containers, errors
+}
+
+type listImagesResult struct {
+	images []*Image
+	err    error
+}
+
+func (d *DockerGroup) ListImages(p *Project) ([]*Image, []error) {
+	f := func(docker *Docker) interface{} {
+		c, e := docker.ListImages(p)
+		return &listImagesResult{c, e}
+	}
+
+	errors := make([]error, 0)
+	images := make([]*Image, 0)
+	for _, e := range d.batchInterfaceResult(f) {
+		l := e.(*listImagesResult)
+		if l.err != nil {
+			errors = append(errors, l.err)
+		}
+		images = append(images, l.images...)
+	}
+
+	return images, errors
 }
 
 func (d *DockerGroup) BuildImage(p *Project, rev Revision, dockerfile []byte) []error {

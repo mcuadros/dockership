@@ -2,6 +2,7 @@ package core
 
 import (
 	"strings"
+	"time"
 
 	"github.com/fsouza/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
@@ -108,7 +109,7 @@ func (s *CoreSuite) TestProject_List(c *C) {
 	da.Deploy(p, Revision{}, []byte{}, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
 	db.Deploy(p, Revision{}, []byte{}, false)
-
+	time.Sleep(1 * time.Second)
 	l, err := p.List()
 	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 2)

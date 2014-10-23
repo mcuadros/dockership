@@ -93,6 +93,42 @@ func (i ImageId) GetRevisionString() string {
 	return tmp[1]
 }
 
+func (i ImageId) GetProjectString() string {
+	tmp := strings.SplitN(string(i), ":", 2)
+	return tmp[0]
+}
+
+type Image struct {
+	DockerEndPoint string
+	docker.APIImages
+}
+
+func (i Image) BelongsTo(p *Project) bool {
+	info := p.Repository.Info()
+	for _, tag := range i.RepoTags {
+		if strings.HasPrefix(tag, fmt.Sprintf("%s/%s", info.Username, info.Name)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (i Image) GetRepoTagsAsImageId() []ImageId {
+	r := make([]ImageId, 0)
+	for _, tag := range i.RepoTags {
+		r = append(r, ImageId(tag))
+	}
+
+	return r
+}
+
+type ImagesByCreated []*Image
+
+func (c ImagesByCreated) Len() int           { return len(c) }
+func (c ImagesByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c ImagesByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
+
 var statusUp = regexp.MustCompile("^Up (.*)")
 
 type Container struct {
@@ -126,11 +162,11 @@ func (c *Container) GetShortId() string {
 	return c.ID[:shortLen]
 }
 
-type SortByCreated []*Container
+type ContainersByCreated []*Container
 
-func (c SortByCreated) Len() int           { return len(c) }
-func (c SortByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-func (c SortByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
+func (c ContainersByCreated) Len() int           { return len(c) }
+func (c ContainersByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c ContainersByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
 
 type Enviroment struct {
 	DockerEndPoints []string `gcfg:"DockerEndPoint"`

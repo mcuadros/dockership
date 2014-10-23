@@ -17,6 +17,9 @@
         .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%; border-color: #0ce3ac; border-width:10px; }
         #loading-bar .bar { background: #0ce3ac; }
         #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff;}
+        .panel-heading .label { margin-right: 10px;}
+        .panel-heading .label .glyphicon { margin-right: 5px; }
+        .popover-content, .popover-title { font-size:80%; }
     </style>
   </head>
   <body ng-cloak>
@@ -38,10 +41,17 @@
           <div class="panel-heading">
               <b>{{p.Project.Name}}</b>&nbsp;&nbsp;
               <span class="label label-info">
-                {{p.Project.Repository}}
-              </span>&nbsp;
+                <span class="glyphicon glyphicon-folder-open"></span>{{p.Project.Repository}}
+              </span>
               <span class="label label-info">
-                {{p.Project.Branch}}
+                <span class="glyphicon glyphicon-inbox"></span>{{p.Project.Branch}}
+              </span>
+              <span
+                popover-title="Alias"
+                popover="{{link.split(':')[1]}}" popover-trigger="mouseenter"
+                ng-repeat='link in p.Project.LinkNames'
+                class="label label-success">
+                <span class="glyphicon glyphicon-link"></span>{{link.split(':')[0]}}
               </span>
           </div>
 
@@ -51,22 +61,28 @@
                 <th class="col-md-2">Enviroment</th>
                 <th class="col-md-2">Last Revision</th>
                 <th class="col-md-2">Running Revision</th>
-                <th class="col-md-2">Server</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
-                <th class="col-md-2">Containers</th>
+                <th class="col-md-4">Containers</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat='s in p.Status' ng-class="
                 s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
-                <td><b>{{s.Enviroment.Name}}</b>
+                <td><b
+                    popover-title="Docker end-points"
+                    popover="{{s.Enviroment.DockerEndPoints}}"
+                    popover-placement="right"
+                    popover-trigger="mouseenter"
+                >{{s.Enviroment.Name}}</b>
                 </td>
                 <td>{{s.LastRevisionLabel.slice(0,12)}}</td>
                 <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
                 <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
-                  <a href="#" class="success" ng-click="openContainers(p.Project)">
+                  <a href="#" class="success"
+                    ng-click="processing||openContainers(p.Project)"
+                  >
                     <span class="badge success">{{s.Containers.length}}</span>
                   </a>
                 </td>
@@ -154,14 +170,14 @@
               <tr>
                 <th class="col-md-1">Level</th>
                 <th class="col-md-2">Time</th>
-                <th class="col-md-4">Message</th>
-                <th class="col-md-5">Params</th>
+                <th class="col-md-6">Message</th>
+                <th class="col-md-3">Params</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat='line in data track by $index'>
                 <td>
-                    <span class="label label-primary" ng-if="line.lvl == 0">Critical</span>
+                    <span class="label label-danger" ng-if="line.lvl == 0">Critical</span>
                     <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
                     <span class="label label-warning" ng-if="line.lvl == 2">Warning</span>
                     <span class="label label-info" ng-if="line.lvl == 3">Info</span>
@@ -170,11 +186,12 @@
                 <td><small>{{line.t.slice(0,19)}}</small></td>
                 <td><b>{{line.msg}}</b></td>
                 <td>
-                  <p
-                    ng-repeat='(n, p) in line'
-                    ng-if='n != "t" && n != "msg" && n != "lvl"'>
-                    <span class="label label-default">{{n}}: {{p}}</span>
-                  </p>
+                  <span
+                    popover-title="Params" data-html='true'
+                    popover="{{params(line)}}"
+                    popover-trigger="mouseenter"
+                    popover-append-to-body="1"
+                    class="label label-default">{{params(line, true)}}</span>
                 </td>
               </tr>
             </tbody>

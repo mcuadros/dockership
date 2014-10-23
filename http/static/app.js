@@ -3,9 +3,11 @@ angular.module('dockership').controller(
     'MainCtrl',
     function ($scope, $http, $modal, $log) {
         'use strict';
-
+        $scope.processing = false;
         $scope.openContainers = function (project) {
+            $scope.processing = true;
             $http.get('/rest/containers/' + project.Name).then(function(res) {
+                $scope.processing = false;
                 var modalInstance = $modal.open({
                     templateUrl: 'ContainersContent.html',
                     controller: 'ContainersCtrl',
@@ -90,11 +92,6 @@ angular.module('dockership').controller(
         $scope.project = project;
         $scope.containers = containers;
 
-        console.log(containers)
-        $scope.ok = function () {
-            $modalInstance.close($scope.selected.item);
-        };
-
         $scope.cancel = function () {
             $modalInstance.dismiss('cancel');
         };
@@ -114,8 +111,24 @@ angular.module('dockership').controller(
             pattern: '{msg}',
             pagesize: 1
         });
-        $scope.ok = function () {
-            $modalInstance.close($scope.selected.item);
+
+        $scope.params = function (params, first) {
+            var strings = [];
+            angular.forEach(params, function(value, key) {
+                if (key != "t" && key != "msg" && key != "lvl" && key != "revision") {
+                    this.push('<b>' + key + '</b>: ' + value);
+                }
+
+                if (key == "revision") {
+                    this.push('<b>' + key + '</b>: ' + value.slice(0,12));
+                }
+            }, strings);
+
+            if (first) {
+                return strings[0].replace(/<[^>]+>/gm, '');
+            }
+
+            return strings.join("<br /> ");
         };
 
         $scope.cancel = function () {
@@ -156,3 +169,24 @@ angular.module('dockership').service('oboe', [
         };
     }
 ]);
+
+angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {
+    return function (val) {
+        return $sce.trustAsHtml(val);
+    };
+}]);
+
+
+// update popover template for binding unsafe html
+angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
+    $templateCache.put("template/popover/popover.html",
+      "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+      "  <div class=\"arrow\"></div>\n" +
+      "\n" +
+      "  <div class=\"popover-inner\">\n" +
+      "      <h3 class=\"popover-title\" ng-bind-html=\"title | unsafe\" ng-show=\"title\"></h3>\n" +
+      "      <div class=\"popover-content\"ng-bind-html=\"content | unsafe\"></div>\n" +
+      "  </div>\n" +
+      "</div>\n" +
+      "");
+}]);

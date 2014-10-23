@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,6 +10,9 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+var VERSION string
+var BUILD_DATE string
 
 func main() {
 	s := &server{}
@@ -84,6 +88,7 @@ func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.oauth.Handler(w, r) {
 		Debug("Handling request", "url", r.URL)
+		w.Header().Set("Server", fmt.Sprintf("dockership %s / %s", VERSION, BUILD_DATE))
 		s.mux.ServeHTTP(w, r)
 	}
 }

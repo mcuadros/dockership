@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/mcuadros/dockership/core"
@@ -10,10 +11,13 @@ import (
 	"github.com/mitchellh/cli"
 )
 
+var VERSION string
+var BUILD_DATE string
+
 const DEFAULT_CONFIG = "config.ini"
 
 func main() {
-	c := cli.NewCLI("dockership", "0.0.1")
+	c := cli.NewCLI("dockership", fmt.Sprintf("%s / %s", VERSION, BUILD_DATE))
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
 		"status":     NewCmdStatus,

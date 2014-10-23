@@ -162,6 +162,27 @@ func (c *Container) GetShortId() string {
 	return c.ID[:shortLen]
 }
 
+type Link struct {
+	Project *Project
+	Alias   string
+}
+
+func (l *Link) String() string {
+	return fmt.Sprintf("%s:%s", l.Project.Name, l.Alias)
+}
+
+type LinkDefinition string
+
+func (l LinkDefinition) GetProjectName() string {
+	tmp := strings.SplitN(string(l), ":", 2)
+	return tmp[0]
+}
+
+func (l LinkDefinition) GetAlias() string {
+	tmp := strings.SplitN(string(l), ":", 2)
+	return tmp[1]
+}
+
 type ContainersByCreated []*Container
 
 func (c ContainersByCreated) Len() int           { return len(c) }

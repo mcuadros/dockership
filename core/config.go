@@ -45,18 +45,37 @@ func (c *Config) LoadEnviroments() {
 	for _, p := range c.Projects {
 		p.Enviroments = make(map[string]*Enviroment, 0)
 		for _, e := range p.EnviromentNames {
-			p.Enviroments[e] = c.mustGetEnviroment(e)
+			p.Enviroments[e] = c.mustGetEnviroment(p, e)
+		}
+
+		p.Links = make(map[string]*Link, 0)
+		for _, l := range p.LinkNames {
+			p.Links[l.GetProjectName()] = &Link{
+				Alias:   l.GetAlias(),
+				Project: c.mustGetProject(p, l.GetProjectName()),
+			}
 		}
 	}
 }
 
-func (c *Config) mustGetEnviroment(name string) *Enviroment {
+func (c *Config) mustGetEnviroment(p *Project, name string) *Enviroment {
 	if e, ok := c.Enviroments[name]; ok {
 		defaults.SetDefaults(e)
 		e.Name = name
 		return e
 	}
 
-	Critical("Undefined enviroment", "enviroment", name)
+	Critical("Undefined enviroment", "enviroment", name, "project", p)
+	return nil
+}
+
+func (c *Config) mustGetProject(p *Project, name string) *Project {
+	if e, ok := c.Projects[name]; ok {
+		defaults.SetDefaults(e)
+		e.Name = name
+		return e
+	}
+
+	Critical("Undefined project", "project", name, "project", p)
 	return nil
 }

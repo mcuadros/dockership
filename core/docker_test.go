@@ -86,7 +86,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	m, _ = testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 
-	p = &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+	p = &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
 	buildImage(d, "foo/bar:qux")
 	rev = Revision{"foo/bar": "qux"}
@@ -103,7 +103,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
 	c.Assert(l[0].Names, HasLen, 1)
-	c.Assert(l[0].Names[0], Equals, "foo_bar")
+	c.Assert(l[0].Names[0], Equals, "foo")
 	return
 }
 

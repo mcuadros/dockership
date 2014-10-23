@@ -13,18 +13,20 @@ import (
 type Project struct {
 	Name                string
 	Repository          VCS
-	RelatedRepositories []VCS  `gcfg:"RelatedRepository"`
-	Branch              string `default:"master"`
-	Dockerfile          string `default:"Dockerfile"`
+	RelatedRepositories []VCS    `gcfg:"RelatedRepository"`
+	Branch              string   `default:"master"`
+	Dockerfile          string   `default:"Dockerfile"`
+	GithubToken         string   `json:"-"`
+	History             int      `default:"3"`
+	UseShortRevisions   bool     `default:"true"`
+	Files               []string `gcfg:"File"`
+	TestCommand         string
 	NoCache             bool
-	UseShortRevisions   bool                   `default:"true"`
 	Ports               []string               `gcfg:"Port"`
-	Files               []string               `gcfg:"File"`
+	Links               map[string]*Link       `json:"-"`
+	LinkNames           []LinkDefinition       `gcfg:"Link"`
 	Enviroments         map[string]*Enviroment `json:"-"`
 	EnviromentNames     []string               `gcfg:"Enviroment"`
-	TestCommand         string
-	GithubToken         string `json:"-"`
-	History             int    `default:"3"`
 }
 
 func (p *Project) Deploy(enviroment string, force bool) []error {

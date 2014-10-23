@@ -152,6 +152,29 @@ func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
 	c.Assert(co.GetPortsString(), Equals, "0.0.0.0:84->42/tcp, 42/tcp")
 }
 
+func (s *CoreSuite) TestLink_String(c *C) {
+	l := Link{
+		Alias: "foo",
+		Project: &Project{
+			Name: "qux",
+		},
+	}
+
+	c.Assert(l.String(), Equals, "qux:foo")
+}
+
+func (s *CoreSuite) TestLinkDefinition_GetProjectName(c *C) {
+	l := LinkDefinition("foo:qux")
+
+	c.Assert(l.GetProjectName(), Equals, "foo")
+}
+
+func (s *CoreSuite) TestLinkDefinition_GetAlias(c *C) {
+	l := LinkDefinition("foo:qux")
+
+	c.Assert(l.GetAlias(), Equals, "qux")
+}
+
 func (s *CoreSuite) TestContainersByCreated_Sort(c *C) {
 	list := []*Container{
 		&Container{APIContainers: docker.APIContainers{Created: 3}},

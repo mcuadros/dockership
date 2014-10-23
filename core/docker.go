@@ -83,7 +83,8 @@ func (d *Docker) cleanContainers(p *Project) error {
 }
 
 func (d *Docker) killContainer(c *Container) error {
-	if err := d.client.StopContainer(c.ID, uint(1*time.Second)); err != nil {
+	kopts := docker.KillContainerOptions{ID: c.ID}
+	if err := d.client.KillContainer(kopts); err != nil {
 		return err
 	}
 
@@ -212,7 +213,7 @@ func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
 
 func (d *Docker) Run(p *Project, rev Revision) error {
 	Debug("Creating container from image", "project", p, "revision", rev, "end-point", d.endPoint)
-	c, err := d.createContainer(d.getImageName(p, rev))
+	c, err := d.createContainer(p, d.getImageName(p, rev))
 	if err != nil {
 		return err
 	}
@@ -237,9 +238,9 @@ func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
 	return ImageId(fmt.Sprintf("%s/%s:%s", info.Username, info.Name, c))
 }
 
-func (d *Docker) createContainer(image ImageId) (*Container, error) {
+func (d *Docker) createContainer(p *Project, image ImageId) (*Container, error) {
 	c, err := d.client.CreateContainer(docker.CreateContainerOptions{
-		Name: strings.Replace(image.GetProjectString(), "/", "_", -1),
+		Name: p.Name,
 		Config: &docker.Config{
 			Image: string(image),
 		},
@@ -260,7 +261,17 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 
 	return d.client.StartContainer(c.ID, &docker.HostConfig{
 		PortBindings: ports,
+		Links:        d.formatLinks(p.Links),
 	})
+}
+
+func (d *Docker) formatLinks(links map[string]*Link) []string {
+	r := make([]string, 0)
+	for _, link := range links {
+		r = append(r, link.String())
+	}
+
+	return r
 }
 
 func (d *Docker) formatPorts(ports []string) (map[docker.Port][]docker.PortBinding, error) {

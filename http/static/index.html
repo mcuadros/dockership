@@ -55,7 +55,7 @@
               </span>
           </div>
 
-          <table class="table">
+          <table class="table table-striped">
             <thead>
               <tr>
                 <th class="col-md-2">Enviroment</th>
@@ -63,7 +63,7 @@
                 <th class="col-md-2">Running Revision</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
-                <th class="col-md-4">Containers</th>
+                <th class="col-md-3">Containers</th>
               </tr>
             </thead>
             <tbody>
@@ -127,19 +127,19 @@
           <table class="table">
             <thead>
               <tr>
-                <th class="col-md-2">Revision</th>
-                <th class="col-md-2">Container ID</th>
-                <th class="col-md-2">Created</th>
-                <th class="col-md-2">Command</th>
+                <th class="col-md-1">Revision</th>
+                <th class="col-md-1">Container ID</th>
+                <th class="col-md-3">Created</th>
+                <th class="col-md-3">Command</th>
                 <th class="col-md-2">Status</th>
                 <th class="col-md-2">Ports</th>
               </tr>
             </thead>
             <tbody>
               <tr ng-repeat='c in containers'>
-                <td><b>{{c.Container.Image}}</b></td>
+                <td><b>{{c.Container.Image.split(':')[1]}}</b></td>
                 <td>{{c.Container.Id.slice(0, 12)}}</td>
-                <td>{{c.Container.Created}}</td>
+                <td>{{c.Container.Created * 1000 | date:'yyyy-dd-MMTHH:mm:ss'}}</td>
                 <td>{{c.Container.Command}}</td>
                 <td>{{c.Container.Status}}</td>
                 <td>

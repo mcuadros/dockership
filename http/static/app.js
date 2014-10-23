@@ -109,7 +109,6 @@ angular.module('dockership').controller(
         $scope.data = oboe({
             url: '/rest/deploy/' + project.Project.Name + '/' + enviroment.Name,
             pattern: '{msg}',
-            pagesize: 1
         });
 
         $scope.params = function (params, first) {

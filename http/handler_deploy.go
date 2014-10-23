@@ -11,6 +11,7 @@ import (
 )
 
 func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	writer := NewAutoFlusherWriter(w, 100*time.Millisecond)
 	defer writer.Close()
 	Streaming(writer)

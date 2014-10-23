@@ -25,6 +25,7 @@ type Project struct {
 	Ports               []string               `gcfg:"Port"`
 	Links               map[string]*Link       `json:"-"`
 	LinkNames           []LinkDefinition       `gcfg:"Link"`
+	LinkedBy            []*Project             `json:"-"`
 	Enviroments         map[string]*Enviroment `json:"-"`
 	EnviromentNames     []string               `gcfg:"Enviroment"`
 }

@@ -225,7 +225,11 @@ func (d *Docker) Run(p *Project, rev Revision) error {
 		"end-point", d.endPoint,
 	)
 
-	return d.startContainer(p, c)
+	if err := d.startContainer(p, c); err != nil {
+		return err
+	}
+
+	return d.restartLinkedContainers(p)
 }
 
 func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
@@ -359,6 +363,48 @@ func (d *Docker) addFileToTar(file string, tr *tar.Writer) error {
 	}
 
 	if _, err := tr.Write(content); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *Docker) restartLinkedContainers(p *Project) error {
+	failed := false
+	for _, linked := range p.LinkedBy {
+		list, err := d.ListContainers(linked)
+		if err != nil {
+			failed = true
+			Error(err.Error(), "project", p)
+			continue
+		}
+
+		for _, lc := range list {
+			Info("Restarting linked container", "project", linked, "container", lc.GetShortId())
+			if err := d.restartContainer(linked, lc); err != nil {
+				failed = true
+				Error("Unable to restart container", "project", linked, "container", lc.GetShortId())
+			}
+		}
+	}
+
+	if failed {
+		return errors.New("Unable to restart one or more containers")
+	}
+
+	return nil
+}
+
+func (d *Docker) restartContainer(p *Project, c *Container) error {
+	if !c.IsRunning() {
+		return nil
+	}
+
+	if err := d.killContainer(c); err != nil {
+		return err
+	}
+
+	if err := d.startContainer(p, c); err != nil {
 		return err
 	}
 

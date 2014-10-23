@@ -38,6 +38,7 @@ func (c *Config) LoadProjects() {
 		}
 
 		p.UseShortRevisions = c.Global.UseShortRevisions
+		p.LinkedBy = make([]*Project, 0)
 	}
 }
 
@@ -50,10 +51,13 @@ func (c *Config) LoadEnviroments() {
 
 		p.Links = make(map[string]*Link, 0)
 		for _, l := range p.LinkNames {
+			linked := c.mustGetProject(p, l.GetProjectName())
 			p.Links[l.GetProjectName()] = &Link{
 				Alias:   l.GetAlias(),
-				Project: c.mustGetProject(p, l.GetProjectName()),
+				Project: linked,
 			}
+
+			linked.LinkedBy = append(linked.LinkedBy, p)
 		}
 	}
 }
@@ -72,7 +76,6 @@ func (c *Config) mustGetEnviroment(p *Project, name string) *Enviroment {
 func (c *Config) mustGetProject(p *Project, name string) *Project {
 	if e, ok := c.Projects[name]; ok {
 		defaults.SetDefaults(e)
-		e.Name = name
 		return e
 	}
 

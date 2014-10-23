@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
@@ -104,6 +105,45 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	c.Assert(l[0].IsRunning(), Equals, true)
 	c.Assert(l[0].Names, HasLen, 1)
 	c.Assert(l[0].Names[0], Equals, "foo")
+	return
+}
+
+func (s *CoreSuite) TestDocker_RunLinked(c *C) {
+	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+	d, _ := docker.NewClient(m.URL())
+
+	linked := &Project{Name: "bar", Repository: "git@github.com:qux/bar.git"}
+	project := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git"}
+
+	project.Links = map[string]*Link{"x": &Link{
+		Alias:   "qux",
+		Project: linked,
+	}}
+
+	linked.LinkedBy = []*Project{project}
+
+	buildImage(d, "foo/bar:qux")
+	buildImage(d, "qux/bar:qux")
+
+	dc, err := NewDocker(m.URL())
+	c.Assert(err, Equals, nil)
+
+	err = dc.Run(project, Revision{"foo/bar": "qux"})
+	c.Assert(err, Equals, nil)
+	time.Sleep(50 * time.Millisecond)
+
+	l, err := dc.ListContainers(project)
+	c.Assert(err, Equals, nil)
+	c.Assert(l[0].IsRunning(), Equals, true)
+	c.Assert(strings.HasSuffix(l[0].Status, "ms"), Equals, true)
+
+	err = dc.Run(linked, Revision{"qux/bar": "qux"})
+	c.Assert(err, Equals, nil)
+
+	l, err = dc.ListContainers(linked)
+	c.Assert(err, Equals, nil)
+	c.Assert(l[0].IsRunning(), Equals, true)
+	c.Assert(strings.HasSuffix(l[0].Status, "us"), Equals, true)
 	return
 }
 

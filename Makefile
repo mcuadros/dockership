@@ -32,7 +32,8 @@ build: assets dependencies
 
 test: dependencies
 	cd $(BASE_PATH)/http; $(BINDATA) --debug $(ASSETS)
-	$(GOTEST) -v ./... --github --slow
+	cd $(BASE_PATH)/core; $(GOTEST) -v . --github --slow
+	cd $(BASE_PATH)/config; $(GOTEST) -v .
 
 dependencies:
 	$(GOGET) -d -v ./...

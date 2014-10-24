@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/mcuadros/dockership/core"
@@ -25,7 +24,6 @@ func (s *server) HandleStatus(w http.ResponseWriter, r *http.Request) {
 	Verbose()
 	vars := mux.Vars(r)
 	project := vars["project"]
-	fmt.Println(project)
 
 	result := make(map[string]*StatusResult, 0)
 	for name, p := range s.config.Projects {

@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/mcuadros/dockership/config"
+
 	"code.google.com/p/goauth2/oauth"
 	"github.com/golang/oauth2"
 	"github.com/google/go-github/github"
@@ -30,20 +32,20 @@ type OAuth struct {
 	PathCallback string // Path to handle callback from OAuth 2.0 backend
 	PathError    string // Path to handle error cases.
 	OAuthConfig  *oauth2.Config
-	Config       *config
+	Config       *config.Config
 	users        map[string]*User
 	store        sessions.Store
 	sync.Mutex
 }
 
-func NewOAuth(config *config) *OAuth {
+func NewOAuth(config *config.Config) *OAuth {
 	authUrl := "https://github.com/login/oauth/authorize"
 	tokenUrl := "https://github.com/login/oauth/access_token"
 
 	opts := &oauth2.Options{
 		ClientID:     config.HTTP.GithubID,
 		ClientSecret: config.HTTP.GithubSecret,
-		RedirectURL:  "http://localhost:8080/oauth2callback",
+		RedirectURL:  config.HTTP.GithubRedirectURL,
 		Scopes:       []string{"read:org"},
 	}
 
@@ -189,7 +191,16 @@ func (o *OAuth) getUser(token *oauth2.Token) (*User, error) {
 		}
 	}
 
-	user = &User{Fullname: *guser.Name, Avatar: *guser.AvatarURL}
+	user = &User{}
+	if guser != nil && guser.Name != nil {
+		user.Fullname = *guser.Name
+	} else if guser.Login != nil {
+		user.Fullname = *guser.Login
+	}
+
+	if guser != nil && guser.AvatarURL != nil {
+		user.Avatar = *guser.AvatarURL
+	}
 
 	o.Lock()
 	o.users[token.AccessToken] = user

@@ -1,10 +1,18 @@
-package core
+package config
 
 import (
+	"testing"
+
 	. "gopkg.in/check.v1"
 )
 
-func (s *CoreSuite) TestConfig_LoadFile(c *C) {
+func Test(t *testing.T) { TestingT(t) }
+
+type ConfigSuite struct{}
+
+var _ = Suite(&ConfigSuite{})
+
+func (s *ConfigSuite) TestConfig_LoadFile(c *C) {
 	var config Config
 	err := config.LoadFile("../example/config.ini")
 

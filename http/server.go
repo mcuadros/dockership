@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/mcuadros/dockership/config"
 	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/gorilla/mux"
@@ -13,10 +15,14 @@ import (
 
 var VERSION string
 var BUILD_DATE string
+var configFile string
 
 func main() {
+	flag.StringVar(&configFile, "config", config.DEFAULT_CONFIG, "config file")
+	flag.Parse()
+
 	s := &server{}
-	s.readConfig()
+	s.readConfig(configFile)
 	s.configure()
 	s.configureAuth()
 	s.run()
@@ -25,7 +31,7 @@ func main() {
 type server struct {
 	mux    *mux.Router
 	oauth  *OAuth
-	config config
+	config config.Config
 }
 
 func (s *server) configure() {
@@ -56,7 +62,6 @@ func (s *server) configure() {
 	})
 
 	s.mux.Path("/app.js").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/app.js")
 		w.Header().Set("Content-Type", "application/javascript")
 		content, _ := Asset("static/app.js")
 		w.Write(content)
@@ -67,8 +72,8 @@ func (s *server) configureAuth() {
 	s.oauth = NewOAuth(&s.config)
 }
 
-func (s *server) readConfig() {
-	if err := s.config.LoadFile("config.ini"); err != nil {
+func (s *server) readConfig(configFile string) {
+	if err := s.config.LoadFile(configFile); err != nil {
 		panic(err)
 	}
 }

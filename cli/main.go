@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mcuadros/dockership/core"
+	"github.com/mcuadros/dockership/config"
 	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/mitchellh/cli"
@@ -13,8 +13,6 @@ import (
 
 var VERSION string
 var BUILD_DATE string
-
-const DEFAULT_CONFIG = "config.ini"
 
 func main() {
 	c := cli.NewCLI("dockership", fmt.Sprintf("%s / %s", VERSION, BUILD_DATE))
@@ -36,7 +34,7 @@ func main() {
 type cmd struct {
 	configFile string
 	project    string
-	config     core.Config
+	config     config.Config
 	flags      *flag.FlagSet
 }
 
@@ -48,7 +46,7 @@ func (c *cmd) loadConfig() {
 
 func (c *cmd) buildFlags(child cli.Command) {
 	c.flags = flag.NewFlagSet("set", flag.ContinueOnError)
-	c.flags.StringVar(&c.configFile, "config", DEFAULT_CONFIG, "")
+	c.flags.StringVar(&c.configFile, "config", config.DEFAULT_CONFIG, "")
 	c.flags.StringVar(&c.project, "project", "", "")
 	c.flags.Usage = func() { child.Help() }
 }

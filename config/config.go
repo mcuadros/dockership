@@ -1,20 +1,29 @@
-package core
+package config
 
 import (
+	"github.com/mcuadros/dockership/core"
 	. "github.com/mcuadros/dockership/logger"
 
 	"code.google.com/p/gcfg"
 	"github.com/mcuadros/go-defaults"
 )
 
+const DEFAULT_CONFIG = "config.ini"
+
 type Config struct {
 	Global struct {
 		UseShortRevisions bool `default:"true"`
 		GithubToken       string
 	}
-
-	Projects    map[string]*Project    `gcfg:"Project"`
-	Enviroments map[string]*Enviroment `gcfg:"Enviroment"`
+	HTTP struct {
+		Listen             string `default:":8080"`
+		GithubID           string
+		GithubSecret       string
+		GithubOrganization string
+		GithubRedirectURL  string
+	}
+	Projects    map[string]*core.Project    `gcfg:"Project"`
+	Enviroments map[string]*core.Enviroment `gcfg:"Enviroment"`
 }
 
 func (c *Config) LoadFile(filename string) error {
@@ -23,6 +32,7 @@ func (c *Config) LoadFile(filename string) error {
 		return err
 	}
 
+	defaults.SetDefaults(c)
 	c.LoadProjects()
 	c.LoadEnviroments()
 	return nil
@@ -38,21 +48,21 @@ func (c *Config) LoadProjects() {
 		}
 
 		p.UseShortRevisions = c.Global.UseShortRevisions
-		p.LinkedBy = make([]*Project, 0)
+		p.LinkedBy = make([]*core.Project, 0)
 	}
 }
 
 func (c *Config) LoadEnviroments() {
 	for _, p := range c.Projects {
-		p.Enviroments = make(map[string]*Enviroment, 0)
+		p.Enviroments = make(map[string]*core.Enviroment, 0)
 		for _, e := range p.EnviromentNames {
 			p.Enviroments[e] = c.mustGetEnviroment(p, e)
 		}
 
-		p.Links = make(map[string]*Link, 0)
+		p.Links = make(map[string]*core.Link, 0)
 		for _, l := range p.LinkNames {
 			linked := c.mustGetProject(p, l.GetProjectName())
-			p.Links[l.GetProjectName()] = &Link{
+			p.Links[l.GetProjectName()] = &core.Link{
 				Alias:   l.GetAlias(),
 				Project: linked,
 			}
@@ -62,7 +72,7 @@ func (c *Config) LoadEnviroments() {
 	}
 }
 
-func (c *Config) mustGetEnviroment(p *Project, name string) *Enviroment {
+func (c *Config) mustGetEnviroment(p *core.Project, name string) *core.Enviroment {
 	if e, ok := c.Enviroments[name]; ok {
 		defaults.SetDefaults(e)
 		e.Name = name
@@ -73,7 +83,7 @@ func (c *Config) mustGetEnviroment(p *Project, name string) *Enviroment {
 	return nil
 }
 
-func (c *Config) mustGetProject(p *Project, name string) *Project {
+func (c *Config) mustGetProject(p *core.Project, name string) *core.Project {
 	if e, ok := c.Projects[name]; ok {
 		defaults.SetDefaults(e)
 		return e

@@ -70,6 +70,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	}
 
 	p := &Project{
+		Name:        "foo",
 		Repository:  "git@github.com:github/gem-builder.git",
 		Branch:      DEFAULT_BRANCH,
 		Enviroments: envs,

@@ -23,6 +23,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 
 	p := &Project{
+		Name:       "foo",
 		Repository: "git@github.com:foo/bar.git",
 		Ports:      []string{"0.0.0.0:8080:80/tcp"},
 	}
@@ -63,6 +64,7 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 
 	file := writeRandomFile("qux")
 	p := &Project{
+		Name:       "image",
 		Repository: "git@github.com:foo/bar.git",
 		NoCache:    true,
 		Files:      []string{file},
@@ -77,7 +79,7 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	c.Assert(files, HasLen, 2)
 	c.Assert(files["Dockerfile"], Equals, "FROM base\n")
 	c.Assert(files[path.Base(file)], Equals, "qux")
-	c.Assert(request.URL.Query().Get("t"), Equals, "foo/bar:qux")
+	c.Assert(request.URL.Query().Get("t"), Equals, "image:qux")
 	c.Assert(request.URL.Query().Get("nocache"), Equals, "1")
 	c.Assert(request.URL.Query().Get("rm"), Equals, "1")
 }
@@ -88,7 +90,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 
 	p = &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
-	buildImage(d, "foo/bar:qux")
+	buildImage(d, "foo:qux")
 	rev = Revision{"foo/bar": "qux"}
 
 	dc, err := NewDocker(m.URL())
@@ -111,7 +113,7 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 
-	linked := &Project{Name: "bar", Repository: "git@github.com:qux/bar.git"}
+	linked := &Project{Name: "qux", Repository: "git@github.com:qux/bar.git"}
 	project := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git"}
 
 	project.Links = map[string]*Link{"x": &Link{
@@ -121,8 +123,8 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 
 	linked.LinkedBy = []*Project{project}
 
-	buildImage(d, "foo/bar:qux")
-	buildImage(d, "qux/bar:qux")
+	buildImage(d, "foo:qux")
+	buildImage(d, "qux:qux")
 
 	dc, err := NewDocker(m.URL())
 	c.Assert(err, Equals, nil)
@@ -155,12 +157,12 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
-	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 	docker, _ := NewDocker(m.URL())
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(1 * time.Second)
-		buildImage(d, fmt.Sprintf("foo/bar:%d", i))
+		buildImage(d, fmt.Sprintf("foo:%d", i))
 		docker.Run(p, Revision{"foo/bar": Commit(fmt.Sprintf("%d", i))})
 	}
 
@@ -205,11 +207,11 @@ func (s *CoreSuite) TestDocker_ListImages(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 	docker, _ := NewDocker(m.URL())
-	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
-	buildImage(d, "foo/bar:qux")
-	buildImage(d, "foo/bar:baz")
-	buildImage(d, "foo/qux:baz")
+	buildImage(d, "foo:qux")
+	buildImage(d, "foo:baz")
+	buildImage(d, "qux:baz")
 
 	l, _ := docker.ListImages(p)
 	c.Assert(l, HasLen, 2)

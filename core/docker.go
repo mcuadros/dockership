@@ -238,8 +238,7 @@ func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
 		c = rev.GetShort()
 	}
 
-	info := p.Repository.Info()
-	return ImageId(fmt.Sprintf("%s/%s:%s", info.Username, info.Name, c))
+	return ImageId(fmt.Sprintf("%s:%s", p.Name, c))
 }
 
 func (d *Docker) createContainer(p *Project, image ImageId) (*Container, error) {

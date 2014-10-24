@@ -78,14 +78,14 @@ func (s *CoreSuite) TestImageId_IsCommit(c *C) {
 }
 
 func (s *CoreSuite) TestImageId_BelongsTo(c *C) {
-	i := ImageId("foo/bar:qux")
+	i := ImageId("foo:qux")
 
 	c.Assert(i.BelongsTo(&Project{
-		Repository: "git@github.com:foo/bar.git",
+		Name: "foo",
 	}), Equals, true)
 
 	c.Assert(i.BelongsTo(&Project{
-		Repository: "git@github.com:qux/bar.git",
+		Name: "qux",
 	}), Equals, false)
 }
 
@@ -98,16 +98,16 @@ func (s *CoreSuite) TestImageId_GetRevisionString(c *C) {
 func (s *CoreSuite) TestImage_BelongsTo(c *C) {
 	i := Image{
 		APIImages: docker.APIImages{
-			RepoTags: []string{"foo/bar:qux"},
+			RepoTags: []string{"foo:qux"},
 		},
 	}
 
 	c.Assert(i.BelongsTo(&Project{
-		Repository: "git@github.com:foo/bar.git",
+		Name: "foo",
 	}), Equals, true)
 
 	c.Assert(i.BelongsTo(&Project{
-		Repository: "git@github.com:qux/bar.git",
+		Name: "qux",
 	}), Equals, false)
 }
 

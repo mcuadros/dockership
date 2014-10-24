@@ -79,8 +79,7 @@ func (r Revision) String() string {
 type ImageId string
 
 func (i ImageId) BelongsTo(p *Project) bool {
-	info := p.Repository.Info()
-	return strings.HasPrefix(string(i), fmt.Sprintf("%s/%s", info.Username, info.Name))
+	return strings.HasPrefix(string(i), p.Name)
 }
 
 func (i ImageId) IsRevision(rev Revision) bool {
@@ -104,9 +103,8 @@ type Image struct {
 }
 
 func (i Image) BelongsTo(p *Project) bool {
-	info := p.Repository.Info()
 	for _, tag := range i.RepoTags {
-		if strings.HasPrefix(tag, fmt.Sprintf("%s/%s", info.Username, info.Name)) {
+		if strings.HasPrefix(tag, p.Name) {
 			return true
 		}
 	}

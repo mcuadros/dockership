@@ -66,7 +66,7 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 		dg.dockers[m.URL()], _ = NewDocker(m.URL())
 	}
 
-	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
+	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 	r := Revision{"foo/bar": Commit("qux")}
 
 	errors := dg.Deploy(p, r, []byte(""), true)
@@ -76,13 +76,13 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	c.Assert(errors, HasLen, 0)
 	c.Assert(containers, HasLen, 5)
 	for _, r := range containers {
-		c.Assert(r.Image, Equals, ImageId("foo/bar:qux"))
+		c.Assert(r.Image, Equals, ImageId("foo:qux"))
 	}
 
 	images, errors := dg.ListImages(p)
 	c.Assert(errors, HasLen, 0)
 	c.Assert(images, HasLen, 5)
 	for _, r := range images {
-		c.Assert(r.RepoTags[0], Equals, "foo/bar:qux")
+		c.Assert(r.RepoTags[0], Equals, "foo:qux")
 	}
 }

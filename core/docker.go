@@ -148,13 +148,15 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 
 	r := make([]*Container, 0)
 	for _, c := range l {
-		i := ImageId(c.Image)
-		if i.BelongsTo(p) {
-			r = append(r, &Container{
-				Image:          i,
-				APIContainers:  c,
-				DockerEndPoint: d.endPoint,
-			})
+		container := &Container{
+			Image:          ImageId(c.Image),
+			APIContainers:  c,
+			DockerEndPoint: d.endPoint,
+		}
+
+		if container.BelongsTo(p) {
+			r = append(r, container)
+
 		}
 	}
 

@@ -152,6 +152,20 @@ func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
 	c.Assert(co.GetPortsString(), Equals, "0.0.0.0:84->42/tcp, 42/tcp")
 }
 
+func (s *CoreSuite) TestContainer_BelongsTo(c *C) {
+	co := Container{APIContainers: docker.APIContainers{
+		Names: []string{"foo"},
+	}}
+
+	c.Assert(co.BelongsTo(&Project{
+		Name: "foo",
+	}), Equals, true)
+
+	c.Assert(co.BelongsTo(&Project{
+		Name: "bar",
+	}), Equals, false)
+}
+
 func (s *CoreSuite) TestLink_String(c *C) {
 	l := Link{
 		Alias: "foo",

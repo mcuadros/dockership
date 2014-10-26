@@ -160,6 +160,16 @@ func (c *Container) GetShortId() string {
 	return c.ID[:shortLen]
 }
 
+func (c *Container) BelongsTo(p *Project) bool {
+	for _, name := range c.Names {
+		if name == p.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 type Link struct {
 	Project *Project
 	Alias   string

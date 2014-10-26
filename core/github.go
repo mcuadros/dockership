@@ -8,8 +8,6 @@ import (
 
 	"code.google.com/p/goauth2/oauth"
 	"github.com/google/go-github/github"
-
-	. "github.com/mcuadros/dockership/logger"
 )
 
 type Github struct {

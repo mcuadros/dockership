@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	. "github.com/mcuadros/dockership/logger"
@@ -23,8 +22,6 @@ func (c *CmdDeploy) parse(args []string) error {
 	c.flags.StringVar(&c.enviroment, "env", "", "")
 	c.flags.BoolVar(&c.force, "force", false, "")
 	err := c.cmd.parse(args)
-
-	fmt.Println(args)
 
 	return err
 }

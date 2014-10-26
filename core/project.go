@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	. "github.com/mcuadros/dockership/logger"
-
 	"github.com/mcuadros/go-command"
 )
 

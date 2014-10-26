@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
-	. "github.com/mcuadros/dockership/logger"
 )
 
 type Docker struct {

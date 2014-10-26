@@ -2,8 +2,6 @@ package core
 
 import (
 	"sync"
-
-	. "github.com/mcuadros/dockership/logger"
 )
 
 type DockerGroup struct {

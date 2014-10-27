@@ -70,6 +70,15 @@ func (s *CoreSuite) TestRevision_String(c *C) {
 	c.Assert(fmt.Sprintf("%s", revisionZA), Equals, "e1ba1f05de5f184fe94ec745250b5d9e")
 }
 
+func (s *CoreSuite) TestDockerfile_Get(c *C) {
+	d := Dockerfile("$DOCKERSHIP_PROJECT/$DOCKERSHIP_VCS/$DOCKERSHIP_REV")
+
+	p := &Project{Name: "foo", Repository: "qux"}
+	r := Revision{"foo": "baz"}
+
+	c.Assert(string(d.Get(p, r)), Equals, "foo/qux/baz")
+}
+
 func (s *CoreSuite) TestImageId_IsCommit(c *C) {
 	i := ImageId("foo/bar:bar")
 

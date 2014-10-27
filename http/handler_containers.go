@@ -24,7 +24,7 @@ func (s *server) HandleContainers(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		l, err := p.List()
+		l, err := p.ListContainers()
 		if len(err) != 0 {
 			result = append(result, &ContainersRecord{Project: p, Error: err})
 		} else {

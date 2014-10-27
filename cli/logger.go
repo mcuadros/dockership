@@ -10,7 +10,7 @@ import (
 
 func init() {
 	log := log15.New()
-	log.SetHandler(log15.LvlFilterHandler(log15.LvlDebug, log15.StdoutHandler))
+	log.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, log15.StdoutHandler))
 
 	core.Events.Subscribe(core.EventInfo, &core.Subscriber{func(ctx ...interface{}) {
 		log.Info(ctx[0].(string), ctx[1:]...)

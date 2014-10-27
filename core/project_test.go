@@ -26,7 +26,7 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	err := p.Deploy("foo", false)
 	c.Assert(err, HasLen, 0)
 
-	l, err := p.List()
+	l, err := p.ListContainers()
 	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].DockerEndPoint, Equals, e.DockerEndPoints[0])
@@ -92,7 +92,34 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	c.Assert(r[0].Containers[0], Equals, r[0].RunningContainers[0])
 }
 
-func (s *CoreSuite) TestProject_List(c *C) {
+func (s *CoreSuite) TestProject_ListContainers(c *C) {
+	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
+	envs := map[string]*Enviroment{
+		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
+	}
+
+	p := &Project{
+		Name:        "foo",
+		Repository:  "git@github.com:foo/bar.git",
+		Branch:      DEFAULT_BRANCH,
+		Enviroments: envs,
+	}
+
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
+	da.Deploy(p, Revision{}, []byte{}, false)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
+	db.Deploy(p, Revision{}, []byte{}, false)
+	time.Sleep(1 * time.Second)
+	l, err := p.ListContainers()
+	c.Assert(err, HasLen, 0)
+	c.Assert(l, HasLen, 2)
+	c.Assert(l[0].APIContainers.Names[0], Equals, "/foo")
+	c.Assert(l[1].APIContainers.Names[0], Equals, "/foo")
+}
+
+func (s *CoreSuite) TestProject_ListImages(c *C) {
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	envs := map[string]*Enviroment{
@@ -111,10 +138,9 @@ func (s *CoreSuite) TestProject_List(c *C) {
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
 	db.Deploy(p, Revision{}, []byte{}, false)
 	time.Sleep(1 * time.Second)
-	l, err := p.List()
+	l, err := p.ListImages()
 	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 2)
-	c.Assert(l[0].DockerEndPoint, Equals, envs["a"].DockerEndPoints[0])
-	c.Assert(l[1].DockerEndPoint, Equals, envs["b"].DockerEndPoints[0])
-
+	c.Assert(l[0].APIImages.ID, Not(Equals), "")
+	c.Assert(l[1].APIImages.ID, Not(Equals), "")
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	. "github.com/mcuadros/dockership/logger"
+	"github.com/mcuadros/dockership/core"
 
 	"github.com/mitchellh/cli"
 )
@@ -33,18 +33,18 @@ func (c *CmdDeploy) Run(args []string) int {
 	}
 
 	if p, ok := c.config.Projects[c.project]; ok {
-		Info("Starting deploy", "project", p, "enviroment", c.enviroment, "force", c.force)
+		core.Info("Starting deploy", "project", p, "enviroment", c.enviroment, "force", c.force)
 		err := p.Deploy(c.enviroment, c.force)
 		if len(err) != 0 {
-			Critical(err[0].Error(), "project", c.project)
+			core.Critical(err[0].Error(), "project", c.project)
 			return 1
 		}
 
-		Info("Deploy success", "project", p, "enviroment", c.enviroment)
+		core.Info("Deploy success", "project", p, "enviroment", c.enviroment)
 		return 0
 	}
 
-	Critical("Unable to find project", "project", c.project)
+	core.Critical("Unable to find project", "project", c.project)
 
 	return 1
 }

@@ -30,7 +30,7 @@ func NewDocker(endPoint string) (*Docker, error) {
 	return &Docker{client: c, endPoint: endPoint}, nil
 }
 
-func (d *Docker) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) error {
+func (d *Docker) Deploy(p *Project, rev Revision, dockerfile Dockerfile, force bool) error {
 	Debug("Deploying dockerfile", "project", p, "revision", rev, "end-point", d.endPoint)
 	if err := d.Clean(p); err != nil {
 		return err
@@ -189,13 +189,13 @@ func (d *Docker) ListImages(p *Project) ([]*Image, error) {
 	return r, nil
 }
 
-func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile []byte) error {
+func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile Dockerfile) error {
 	Debug("Building image", "project", p, "revision", rev, "end-point", d.endPoint)
 
 	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	outputbuf.WriteTo(os.Stdout)
 
-	if err := d.buildTar(p, dockerfile, inputbuf); err != nil {
+	if err := d.buildTar(p, dockerfile.Get(p, rev), inputbuf); err != nil {
 		return err
 	}
 

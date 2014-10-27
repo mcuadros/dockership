@@ -175,6 +175,27 @@ func (s *CoreSuite) TestContainer_BelongsTo(c *C) {
 	}), Equals, false)
 }
 
+func (s *CoreSuite) TestContainer_BelongsToByImage(c *C) {
+	co := Container{
+		Image: ImageId("foo:bar"),
+		APIContainers: docker.APIContainers{
+			Names: []string{"/qux"},
+		},
+	}
+
+	c.Assert(co.BelongsTo(&Project{
+		Name: "foo",
+	}), Equals, true)
+
+	c.Assert(co.BelongsTo(&Project{
+		Name: "qux",
+	}), Equals, true)
+
+	c.Assert(co.BelongsTo(&Project{
+		Name: "bar",
+	}), Equals, false)
+}
+
 func (s *CoreSuite) TestLink_String(c *C) {
 	l := Link{
 		Alias: "foo",

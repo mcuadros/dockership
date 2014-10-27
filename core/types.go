@@ -180,6 +180,10 @@ func (c *Container) GetShortId() string {
 }
 
 func (c *Container) BelongsTo(p *Project) bool {
+	if c.Image.BelongsTo(p) {
+		return true
+	}
+
 	pname := fmt.Sprintf("/%s", p.Name)
 	for _, name := range c.Names {
 		if name == pname {

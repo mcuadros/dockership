@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/mcuadros/dockership/config"
-	. "github.com/mcuadros/dockership/logger"
+	"github.com/mcuadros/dockership/core"
 
 	"github.com/mitchellh/cli"
 )
@@ -25,7 +25,7 @@ func main() {
 
 	exitStatus, err := c.Run()
 	if err != nil {
-		Critical(err.Error())
+		core.Critical(err.Error())
 	}
 
 	os.Exit(exitStatus)
@@ -40,7 +40,7 @@ type cmd struct {
 
 func (c *cmd) loadConfig() {
 	if err := c.config.LoadFile(c.configFile); err != nil {
-		Critical(err.Error(), "file", c.configFile)
+		core.Critical(err.Error(), "file", c.configFile)
 	}
 }
 
@@ -59,7 +59,7 @@ func (c *cmd) parse(args []string) error {
 	c.loadConfig()
 
 	if _, ok := c.config.Projects[c.project]; !ok {
-		Critical("Unknown project", "project", c.project)
+		core.Critical("Unknown project", "project", c.project)
 	}
 
 	return nil

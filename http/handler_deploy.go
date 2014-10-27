@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	. "github.com/mcuadros/dockership/logger"
+	"github.com/mcuadros/dockership/core"
 
 	"github.com/gorilla/mux"
 )
@@ -14,7 +14,9 @@ func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	writer := NewAutoFlusherWriter(w, 100*time.Millisecond)
 	defer writer.Close()
-	Streaming(writer)
+
+	subs := subscribeWriteToEvents(writer)
+	defer unsubscribeEvents(subs)
 
 	force := true
 	vars := mux.Vars(r)
@@ -22,14 +24,14 @@ func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
 	enviroment := vars["enviroment"]
 
 	if p, ok := s.config.Projects[project]; ok {
-		Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
+		core.Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
 		err := p.Deploy(enviroment, force)
 		if len(err) != 0 {
 			for _, e := range err {
-				Critical(e.Error(), "project", project)
+				core.Critical(e.Error(), "project", project)
 			}
 		} else {
-			Info("Deploy success", "project", p, "enviroment", enviroment)
+			core.Info("Deploy success", "project", p, "enviroment", enviroment)
 		}
 	} else {
 		s.json(w, 404, fmt.Sprintf("Project %q not found", project))

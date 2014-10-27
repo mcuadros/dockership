@@ -155,7 +155,6 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 
 		if container.BelongsTo(p) {
 			r = append(r, container)
-
 		}
 	}
 

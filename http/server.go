@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/mcuadros/dockership/config"
-	. "github.com/mcuadros/dockership/logger"
+	"github.com/mcuadros/dockership/core"
 
 	"github.com/gorilla/mux"
 )
@@ -92,7 +92,7 @@ func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.oauth.Handler(w, r) {
-		Debug("Handling request", "url", r.URL)
+		core.Debug("Handling request", "url", r.URL)
 		w.Header().Set("Server", fmt.Sprintf("dockership %s / %s", VERSION, BUILD_DATE))
 		s.mux.ServeHTTP(w, r)
 	}

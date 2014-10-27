@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/mcuadros/dockership/core"
-	. "github.com/mcuadros/dockership/logger"
 
 	"github.com/gorilla/mux"
 )
@@ -16,7 +15,6 @@ type ContainersRecord struct {
 }
 
 func (s *server) HandleContainers(w http.ResponseWriter, r *http.Request) {
-	Verbose()
 	vars := mux.Vars(r)
 	project := vars["project"]
 

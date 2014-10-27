@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/mcuadros/dockership/core"
-	. "github.com/mcuadros/dockership/logger"
 
 	"code.google.com/p/gcfg"
 	"github.com/mcuadros/go-defaults"
@@ -79,7 +78,7 @@ func (c *Config) mustGetEnviroment(p *core.Project, name string) *core.Enviromen
 		return e
 	}
 
-	Critical("Undefined enviroment", "enviroment", name, "project", p)
+	core.Critical("Undefined enviroment", "enviroment", name, "project", p)
 	return nil
 }
 
@@ -89,6 +88,6 @@ func (c *Config) mustGetProject(p *core.Project, name string) *core.Project {
 		return e
 	}
 
-	Critical("Undefined project", "project", name, "project", p)
+	core.Critical("Undefined project", "project", name, "project", p)
 	return nil
 }

@@ -161,8 +161,9 @@ func (c *Container) GetShortId() string {
 }
 
 func (c *Container) BelongsTo(p *Project) bool {
+	pname := fmt.Sprintf("/%s", p.Name)
 	for _, name := range c.Names {
-		if name == p.Name {
+		if name == pname {
 			return true
 		}
 	}

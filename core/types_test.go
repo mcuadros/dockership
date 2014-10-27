@@ -154,7 +154,7 @@ func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
 
 func (s *CoreSuite) TestContainer_BelongsTo(c *C) {
 	co := Container{APIContainers: docker.APIContainers{
-		Names: []string{"foo"},
+		Names: []string{"/foo"},
 	}}
 
 	c.Assert(co.BelongsTo(&Project{

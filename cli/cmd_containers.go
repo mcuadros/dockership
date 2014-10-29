@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/pkg/units"
 	"github.com/mitchellh/cli"
 	"github.com/stevedomin/termtable"
 )
@@ -30,7 +29,7 @@ func (c *CmdContainers) Run(args []string) int {
 			continue
 		}
 
-		l, err := p.List()
+		l, err := p.ListContainers()
 		if len(err) != 0 {
 			continue
 		}
@@ -42,7 +41,7 @@ func (c *CmdContainers) Run(args []string) int {
 				c.Image.GetRevisionString(),
 				c.GetShortId(),
 				c.Command,
-				units.HumanDuration(time.Now().UTC().Sub(time.Unix(c.Created, 0))),
+				HumanDuration(time.Now().UTC().Sub(time.Unix(c.Created, 0))),
 				c.Status,
 				c.GetPortsString(),
 			})
@@ -59,7 +58,7 @@ func (c *CmdContainers) Synopsis() string {
 
 func (c *CmdContainers) Help() string {
 	helpText := `
-Usage: dockership deploy [options]
+Usage: dockership containers [options]
   List the containers deployed by this tool.
 
 

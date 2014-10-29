@@ -145,7 +145,7 @@ func (p *Project) StatusByEnviroment(e *Enviroment) (*ProjectStatus, []error) {
 	return s, nil
 }
 
-func (p *Project) List() ([]*Container, []error) {
+func (p *Project) ListContainers() ([]*Container, []error) {
 	e := make([]error, 0)
 	r := make([]*Container, 0)
 	for _, env := range p.Enviroments {
@@ -154,6 +154,25 @@ func (p *Project) List() ([]*Container, []error) {
 			e = append(e, err)
 		} else {
 			if l, err := d.ListContainers(p); len(err) != 0 {
+				e = append(e, err...)
+			} else {
+				r = append(r, l...)
+			}
+		}
+	}
+
+	return r, e
+}
+
+func (p *Project) ListImages() ([]*Image, []error) {
+	e := make([]error, 0)
+	r := make([]*Image, 0)
+	for _, env := range p.Enviroments {
+		d, err := NewDockerGroup(env)
+		if err != nil {
+			e = append(e, err)
+		} else {
+			if l, err := d.ListImages(p); len(err) != 0 {
 				e = append(e, err...)
 			} else {
 				r = append(r, l...)

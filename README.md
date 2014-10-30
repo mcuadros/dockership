@@ -1,4 +1,4 @@
-dockership
+dockership [![Build Status](https://travis-ci.org/mcuadros/dockership.svg?branch=master)](https://travis-ci.org/mcuadros/dockership)
 ==========
 Dockership is dead simple docker deploy tool.
 

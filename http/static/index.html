@@ -7,39 +7,84 @@
     <script src="https://cdn.rawgit.com/jimhigson/oboe.js/master/dist/oboe-browser.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.16/angular-animate.js"></script>
     <script src="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.js"></script>
+    <script type="text/javascript"
+      src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.6.0/headroom.min.js"
+    ></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.6.0/angular.headroom.min.js"></script>
     <script src="/app.js"></script>
-    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/darkly/bootstrap.min.css" rel="stylesheet">
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.css" rel="stylesheet">
     <style>
         html, body { padding:0 60px 0 60px;}
         .deploy-log { max-height: 420px; overflow-y: auto; }
         .avatar  {padding-top:10px;}
-        .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%; border-color: #0ce3ac; border-width:10px; }
-        #loading-bar .bar { background: #0ce3ac; }
+        .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%;  }
+        #loading-bar .bar { background: #634224; }
         #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff;}
-        .panel-heading .label { margin-right: 10px;}
-        .panel-heading .label .glyphicon { margin-right: 5px; }
+
         .popover-content, .popover-title { font-size:80%; }
+
+        .headroom { transition: transform 200ms linear; }
+        .headroom--unpinned { transform: translateY(-100%); }
+        .headroom--pinned { transform: translateY(0%); }
+        .navbar-brand {
+          background-image: url(/dockership.png);
+          background-repeat: no-repeat;
+          background-size: 200px;
+          width: 200px;
+          margin:5px;
+        }
+
+        .navbar-brand span { display: none;}
+        .container {
+          max-width: 60em;
+          margin: 0 auto;
+          padding: 0 1.5em;
+        }
+        #main { margin-top: 80px; }
+
+        .project .info { padding-top: 24px;  }
+        .project .info .label { margin-right: 10px; float: right; }
+        .project .info .label .glyphicon { margin-right: 5px; }
+        footer { padding-top: 60px !important; }
+        footer a { color: #808080; font-weight: bolder; }
+
+        .bs-callout {
+          padding: 20px;
+          background-color:  #fff;
+          margin: 20px 0;
+          border: 1px solid #469408;
+          border-left-width: 5px;
+          border-radius: 3px;
+        }
     </style>
   </head>
   <body ng-cloak>
-    <div ng-controller="MainCtrl" id="main">
-        <div class="page-header">
-          <div class="row">
-            <div class="col-lg-6">
-              <h1 id="buttons"><span class="glyphicon glyphicon-import"></span> Dockership</h1>
+      <headroom ng-controller="HeaderCtrl"
+          class="navbar navbar-default navbar-fixed-top"
+          tolerance='10' offset='50'
+        >
+          <div class="container">
+            <div class="navbar-header">
+              <a href="/" class="navbar-brand"><span>Dockership</span></a>
+              <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
             </div>
-            <div class="col-lg-6">
-              <p class="navbar-text navbar-right avatar">
-                Signed in as <a href="/logout" class="navbar-link">{{user.Fullname}}</a>
-                <img ng-src="{{user.Avatar}}" />
-              </p>
+            <div class="navbar-collapse collapse avatar navbar-right" id="navbar-main">
+              Signed in as
+              <a href="/logout" class="navbar-link">{{user.Fullname}}</a>
+              <img ng-src="{{user.Avatar}}" />
             </div>
           </div>
-        </div>
-        <div class="panel panel-default" ng-repeat='p in groups'>
-          <div class="panel-heading">
-              <b>{{p.Project.Name}}</b>&nbsp;&nbsp;
+      </headroom>
+      <div ng-controller="MainCtrl" id="main" class="container">
+        <div ng-repeat='p in groups'>
+          <div class="row project">
+            <h3 class="col-md-4">{{p.Project.Name}}</h3>
+            <div class="col-md-8 info">
               <span class="label label-info">
                 <span class="glyphicon glyphicon-folder-open"></span>{{p.Project.Repository}}
               </span>
@@ -53,17 +98,18 @@
                 class="label label-success">
                 <span class="glyphicon glyphicon-link"></span>{{link.split(':')[0]}}
               </span>
-          </div>
-
+            </div>
+        </div>
+        <div style="clear:both"></div>
+        <div class="panel panel-default">
           <table class="table table-striped">
             <thead>
               <tr>
                 <th class="col-md-2">Enviroment</th>
-                <th class="col-md-2">Last Revision</th>
-                <th class="col-md-2">Running Revision</th>
+                <th class="col-md-3">Running Revision</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
-                <th class="col-md-3">Containers</th>
+                <th class="col-md-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -76,9 +122,7 @@
                     popover-trigger="mouseenter"
                 >{{s.Enviroment.Name}}</b>
                 </td>
-                <td>{{s.LastRevisionLabel.slice(0,12)}}</td>
                 <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
-                <td>{{s.Enviroment.DockerEndPoint.slice(7, s.Enviroment.DockerEndPoint.length)}}</td>
                 <td>
                   <a href="#" class="success"
                     ng-click="processing||openContainers(p.Project)"
@@ -94,7 +138,7 @@
                     Down
                   </span>
                 </td>
-                <td>
+                <td class="text-right">
                   <button ng-if="!isDeployable(s)"
                     type="button"
                     ng-click="openDeploy(p, s.Enviroment)"
@@ -114,11 +158,24 @@
             </tbody>
           </table>
         </div>
+        </div>
+
+        <div class="bs-callout" ng-hide="loaded">
+          <h4>Gathering container status</h4>
+          <p>Dockership is connecting to all the docker end points, please wait.</p>
+        </div>
+
+        <footer ng-show="loaded">
+          <div class=" well well-sm">
+              by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
+              . Under MIT License</a> /
+
+              Logo by
+              <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
+          </div>
+        </footer>
     </div>
-    <div id="footer" ng-cloack>
-        <p class="muted credit">Powered by <a href="https://github.com/mcuadros/dockership">Dockership</a> MIT License</p></p>
-      </div>
-    </div>
+
     <script type="text/ng-template" id="ContainersContent.html">
         <div class="modal-header">
             <h3 class="modal-title">Containers <b>{{project.Name}}</b></h3>

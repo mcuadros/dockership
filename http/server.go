@@ -61,6 +61,12 @@ func (s *server) configure() {
 		w.Write(content)
 	})
 
+	s.mux.Path("/dockership.png").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		content, _ := Asset("static/dockership.png")
+		w.Write(content)
+	})
+
 	s.mux.Path("/app.js").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		content, _ := Asset("static/app.js")

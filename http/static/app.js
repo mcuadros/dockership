@@ -1,4 +1,4 @@
-angular.module('dockership', ['ui.bootstrap', 'angular-loading-bar', 'ngAnimate']);
+angular.module('dockership', ['ui.bootstrap', 'angular-loading-bar', 'ngAnimate', 'headroom']);
 angular.module('dockership').controller(
     'MainCtrl',
     function ($scope, $http, $modal, $log) {
@@ -58,17 +58,32 @@ angular.module('dockership').controller(
             return true;
         };
 
+        $scope.loaded = false;
         $scope.loadStatus = function() {
             $http.get('/rest/status/').then(function(res) {
                 $scope.groups = res.data;
                 for (var i in res.data.Errors) {
                     $scope.log(res.data.Errors[i]);
                 }
+
+                $scope.loaded = true;
             }, function(msg) {
                 $scope.log(msg.data);
             });
         }
 
+
+        $scope.log = function(msg) {
+            $scope.errors.push(msg);
+        };
+
+        $scope.loadStatus()
+    }
+);
+
+angular.module('dockership').controller(
+    'HeaderCtrl',
+    function ($scope, $http, $log) {
         $scope.loadUser = function() {
             $http.get('/rest/user').then(function(res) {
                 $scope.user = res.data;
@@ -77,11 +92,6 @@ angular.module('dockership').controller(
             });
         }
 
-        $scope.log = function(msg) {
-            $scope.errors.push(msg);
-        };
-
-        $scope.loadStatus()
         $scope.loadUser()
     }
 );

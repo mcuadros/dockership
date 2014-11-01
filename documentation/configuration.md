@@ -1,12 +1,16 @@
+---
+Title: Configuration
+---
+
 Configuration
 =============
 
-The **dockership** configuration is based on a INI-formatted config file.
+The **dockership** configuration is based on a INI-formatted config file. 
 
 Dockership will look at `/etc/dockership/dockership.conf` for this config file by default. The `-config` flag may be passed to the `dockershipd` or `dockership` binaries to use a custom config file location.
 
 ## Syntax
-The config file syntax is based on [git-config](http://git-scm.com/docs/git-config#_syntax), with minor changes.
+The config file syntax is based on [git-config](http://git-scm.com/docs/git-config#_syntax), with minor changes.  
 
 The file consists of **sections** and **variables**. A section begins with the name of the section in square brackets and continues until the next section begins. Section names are not case sensitive. Only alphanumeric characters, - and . are allowed in section names. Each variable must belong to some section, which means that there must be a section header before the first setting of a variable.
 
@@ -26,7 +30,7 @@ flag # implicit value for bool is true
 
 A miscellaneous of configuration variables used across the whole tool.
 
-* `GithubToken` (mandatory): a Github [personal access token](https://github.com/settings/tokens/new) used in every request to the [Github API](https://developer.github.com/).
+* `GithubToken` (mandatory): a Github [personal access token](https://github.com/settings/tokens/new) used in every request to the [Github API](https://developer.github.com/). 
 
 * `UseShortRevisions` (default: true): if is false all the images and containers will be defined using full length revision names, instead the short one.
 
@@ -67,7 +71,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 
 ### Scenario
 #### rest-service project
-REST webserice in Python running under a uwsgi+nginx on port 8080
+REST webservice in Python running under a uwsgi+nginx on port 8080
 
 This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository do not have new commits.
 

@@ -48,18 +48,18 @@ Since the authentication is based on a registered [Github Application](https://g
 
 ### Environment
 
-A environment is a logical group of any number of Docker servers. Dockership support multiple environment. Each `Environment` is defined as a section with subsection: `[Enviroment "production"]`
+A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Enviroment "production"]`
 
 * `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
 
 ### Project
 
-`Project` section defines the configuration for every project to be deployed in the environments. The relation between repositories in one-to-one, so the repository should contain the `Dockerfile` and all the files needed to build the Docker image. The Project as Environment is defined as a section with subsection: `[Project "disruptive-app"]`
+`Project` section defines the configuration for every project to be deployed in the environments. The relation between repositories is one-to-one, so the repository should contain the `Dockerfile` and all the files needed to build the Docker image. The Project as Environment is defined as a section with subsection: `[Project "disruptive-app"]`
 
 * `Repository` (mandatory): Github repository SSH clone URL (eg.: `git@github.com:mcuadros/dockership.git`)
 * `Branch` (optional): branch to be deployed
 * `Dockerfile` (default: Dockerfile): the path to the Dockerfile at the repository.
-* `RelatedRepositories` (optional, multiple): SSH clone URL to dependant repositories. (Link to more explanatory document)
+* `RelatedRepositories` (optional, multiple): SSH clone URL to dependent repositories. (Link to more explanatory document)
 * `History` (default: 3): Number to old images you want to keep in each Docker server. 
 * `NoCache` (optional): Avoid to use the Docker cache (like --no-cache at `docker build`)
 * `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`)
@@ -73,7 +73,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 #### rest-service project
 REST webservice in Python running under a uwsgi+nginx on port 8080
 
-This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository do not have new commits.
+This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository does not have new commits.
 
 #### frontend project
 An AngularJS frontend running on a nginx server, with a `reverse_proxy` pointing to the port 8080 at rest-service container, in the path `/rest`.

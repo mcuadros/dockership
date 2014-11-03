@@ -48,13 +48,13 @@ Since the authentication is based on a registered [Github Application](https://g
 
 ### Environment
 
-A environment is a logical group of any number of Docker servers. Dockership support multiple environment. Each `Environment` is defined as a section with subsection: `[Enviroment "production"]`
+A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Enviroment "production"]`
 
 * `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
 
 ### Project
 
-`Project` section defines the configuration for every project to be deployed in the environments. The relation between repositories in one-to-one, so the repository should contain the `Dockerfile` and all the files needed to build the Docker image. The Project as Environment is defined as a section with subsection: `[Project "disruptive-app"]`
+`Project` section defines the configuration for every project to be deployed in the environments. The relation between repositories is one-to-one, so the repository should contain the `Dockerfile` and all the files needed to build the Docker image. The Project as Environment is defined as a section with subsection: `[Project "disruptive-app"]`
 
 * `Repository` (mandatory): Github repository SSH clone URL (eg.: `git@github.com:mcuadros/dockership.git`)
 * `Branch` (optional): branch to be deployed

@@ -48,7 +48,7 @@ Since the authentication is based on a registered [Github Application](https://g
 
 ### Environment
 
-A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Enviroment "production"]`
+A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Environment "production"]`
 
 * `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
 
@@ -65,7 +65,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 * `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`)
 * `Link` (multiple, optional): creates a Link to other project, when this project is deployed the linked projects are restarted (like -P at `docker run`)
 * `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if is different from the global one.
-* `Enviroment` (multiple, mandatory): Environment name where this project could be deployed
+* `Environment` (multiple, mandatory): Environment name where this project could be deployed
 
 ## Example
 
@@ -87,22 +87,22 @@ GithubToken = example-token
 
 [Project "rest-service"]
 Repository = git@github.com:company/rest-service.git
-Enviroment = live
-Enviroment = dev
+Environment = live
+Environment = dev
 File = /tmp/container.py
 RelatedRepository = git@github.com:company/domain.git
 
 [Project "frontend"]
 Repository = git@github.com:company/angular-client.git
-Enviroment = live
-Enviroment = dev
+Environment = live
+Environment = dev
 Port = 0.0.0.0:80:80/tcp
 Link = rest-service:backend
 
-[Enviroment "live"]
+[Environment "live"]
 DockerEndPoint = http://live-1.example.com
 DockerEndPoint = http://live-2.example.com
 
-[Enviroment "dev"]
+[Environment "dev"]
 DockerEndPoint = http://dev.example.com
 ```

@@ -9,8 +9,8 @@ import (
 )
 
 type CmdDeploy struct {
-	enviroment string
-	force      bool
+	environment string
+	force       bool
 	cmd
 }
 
@@ -19,7 +19,7 @@ func NewCmdDeploy() (cli.Command, error) {
 }
 
 func (c *CmdDeploy) parse(args []string) error {
-	c.flags.StringVar(&c.enviroment, "env", "", "")
+	c.flags.StringVar(&c.environment, "env", "", "")
 	c.flags.BoolVar(&c.force, "force", false, "")
 	err := c.cmd.parse(args)
 
@@ -33,14 +33,14 @@ func (c *CmdDeploy) Run(args []string) int {
 	}
 
 	if p, ok := c.config.Projects[c.project]; ok {
-		core.Info("Starting deploy", "project", p, "enviroment", c.enviroment, "force", c.force)
-		err := p.Deploy(c.enviroment, c.force)
+		core.Info("Starting deploy", "project", p, "environment", c.environment, "force", c.force)
+		err := p.Deploy(c.environment, c.force)
 		if len(err) != 0 {
 			core.Critical(err[0].Error(), "project", c.project)
 			return 1
 		}
 
-		core.Info("Deploy success", "project", p, "enviroment", c.enviroment)
+		core.Info("Deploy success", "project", p, "environment", c.environment)
 		return 0
 	}
 
@@ -50,13 +50,13 @@ func (c *CmdDeploy) Run(args []string) int {
 }
 
 func (c *CmdDeploy) Synopsis() string {
-	return "Deploy a project in the target enviroment."
+	return "Deploy a project in the target environment."
 }
 
 func (c *CmdDeploy) Help() string {
 	helpText := `
 Usage: dockership deploy [options]
-  Deploy a project in the target enviroment. The dockership will search for the
+  Deploy a project in the target environment. The dockership will search for the
   last commit at the gived repository, retrieving the Dockerfile. This Dockerfile
   will be used for create a new image and launching a new container. Cleaning
   the old images in the process.
@@ -64,7 +64,7 @@ Usage: dockership deploy [options]
 
 Options:
   -project=""                Just deploy the given project.
-  -env=""                    Target enviroment.
+  -env=""                    Target environment.
   -force                     Deploy even a container is allready running.
 
 `

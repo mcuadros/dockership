@@ -21,17 +21,17 @@ func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
 	force := true
 	vars := mux.Vars(r)
 	project := vars["project"]
-	enviroment := vars["enviroment"]
+	environment := vars["environment"]
 
 	if p, ok := s.config.Projects[project]; ok {
-		core.Info("Starting deploy", "project", p, "enviroment", enviroment, "force", force)
-		err := p.Deploy(enviroment, force)
+		core.Info("Starting deploy", "project", p, "environment", environment, "force", force)
+		err := p.Deploy(environment, force)
 		if len(err) != 0 {
 			for _, e := range err {
 				core.Critical(e.Error(), "project", project)
 			}
 		} else {
-			core.Info("Deploy success", "project", p, "enviroment", enviroment)
+			core.Info("Deploy success", "project", p, "environment", environment)
 		}
 	} else {
 		s.json(w, 404, fmt.Sprintf("Project %q not found", project))

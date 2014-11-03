@@ -44,7 +44,7 @@ This project at the `dockership.ini` can be configured as follows:
 [Project "corporate-site"]
 Repository = git@github.com:example/corporate-site.git
 Port = 0.0.0.0:80:80/tcp
-Enviroment = live
+Environment = live
 ```
 
 ## Centralised dockerfiles repository
@@ -67,14 +67,14 @@ Repository =  git@github.com:example/devops.git
 RelatedRepository = git@github.com:example/corporate-site.git
 Dockerfile = dockerfiles/CorporateSiteDokerFile
 Port = 0.0.0.0:80:80/tcp
-Enviroment = live
+Environment = live
 
 [Project "internal-site"]
 Repository =  git@github.com:example/devops.git
 RelatedRepository = git@github.com:example/internal-site.git
 Dockerfile = dockerfiles/InternalSiteDockerfile
 Port = 0.0.0.0:80:80/tcp
-Enviroment = live
+Environment = live
 ```
 
 Using the `RelatedRepository` we can track any change at the deployed project, having the dockerfile in other repository. But we have a caveat, every time a file is changed at the `devops` repository even unrelated to the project, this project will look outdated.

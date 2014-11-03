@@ -105,7 +105,7 @@
           <table class="table table-striped">
             <thead>
               <tr>
-                <th class="col-md-2">Enviroment</th>
+                <th class="col-md-2">Environment</th>
                 <th class="col-md-3">Running Revision</th>
                 <th class="col-md-2">Containers</th>
                 <th class="col-md-2">Status</th>
@@ -117,10 +117,10 @@
                 s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
                 <td><b
                     popover-title="Docker end-points"
-                    popover="{{s.Enviroment.DockerEndPoints}}"
+                    popover="{{s.Environment.DockerEndPoints}}"
                     popover-placement="right"
                     popover-trigger="mouseenter"
-                >{{s.Enviroment.Name}}</b>
+                >{{s.Environment.Name}}</b>
                 </td>
                 <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
                 <td>
@@ -141,14 +141,14 @@
                 <td class="text-right">
                   <button ng-if="!isDeployable(s)"
                     type="button"
-                    ng-click="openDeploy(p, s.Enviroment)"
+                    ng-click="openDeploy(p, s.Environment)"
                     class="btn btn-success btn-xs">
                        <span class="glyphicon glyphicon-saved"></span>
                        Up-to-date
                   </button>
                   <button ng-if="isDeployable(s)"
                     type="button"
-                    ng-click="openDeploy(p, s.Enviroment)"
+                    ng-click="openDeploy(p, s.Environment)"
                     class="btn btn-primary btn-xs">
                        <span class="glyphicon glyphicon-import"></span>
                        Deploy {{s.LastRevisionLabel.slice(0,12)}}
@@ -215,9 +215,9 @@
     <script type="text/ng-template" id="DeployContent.html">
         <div class="modal-header">
             <h3 class="modal-title">
-                Deploying <b>{{project.Project.Name}}</b> @ <b>{{enviroment.Name}}</b>
+                Deploying <b>{{project.Project.Name}}</b> @ <b>{{environment.Name}}</b>
                 <small>
-                    Revision <b>{{project.Status[enviroment.Name].LastRevisionLabel}}</b>
+                    Revision <b>{{project.Status[environment.Name].LastRevisionLabel}}</b>
                 </small>
             </h3>
         </div>

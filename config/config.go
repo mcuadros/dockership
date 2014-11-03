@@ -21,8 +21,8 @@ type Config struct {
 		GithubOrganization string
 		GithubRedirectURL  string
 	}
-	Projects    map[string]*core.Project    `gcfg:"Project"`
-	Enviroments map[string]*core.Enviroment `gcfg:"Enviroment"`
+	Projects     map[string]*core.Project     `gcfg:"Project"`
+	Environments map[string]*core.Environment `gcfg:"Environment"`
 }
 
 func (c *Config) LoadFile(filename string) error {
@@ -33,7 +33,7 @@ func (c *Config) LoadFile(filename string) error {
 
 	defaults.SetDefaults(c)
 	c.LoadProjects()
-	c.LoadEnviroments()
+	c.LoadEnvironments()
 	return nil
 }
 
@@ -51,11 +51,11 @@ func (c *Config) LoadProjects() {
 	}
 }
 
-func (c *Config) LoadEnviroments() {
+func (c *Config) LoadEnvironments() {
 	for _, p := range c.Projects {
-		p.Enviroments = make(map[string]*core.Enviroment, 0)
-		for _, e := range p.EnviromentNames {
-			p.Enviroments[e] = c.mustGetEnviroment(p, e)
+		p.Environments = make(map[string]*core.Environment, 0)
+		for _, e := range p.EnvironmentNames {
+			p.Environments[e] = c.mustGetEnvironment(p, e)
 		}
 
 		p.Links = make(map[string]*core.Link, 0)
@@ -71,14 +71,14 @@ func (c *Config) LoadEnviroments() {
 	}
 }
 
-func (c *Config) mustGetEnviroment(p *core.Project, name string) *core.Enviroment {
-	if e, ok := c.Enviroments[name]; ok {
+func (c *Config) mustGetEnvironment(p *core.Project, name string) *core.Environment {
+	if e, ok := c.Environments[name]; ok {
 		defaults.SetDefaults(e)
 		e.Name = name
 		return e
 	}
 
-	core.Critical("Undefined enviroment", "enviroment", name, "project", p)
+	core.Critical("Undefined environment", "environment", name, "project", p)
 	return nil
 }
 

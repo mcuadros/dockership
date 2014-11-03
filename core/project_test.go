@@ -14,13 +14,13 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	}
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-	e := &Enviroment{Name: "a", DockerEndPoints: []string{m.URL()}}
+	e := &Environment{Name: "a", DockerEndPoints: []string{m.URL()}}
 	p := &Project{
-		Repository:  "git@github.com:github/gem-builder.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: map[string]*Enviroment{"foo": e},
-		Dockerfile:  "git_mock",
-		GithubToken: "05bed21c257d935017d85d3398b46ac81035756f",
+		Repository:   "git@github.com:github/gem-builder.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: map[string]*Environment{"foo": e},
+		Dockerfile:   "git_mock",
+		GithubToken:  "05bed21c257d935017d85d3398b46ac81035756f",
 	}
 
 	err := p.Deploy("foo", false)
@@ -34,10 +34,10 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 
 func (s *CoreSuite) TestProject_Test(c *C) {
 	p := &Project{
-		Repository:  "git@github.com:foo/bar.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: map[string]*Enviroment{"a": &Enviroment{}},
-		TestCommand: "foo",
+		Repository:   "git@github.com:foo/bar.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: map[string]*Environment{"a": &Environment{}},
+		TestCommand:  "foo",
 	}
 
 	_, err := p.Test("a")
@@ -46,10 +46,10 @@ func (s *CoreSuite) TestProject_Test(c *C) {
 
 func (s *CoreSuite) TestProject_TestFail(c *C) {
 	p := &Project{
-		Repository:  "git@github.com:foo/bar.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: map[string]*Enviroment{"a": &Enviroment{}},
-		TestCommand: "echo",
+		Repository:   "git@github.com:foo/bar.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: map[string]*Environment{"a": &Environment{}},
+		TestCommand:  "echo",
 	}
 
 	r, err := p.Test("a")
@@ -64,17 +64,17 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-	envs := map[string]*Enviroment{
-		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
-		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
+	envs := map[string]*Environment{
+		"a": &Environment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Environment{Name: "b", DockerEndPoints: []string{mB.URL()}},
 	}
 
 	p := &Project{
-		Name:        "foo",
-		Repository:  "git@github.com:github/gem-builder.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: envs,
-		Dockerfile:  "git_mock",
+		Name:         "foo",
+		Repository:   "git@github.com:github/gem-builder.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: envs,
+		Dockerfile:   "git_mock",
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
@@ -85,7 +85,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	r, err := p.Status()
 	c.Assert(err, HasLen, 0)
 	c.Assert(r, HasLen, 2)
-	c.Assert(r[0].Enviroment, Equals, envs["a"])
+	c.Assert(r[0].Environment, Equals, envs["a"])
 	c.Assert(r[0].LastRevision.GetShort(), Equals, "d170057eca46")
 	c.Assert(r[0].Containers, HasLen, 1)
 	c.Assert(r[0].RunningContainers, HasLen, 1)
@@ -95,16 +95,16 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 func (s *CoreSuite) TestProject_ListContainers(c *C) {
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-	envs := map[string]*Enviroment{
-		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
-		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
+	envs := map[string]*Environment{
+		"a": &Environment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Environment{Name: "b", DockerEndPoints: []string{mB.URL()}},
 	}
 
 	p := &Project{
-		Name:        "foo",
-		Repository:  "git@github.com:foo/bar.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: envs,
+		Name:         "foo",
+		Repository:   "git@github.com:foo/bar.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: envs,
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
@@ -122,15 +122,15 @@ func (s *CoreSuite) TestProject_ListContainers(c *C) {
 func (s *CoreSuite) TestProject_ListImages(c *C) {
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	mB, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-	envs := map[string]*Enviroment{
-		"a": &Enviroment{Name: "a", DockerEndPoints: []string{mA.URL()}},
-		"b": &Enviroment{Name: "b", DockerEndPoints: []string{mB.URL()}},
+	envs := map[string]*Environment{
+		"a": &Environment{Name: "a", DockerEndPoints: []string{mA.URL()}},
+		"b": &Environment{Name: "b", DockerEndPoints: []string{mB.URL()}},
 	}
 
 	p := &Project{
-		Repository:  "git@github.com:foo/bar.git",
-		Branch:      DEFAULT_BRANCH,
-		Enviroments: envs,
+		Repository:   "git@github.com:foo/bar.git",
+		Branch:       DEFAULT_BRANCH,
+		Environments: envs,
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])

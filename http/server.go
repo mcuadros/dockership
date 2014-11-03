@@ -46,7 +46,7 @@ func (s *server) configure() {
 	s.mux.Path("/rest/containers/{project:.*}").Methods("GET").HandlerFunc(s.HandleContainers)
 
 	// deploy
-	s.mux.Path("/rest/deploy/{project:.*}/{enviroment:.*}").Methods("GET").HandlerFunc(s.HandleDeploy)
+	s.mux.Path("/rest/deploy/{project:.*}/{environment:.*}").Methods("GET").HandlerFunc(s.HandleDeploy)
 
 	// logged-user
 	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -21,7 +21,7 @@ func (c *CmdStatus) Run(args []string) int {
 	}
 
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
-	table.SetHeader([]string{"Enviroment", "Project", "Last Commit", "Containers", "Status"})
+	table.SetHeader([]string{"Environment", "Project", "Last Commit", "Containers", "Status"})
 
 	for name, p := range c.config.Projects {
 		if c.project != "" && c.project != name {
@@ -43,7 +43,7 @@ func (c *CmdStatus) Run(args []string) int {
 			}
 
 			table.AddRow([]string{
-				s.Enviroment.String(),
+				s.Environment.String(),
 				p.String(),
 				s.LastRevision.GetShort(),
 				fmt.Sprintf("%d", len(s.Containers)),

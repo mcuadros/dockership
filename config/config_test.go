@@ -23,16 +23,16 @@ func (s *ConfigSuite) TestConfig_LoadFile(c *C) {
 	c.Assert(project.GithubToken, Equals, "<your-github-token>")
 	c.Assert(project.UseShortRevisions, Equals, true)
 
-	c.Assert(project.Enviroments, HasLen, 2)
+	c.Assert(project.Environments, HasLen, 2)
 
 	c.Assert(
-		project.Enviroments["live"].DockerEndPoints[0],
+		project.Environments["live"].DockerEndPoints[0],
 		Equals,
 		"http://live-docker.my-company.com:4243",
 	)
 
 	c.Assert(
-		project.Enviroments["testing"].DockerEndPoints[0],
+		project.Environments["testing"].DockerEndPoints[0],
 		Equals,
 		"http://testing-docker.my-company.com:4243",
 	)

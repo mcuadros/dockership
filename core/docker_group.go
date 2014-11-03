@@ -5,18 +5,18 @@ import (
 )
 
 type DockerGroup struct {
-	enviroment *Enviroment
-	dockers    map[string]*Docker
+	environment *Environment
+	dockers     map[string]*Docker
 	sync.WaitGroup
 }
 
-func NewDockerGroup(enviroment *Enviroment) (*DockerGroup, error) {
+func NewDockerGroup(environment *Environment) (*DockerGroup, error) {
 	dg := &DockerGroup{
-		enviroment: enviroment,
-		dockers:    make(map[string]*Docker, 0),
+		environment: environment,
+		dockers:     make(map[string]*Docker, 0),
 	}
 
-	for _, endPoint := range enviroment.DockerEndPoints {
+	for _, endPoint := range environment.DockerEndPoints {
 		if d, err := NewDocker(endPoint); err == nil {
 			dg.dockers[endPoint] = d
 		} else {

@@ -232,8 +232,8 @@ func (s *CoreSuite) TestContainersByCreated_Sort(c *C) {
 	c.Assert(list[2].Created, Equals, int64(3))
 }
 
-func (s *CoreSuite) TestEnviroment_String(c *C) {
-	e := Enviroment{Name: "foo"}
+func (s *CoreSuite) TestEnvironment_String(c *C) {
+	e := Environment{Name: "foo"}
 
 	c.Assert(e.String(), Equals, "foo")
 }

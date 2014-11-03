@@ -36,7 +36,7 @@ func (s *server) HandleStatus(w http.ResponseWriter, r *http.Request) {
 		} else {
 			record.Status = make(map[string]*StatusRecord, 0)
 			for _, s := range sl {
-				record.Status[s.Enviroment.Name] = &StatusRecord{s.LastRevision.Get(), s}
+				record.Status[s.Environment.Name] = &StatusRecord{s.LastRevision.Get(), s}
 			}
 		}
 

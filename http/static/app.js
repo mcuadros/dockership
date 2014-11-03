@@ -26,7 +26,7 @@ angular.module('dockership').controller(
             });
         };
 
-        $scope.openDeploy = function (project, enviroment) {
+        $scope.openDeploy = function (project, environment) {
              var modalInstance = $modal.open({
                 templateUrl: 'DeployContent.html',
                 controller: 'DeployCtrl',
@@ -35,8 +35,8 @@ angular.module('dockership').controller(
                     project: function () {
                         return project;
                     },
-                    enviroment: function () {
-                        return enviroment;
+                    environment: function () {
+                        return environment;
                     },
                     loadStatus: function () {
                         return $scope.loadStatus;
@@ -111,13 +111,13 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'DeployCtrl',
-    function ($scope, $modalInstance, $http, oboe, project, enviroment, loadStatus) {
+    function ($scope, $modalInstance, $http, oboe, project, environment, loadStatus) {
         $scope.project = project;
-        $scope.enviroment = enviroment;
+        $scope.environment = environment;
 
         $scope.data = [];
         $scope.data = oboe({
-            url: '/rest/deploy/' + project.Project.Name + '/' + enviroment.Name,
+            url: '/rest/deploy/' + project.Project.Name + '/' + environment.Name,
             pattern: '{msg}',
         });
 

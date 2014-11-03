@@ -221,11 +221,11 @@ func (c ContainersByCreated) Len() int           { return len(c) }
 func (c ContainersByCreated) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 func (c ContainersByCreated) Less(i, j int) bool { return c[i].Created < c[j].Created }
 
-type Enviroment struct {
+type Environment struct {
 	DockerEndPoints []string `gcfg:"DockerEndPoint"`
 	Name            string
 }
 
-func (e *Enviroment) String() string {
+func (e *Environment) String() string {
 	return e.Name
 }

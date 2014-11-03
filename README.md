@@ -12,17 +12,17 @@ The configuration is based on a INI-style config file like this
 ```ini
 [Project "corporate-site"]
 Repository = git@github.com:example/corporate-site.git
-Enviroment = live
-Enviroment = dev
+Environment = live
+Environment = dev
 Port = 0.0.0.0:80:80/tcp
 
 
-[Enviroment "live"]
+[Environment "live"]
 DockerEndPoint = http://live-1.example.com
 DockerEndPoint = http://live-2.example.com
 
 
-[Enviroment "dev"]
+[Environment "dev"]
 DockerEndPoint = http://dev.example.com
 ```
 

@@ -22,7 +22,7 @@ func (c *CmdContainers) Run(args []string) int {
 	}
 
 	table := termtable.NewTable(nil, &termtable.TableOptions{Padding: 3})
-	table.SetHeader([]string{"Enviroment", "Repository", "Commit", "Container ID", "Created", "Command", "Status", "Ports"})
+	table.SetHeader([]string{"Environment", "Repository", "Commit", "Container ID", "Created", "Command", "Status", "Ports"})
 
 	for name, p := range c.config.Projects {
 		if c.project != "" && c.project != name {

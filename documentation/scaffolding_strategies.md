@@ -5,7 +5,9 @@ Title: Scaffolding Strategies
 Scaffolding Strategies
 ======================
 
-**Dockership** suggests self-contained repositories, this means that every repository to be deploy should contain his Dockerfile, another techniques could be used as we explain in this document.
+This document describes the different possibilities to define the scaffolding of applications to be used with Dockership. 
+
+The easiest strategy for working with Dockership is to use self-contained repositiories: every repository to be deployed should contain his Dockerfile. Alternatively, the Dockefiles of the different applications of a company can be centralized in a single repository. 
 
 ## Self-contained Repositories
 

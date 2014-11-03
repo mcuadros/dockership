@@ -1,5 +1,5 @@
 ![Dockership](https://cdn.rawgit.com/mcuadros/dockership-site/master/static/images/dockership.png)
-### [![Build Status](https://travis-ci.org/mcuadros/dockership.svg?branch=master)](https://travis-ci.org/mcuadros/dockership)
+### [![Latest Stable Version](http://img.shields.io/github/release/mcuadros/dockership.svg?style=flat)](https://github.com/mcuadros/dockership/releases) [![Build Status](http://img.shields.io/travis/mcuadros/dockership.svg?style=flat)](https://travis-ci.org/mcuadros/dockership)
 
 The deploy is based on git repositories (currently only supports Github ones) containing the Dockerfile for each project. Dockership handles the building and running process at one or multiple docker servers, the  version control is made through the git commits, being extremly easy.
 

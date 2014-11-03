@@ -59,7 +59,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 * `Repository` (mandatory): Github repository SSH clone URL (eg.: `git@github.com:mcuadros/dockership.git`)
 * `Branch` (optional): branch to be deployed
 * `Dockerfile` (default: Dockerfile): the path to the Dockerfile at the repository.
-* `RelatedRepositories` (optional, multiple): SSH clone URL to dependant repositories. (Link to more explanatory document)
+* `RelatedRepositories` (optional, multiple): SSH clone URL to dependent repositories. (Link to more explanatory document)
 * `History` (default: 3): Number to old images you want to keep in each Docker server. 
 * `NoCache` (optional): Avoid to use the Docker cache (like --no-cache at `docker build`)
 * `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`)
@@ -73,7 +73,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 #### rest-service project
 REST webservice in Python running under a uwsgi+nginx on port 8080
 
-This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository do not have new commits.
+This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository does not have new commits.
 
 #### frontend project
 An AngularJS frontend running on a nginx server, with a `reverse_proxy` pointing to the port 8080 at rest-service container, in the path `/rest`.

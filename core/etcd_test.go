@@ -12,7 +12,7 @@ func (_ *CoreSuite) TestEtcd_Get(c *C) {
 	e := NewEtcd([]string{"http://127.0.0.1:3000/"})
 	r, err := e.Get("foo")
 	c.Assert(err, Equals, nil)
-	c.Assert(r, Equals, "this is awesome")
+	c.Assert(r, Equals, "foofoo")
 }
 
 func (_ *CoreSuite) TestEtcd_GetDir(c *C) {
@@ -39,7 +39,11 @@ func startEtcdMockServer() {
 	})
 
 	mux.Handle("/v2/keys/foo", &reponseHandler{
-		"{\"action\":\"get\",\"node\":{\"key\":\"/mykey\",\"value\":\"this is awesome\",\"modifiedIndex\":3,\"createdIndex\":3}}",
+		"{\"action\":\"get\",\"node\":{\"key\":\"/mykey\",\"value\":\"foofoo\",\"modifiedIndex\":3,\"createdIndex\":3}}",
+	})
+
+	mux.Handle("/v2/keys/bar/foo", &reponseHandler{
+		"{\"action\":\"get\",\"node\":{\"key\":\"/mykey\",\"value\":\"barfoobarfoo\",\"modifiedIndex\":3,\"createdIndex\":3}}",
 	})
 
 	http.ListenAndServe(":3000", mux)

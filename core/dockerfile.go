@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 )
 
 type Dockerfile struct {
@@ -24,6 +25,7 @@ func NewDockerfile(blob []byte, p *Project, r Revision, e *Environment) *Dockerf
 func (d *Dockerfile) Get() []byte {
 	result := d.blob
 	result = d.resolveInfoVariables(result)
+	result = d.resolveEtcdVariables(result)
 
 	return result
 }
@@ -46,4 +48,33 @@ func (d *Dockerfile) resolveInfoVariables(result []byte) []byte {
 	}
 
 	return result
+}
+
+var etcdVars = regexp.MustCompile("\\$ETCD_([A-Za-z_]*)")
+
+func (d *Dockerfile) resolveEtcdVariables(result []byte) []byte {
+	if d.environment == nil || d.environment.EtcdServers == nil {
+		return result
+	}
+
+	etcd := NewEtcd(d.environment.EtcdServers)
+	for _, m := range etcdVars.FindAllSubmatch(result, -1) {
+		val, err := d.getEtcdValue(etcd, m[1])
+		if err == nil {
+			result = bytes.Replace(result, m[0], val, -1)
+		}
+	}
+
+	return result
+}
+
+func (d *Dockerfile) getEtcdValue(etcd *Etcd, key []byte) ([]byte, error) {
+	etcdKey := string(bytes.Replace(key, []byte("__"), []byte("/"), -1))
+	value, err := etcd.Get(etcdKey)
+	if err != nil {
+		Warning("Unable to retrieve key from etcd", "key", etcdKey, "environment", d.environment.Name)
+		return []byte(""), err
+	}
+
+	return []byte(value), nil
 }

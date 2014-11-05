@@ -14,3 +14,16 @@ func (_ *CoreSuite) TestDockerfile_Get(c *C) {
 
 	c.Assert(string(d.Get()), Equals, "foo/bar/qux/baz")
 }
+
+func (_ *CoreSuite) TestDockerfile_GetWithEtcd(c *C) {
+	go startEtcdMockServer()
+
+	d := NewDockerfile(
+		[]byte("foo $ETCD_foo qux $FOO $ETCD_bar__foo $ETCD_MISSING $ETCD_foo"),
+		&Project{Name: "foo", Repository: "qux"},
+		Revision{"foo": "baz"},
+		&Environment{Name: "bar", EtcdServers: []string{"http://127.0.0.1:3000"}},
+	)
+
+	c.Assert(string(d.Get()), Equals, "foo foofoo qux $FOO barfoobarfoo $ETCD_MISSING foofoo")
+}

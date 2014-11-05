@@ -26,7 +26,10 @@ This kind of variables are sourced from the internal process of Dockerfile given
 
 Dockership can be connected to a etcd server and allowing retrieve values directly into your Dockerfile.
 
-The etcd keys are translated to variables. For example a key called `foo` will be converted in `$ETCD_FOO` or a key in a directory like `qux/bar` becomes `$ETCD_QUX_BAR`. If the key not is found then the variable will be an empty string.
+The etcd keys are translated to variables. For example a key called `FOO` will be converted in `$ETCD_FOO` or a key in a directory like `qux/bar` becomes `$ETCD_QUX__BAR`. If the key not is found or `etcd` returns an error the variable not is replaced.
+
+The `etcd` keys are case-sensitive, to replace a key named `foo` a variable `$ETCD_foo` is required. If the key is a directory the `/` should be replace with `__`.
+
 
 
 ## Avoid cache issues

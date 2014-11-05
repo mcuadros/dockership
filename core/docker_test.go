@@ -30,7 +30,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 
 	d, _ := NewDocker(m.URL())
 	rev := Revision{"foo": "bar"}
-	err := d.Deploy(p, rev, []byte("FROM base\n"), false)
+	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, false)
 	c.Assert(err, Equals, nil)
 
 	l, _ := d.ListContainers(p)
@@ -72,12 +72,12 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 
 	s.Add(1)
 	d, _ := NewDocker(ts.URL)
-	err := d.BuildImage(p, Revision{"key": "qux"}, []byte("FROM base\n$DOCKERSHIP_PROJECT"))
+	err := d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")})
 	s.Wait()
 
 	c.Assert(err, Equals, nil)
 	c.Assert(files, HasLen, 2)
-	c.Assert(files["Dockerfile"], Equals, "FROM base\nimage")
+	c.Assert(files["Dockerfile"], Equals, "FROM base\n")
 	c.Assert(files[path.Base(file)], Equals, "qux")
 	c.Assert(request.URL.Query().Get("t"), Equals, "image:qux")
 	c.Assert(request.URL.Query().Get("nocache"), Equals, "1")

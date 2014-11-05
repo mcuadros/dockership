@@ -78,9 +78,9 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, []byte{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, []byte{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, false)
 
 	r, err := p.Status()
 	c.Assert(err, HasLen, 0)
@@ -108,9 +108,9 @@ func (s *CoreSuite) TestProject_ListContainers(c *C) {
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, []byte{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, []byte{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListContainers()
 	c.Assert(err, HasLen, 0)
@@ -134,9 +134,9 @@ func (s *CoreSuite) TestProject_ListImages(c *C) {
 	}
 
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, []byte{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, []byte{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListImages()
 	c.Assert(err, HasLen, 0)

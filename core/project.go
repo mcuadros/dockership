@@ -32,22 +32,25 @@ func (p *Project) Deploy(environment string, force bool) []error {
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
-	file, err := c.GetDockerFile(p)
+	blob, err := c.GetDockerFile(p)
 	if err != nil {
 		return []error{err}
 	}
 
-	rev, err := c.GetLastRevision(p)
+	r, err := c.GetLastRevision(p)
 	if err != nil {
 		return []error{err}
 	}
 
-	d, err := NewDockerGroup(p.mustGetEnvironment(environment))
+	e := p.mustGetEnvironment(environment)
+	d, err := NewDockerGroup(e)
 	if err != nil {
 		return []error{err}
 	}
 
-	return d.Deploy(p, rev, file, force)
+	file := NewDockerfile(blob, p, r, e)
+
+	return d.Deploy(p, r, file, force)
 }
 
 func (p *Project) mustGetEnvironment(name string) *Environment {

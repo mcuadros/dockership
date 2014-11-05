@@ -1,7 +1,6 @@
 package core
 
 import (
-	"bytes"
 	"crypto/md5"
 	"fmt"
 	"regexp"
@@ -75,24 +74,6 @@ func (r Revision) GetShort() string {
 
 func (r Revision) String() string {
 	return r.Get()
-}
-
-type Dockerfile []byte
-
-func (d Dockerfile) Get(p *Project, r Revision) []byte {
-	vars := map[string]string{
-		"PROJECT": p.Name,
-		"VCS":     string(p.Repository),
-		"REV":     r.GetShort(),
-	}
-
-	result := []byte(d)
-	for name, value := range vars {
-		varName := []byte(fmt.Sprintf("$DOCKERSHIP_%s", name))
-		result = bytes.Replace(result, varName, []byte(value), -1)
-	}
-
-	return result
 }
 
 type ImageId string
@@ -223,6 +204,7 @@ func (c ContainersByCreated) Less(i, j int) bool { return c[i].Created < c[j].Cr
 
 type Environment struct {
 	DockerEndPoints []string `gcfg:"DockerEndPoint"`
+	EtcdServers     []string `gcfg:"EtcdServer"`
 	Name            string
 }
 

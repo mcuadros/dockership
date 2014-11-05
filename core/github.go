@@ -31,7 +31,7 @@ func NewGithub(token string) *Github {
 	}
 }
 
-func (g *Github) GetDockerFile(p *Project) (content Dockerfile, err error) {
+func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
 	info := p.Repository.Info()
 	commit, err := g.doGetLastCommit(info)
 	if err != nil {

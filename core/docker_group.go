@@ -27,7 +27,7 @@ func NewDockerGroup(environment *Environment) (*DockerGroup, error) {
 	return dg, nil
 }
 
-func (d *DockerGroup) Deploy(p *Project, rev Revision, dockerfile []byte, force bool) []error {
+func (d *DockerGroup) Deploy(p *Project, rev Revision, dockerfile *Dockerfile, force bool) []error {
 	Info("Deploying dockerfile", "project", p, "revision", rev, "end-points", len(d.dockers))
 	return d.batchErrorResult(func(docker *Docker) interface{} {
 		return &errorResult{err: docker.Deploy(p, rev, dockerfile, force)}
@@ -89,7 +89,7 @@ func (d *DockerGroup) ListImages(p *Project) ([]*Image, []error) {
 	return images, errors
 }
 
-func (d *DockerGroup) BuildImage(p *Project, rev Revision, dockerfile []byte) []error {
+func (d *DockerGroup) BuildImage(p *Project, rev Revision, dockerfile *Dockerfile) []error {
 	Info("Building image", "project", p, "revision", rev, "end-points", len(d.dockers))
 	return d.batchErrorResult(func(docker *Docker) interface{} {
 		return &errorResult{err: docker.BuildImage(p, rev, dockerfile)}

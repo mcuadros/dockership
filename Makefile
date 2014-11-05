@@ -53,7 +53,7 @@ packages: clean assets
 	for os in $(PKG_OS); do \
 		for arch in $(PKG_ARCH); do \
 			cd $(BASE_PATH); \
-			mkdir -p $(PROJECT)_$(VERSION)_$${os}_$${arch}; \
+			mkdir -p $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}; \
 			for cmd in $(COMMANDS); do \
 				GOOS=$${os} GOARCH=$${arch} $(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" -o $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}/$${cmd} $${cmd}.go ; \
 			done; \

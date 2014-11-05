@@ -1,4 +1,6 @@
 # Package configuration
+PROJECT = dockership
+COMMANDS = dockership dockershipd
 DEPENDENCIES = gopkg.in/check.v1 \
 code.google.com/p/go.tools/cmd/cover \
 github.com/jteeuwen/go-bindata/... \
@@ -9,7 +11,13 @@ github.com/laher/goxc
 BASE_PATH := $(shell pwd)
 BUILD_PATH := $(BASE_PATH)/build
 VERSION ?= $(shell git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+BUILD ?= $(shell date)
 ASSETS := static
+
+# PACKAGES
+PKG_OS = darwin linux
+PKG_ARCH = amd64
+PKG_CONTENT = README.md LICENSE
 
 # Go parameters
 GOCMD = go
@@ -28,8 +36,9 @@ assets:
 	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http $(ASSETS)
 
 build: assets dependencies
-	$(GOCMD) build dockership.go
-	$(GOCMD) build dockershipd.go
+	for cmd in $(COMMANDS); do \
+		$(GOCMD) build $${cmd}.go; \
+	done
 
 test: dependencies
 	cd $(BASE_PATH)/http; $(BINDATA) --debug $(ASSETS)
@@ -40,8 +49,21 @@ dependencies:
 	$(GOGET) -d -v ./...
 	for i in $(DEPENDENCIES); do $(GOGET) $$i; done
 
-packages: assets
-	$(GOXC) -d="$(BUILD_PATH)" -c $(GOXC_CONFIG) -pv="$(VERSION)"
+packages: clean assets
+	for os in $(PKG_OS); do \
+		for arch in $(PKG_ARCH); do \
+			cd $(BASE_PATH); \
+			mkdir -p $(PROJECT)_$(VERSION)_$${os}_$${arch}; \
+			for cmd in $(COMMANDS); do \
+				GOOS=$${os} GOARCH=$${arch} $(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" -o $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}/$${cmd} $${cmd}.go ; \
+			done; \
+			for content in $(PKG_CONTENT); do \
+				cp -rf $${content} $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}/; \
+			done; \
+			cd  $(BUILD_PATH) && tar -cvzf $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}.tar.gz $(PROJECT)_$(VERSION)_$${os}_$${arch}/; \
+		done; \
+	done;
+
 
 clean:
 	echo $(VERSION)

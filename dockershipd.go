@@ -4,6 +4,9 @@ import (
 	"github.com/mcuadros/dockership/http"
 )
 
+var version string
+var build string
+
 func main() {
-	http.Start()
+	http.Start(version, build)
 }

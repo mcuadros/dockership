@@ -10,11 +10,11 @@ import (
 	mcli "github.com/mitchellh/cli"
 )
 
-var VERSION string
-var BUILD_DATE string
+var version string
+var build string
 
 func main() {
-	c := mcli.NewCLI("dockership", fmt.Sprintf("%s / %s", VERSION, BUILD_DATE))
+	c := mcli.NewCLI("dockership", fmt.Sprintf("dockership ver.: %s (build: %s)", version, build))
 	c.Args = os.Args[1:]
 	c.Commands = map[string]mcli.CommandFactory{
 		"status":     cli.NewCmdStatus,

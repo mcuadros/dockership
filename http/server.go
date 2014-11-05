@@ -13,15 +13,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var VERSION string
-var BUILD_DATE string
 var configFile string
 
-func Start() {
+func Start(version, build string) {
+	core.Info("Starting HTTP daemon", "version", version, "build", build)
 	flag.StringVar(&configFile, "config", config.DEFAULT_CONFIG, "config file")
 	flag.Parse()
 
-	s := &server{}
+	s := &server{serverId: fmt.Sprintf("dockership %s, build %s", version, build)}
 	s.readConfig(configFile)
 	s.configure()
 	s.configureAuth()
@@ -29,9 +28,10 @@ func Start() {
 }
 
 type server struct {
-	mux    *mux.Router
-	oauth  *OAuth
-	config config.Config
+	serverId string
+	mux      *mux.Router
+	oauth    *OAuth
+	config   config.Config
 }
 
 func (s *server) configure() {
@@ -100,7 +100,7 @@ func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.oauth.Handler(w, r) {
 		core.Debug("Handling request", "url", r.URL)
-		w.Header().Set("Server", fmt.Sprintf("dockership %s / %s", VERSION, BUILD_DATE))
+		w.Header().Set("Server", s.serverId)
 		s.mux.ServeHTTP(w, r)
 	}
 }

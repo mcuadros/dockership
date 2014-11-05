@@ -7,7 +7,7 @@ import (
 	"github.com/mcuadros/go-defaults"
 )
 
-const DEFAULT_CONFIG = "config.ini"
+const DEFAULT_CONFIG = "/etc/dockership/dockership.conf"
 
 type Config struct {
 	Global struct {

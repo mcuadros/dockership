@@ -25,10 +25,11 @@ BINDATA = go-bindata
 all: test build
 
 assets:
-	cd $(BASE_PATH)/http; $(BINDATA) $(ASSETS)
+	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http $(ASSETS)
 
 build: assets dependencies
-	$(GOCMD) build ./...
+	$(GOCMD) build dockership.go
+	$(GOCMD) build dockershipd.go
 
 test: dependencies
 	cd $(BASE_PATH)/http; $(BINDATA) --debug $(ASSETS)

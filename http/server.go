@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ var VERSION string
 var BUILD_DATE string
 var configFile string
 
-func main() {
+func Start() {
 	flag.StringVar(&configFile, "config", config.DEFAULT_CONFIG, "config file")
 	flag.Parse()
 
@@ -85,6 +85,7 @@ func (s *server) readConfig(configFile string) {
 }
 
 func (s *server) run() {
+	core.Info("HTTP server running", "host:port", s.config.HTTP.Listen)
 	if err := http.ListenAndServe(s.config.HTTP.Listen, s); err != nil {
 		panic(err)
 	}

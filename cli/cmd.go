@@ -1,9 +1,8 @@
-package main
+package cli
 
 import (
 	"flag"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/mcuadros/dockership/config"
@@ -11,26 +10,6 @@ import (
 
 	"github.com/mitchellh/cli"
 )
-
-var VERSION string
-var BUILD_DATE string
-
-func main() {
-	c := cli.NewCLI("dockership", fmt.Sprintf("%s / %s", VERSION, BUILD_DATE))
-	c.Args = os.Args[1:]
-	c.Commands = map[string]cli.CommandFactory{
-		"status":     NewCmdStatus,
-		"deploy":     NewCmdDeploy,
-		"containers": NewCmdContainers,
-	}
-
-	exitStatus, err := c.Run()
-	if err != nil {
-		core.Critical(err.Error())
-	}
-
-	os.Exit(exitStatus)
-}
 
 type cmd struct {
 	configFile string

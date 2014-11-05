@@ -13,6 +13,7 @@ type Config struct {
 	Global struct {
 		UseShortRevisions bool `default:"true"`
 		GithubToken       string
+		EtcdServers       []string `gcfg:"EtcdServer"`
 	}
 	HTTP struct {
 		Listen             string `default:":8080"`
@@ -34,11 +35,11 @@ func (c *Config) LoadFile(filename string) error {
 	defaults.SetDefaults(c)
 	c.LoadProjects()
 	c.LoadEnvironments()
+	c.LinkProjectsAndEnviroments()
 	return nil
 }
 
 func (c *Config) LoadProjects() {
-	defaults.SetDefaults(c)
 	for name, p := range c.Projects {
 		p.Name = name
 		defaults.SetDefaults(p)
@@ -52,6 +53,16 @@ func (c *Config) LoadProjects() {
 }
 
 func (c *Config) LoadEnvironments() {
+	for name, e := range c.Environments {
+		e.Name = name
+		defaults.SetDefaults(e)
+		if e.EtcdServers == nil || len(e.EtcdServers) == 0 {
+			e.EtcdServers = c.Global.EtcdServers
+		}
+	}
+}
+
+func (c *Config) LinkProjectsAndEnviroments() {
 	for _, p := range c.Projects {
 		p.Environments = make(map[string]*core.Environment, 0)
 		for _, e := range p.EnvironmentNames {

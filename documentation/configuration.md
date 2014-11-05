@@ -5,12 +5,12 @@ Title: Configuration
 Configuration
 =============
 
-The **dockership** configuration is based on a INI-formatted config file. 
+The **dockership** configuration is based on a INI-formatted config file.
 
 Dockership will look at `/etc/dockership/dockership.conf` for this config file by default. The `-config` flag may be passed to the `dockershipd` or `dockership` binaries to use a custom config file location.
 
 ## Syntax
-The config file syntax is based on [git-config](http://git-scm.com/docs/git-config#_syntax), with minor changes.  
+The config file syntax is based on [git-config](http://git-scm.com/docs/git-config#_syntax), with minor changes.
 
 The file consists of **sections** and **variables**. A section begins with the name of the section in square brackets and continues until the next section begins. Section names are not case sensitive. Only alphanumeric characters, - and . are allowed in section names. Each variable must belong to some section, which means that there must be a section header before the first setting of a variable.
 
@@ -30,9 +30,11 @@ flag # implicit value for bool is true
 
 A miscellaneous of configuration variables used across the whole tool.
 
-* `GithubToken` (mandatory): a Github [personal access token](https://github.com/settings/tokens/new) used in every request to the [Github API](https://developer.github.com/). 
+* `GithubToken` (mandatory): a Github [personal access token](https://github.com/settings/tokens/new) used in every request to the [Github API](https://developer.github.com/).
 
 * `UseShortRevisions` (default: true): if is false all the images and containers will be defined using full length revision names, instead the short one.
+
+* `EtcdServer` (multiple, optional): etcd server, needed for etcd variables at the Dockerfiles.
 
 ### HTTP
 
@@ -51,6 +53,9 @@ Since the authentication is based on a registered [Github Application](https://g
 A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Environment "production"]`
 
 * `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
+
+* `EtcdServer` (multiple, optional): if none is configured the `Global.EtcdServer` will be used
+
 
 ### Project
 

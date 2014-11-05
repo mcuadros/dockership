@@ -17,23 +17,31 @@ func (s *ConfigSuite) TestConfig_LoadFile(c *C) {
 	err := config.LoadFile("../example/config.ini")
 
 	c.Assert(err, Equals, nil)
-	c.Assert(config.Projects, HasLen, 1)
+	c.Assert(config.Projects, HasLen, 2)
 
-	project := config.Projects["project"]
-	c.Assert(project.GithubToken, Equals, "<your-github-token>")
-	c.Assert(project.UseShortRevisions, Equals, true)
+	projectA := config.Projects["project"]
+	c.Assert(projectA.GithubToken, Equals, "<your-github-token>")
+	c.Assert(projectA.UseShortRevisions, Equals, true)
 
-	c.Assert(project.Environments, HasLen, 2)
+	projectB := config.Projects["other-project"]
+	c.Assert(projectB.GithubToken, Equals, "<other-github-token>")
+	c.Assert(projectB.UseShortRevisions, Equals, true)
+
+	c.Assert(projectA.Environments, HasLen, 2)
+	c.Assert(projectB.Environments, HasLen, 1)
 
 	c.Assert(
-		project.Environments["live"].DockerEndPoints[0],
+		projectA.Environments["live"].DockerEndPoints[0],
 		Equals,
 		"http://live-docker.my-company.com:4243",
 	)
 
 	c.Assert(
-		project.Environments["testing"].DockerEndPoints[0],
+		projectA.Environments["testing"].DockerEndPoints[0],
 		Equals,
 		"http://testing-docker.my-company.com:4243",
 	)
+
+	c.Assert(projectA.Environments["testing"].EtcdServers, HasLen, 1)
+	c.Assert(projectB.Environments["live"].EtcdServers, HasLen, 2)
 }

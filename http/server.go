@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/mcuadros/dockership/config"
 	"github.com/mcuadros/dockership/core"
@@ -30,29 +29,23 @@ func Start(version, build string) {
 
 type server struct {
 	serverId string
+	sockjs   *SockJS
 	mux      *mux.Router
 	oauth    *OAuth
 	config   config.Config
 }
 
 func (s *server) configure() {
-	sjs := NewSockJSWriter()
-	subscribeWriteToEvents(sjs)
-
+	s.sockjs = NewSockJS("log")
 	s.mux = mux.NewRouter()
+
+	s.sockjs.AddHandler("containers", s.HandleContainers)
+	s.sockjs.AddHandler("status", s.HandleStatus)
 
 	// socket
 	s.mux.Path("/socket/{any:.*}").Handler(sockjs.NewHandler("/socket", sockjs.DefaultOptions, func(session sockjs.Session) {
-		sjs.AddSessionAndRead(session)
+		s.sockjs.AddSessionAndRead(session)
 	}))
-
-	// status
-	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(s.HandleStatus)
-	s.mux.Path("/rest/status/{project:.*}").Methods("GET").HandlerFunc(s.HandleStatus)
-
-	// containers
-	s.mux.Path("/rest/containers").Methods("GET").HandlerFunc(s.HandleContainers)
-	s.mux.Path("/rest/containers/{project:.*}").Methods("GET").HandlerFunc(s.HandleContainers)
 
 	// deploy
 	s.mux.Path("/rest/deploy/{project:.*}/{environment:.*}").Methods("GET").HandlerFunc(s.HandleDeploy)
@@ -111,49 +104,5 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		core.Debug("Handling request", "url", r.URL)
 		w.Header().Set("Server", s.serverId)
 		s.mux.ServeHTTP(w, r)
-	}
-}
-
-type SockJSWriter struct {
-	sessions []sockjs.Session
-	sync.Mutex
-}
-
-func NewSockJSWriter() *SockJSWriter {
-	return &SockJSWriter{
-		sessions: make([]sockjs.Session, 0),
-	}
-}
-
-func (s *SockJSWriter) Write(p []byte) (int, error) {
-	data := fmt.Sprintf("{\"name\":\"log\", \"result\":%s}", p)
-	s.Send(data)
-
-	return len(p), nil
-}
-
-func (s *SockJSWriter) Send(data string) {
-	for _, session := range s.sessions {
-		session.Send(data)
-	}
-}
-
-func (s *SockJSWriter) AddSessionAndRead(session sockjs.Session) {
-	s.Lock()
-	s.sessions = append(s.sessions, session)
-	s.Unlock()
-
-	s.Read(session)
-}
-
-func (s *SockJSWriter) Read(session sockjs.Session) {
-	for {
-		if msg, err := session.Recv(); err == nil {
-			if session.Send(msg) != nil {
-				break
-			}
-		} else {
-			break
-		}
 	}
 }

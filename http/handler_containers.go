@@ -1,11 +1,11 @@
 package http
 
 import (
-	"net/http"
+	"fmt"
 
 	"github.com/mcuadros/dockership/core"
 
-	"github.com/gorilla/mux"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
 type ContainersRecord struct {
@@ -14,9 +14,13 @@ type ContainersRecord struct {
 	Error     []error
 }
 
-func (s *server) HandleContainers(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	project := vars["project"]
+func (s *server) HandleContainers(msg Message, session sockjs.Session) {
+	fmt.Println()
+
+	project, ok := msg.Request["project"]
+	if !ok {
+		return
+	}
 
 	result := make([]*ContainersRecord, 0)
 	for name, p := range s.config.Projects {
@@ -34,5 +38,5 @@ func (s *server) HandleContainers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	s.json(w, 200, result)
+	s.sockjs.Send("containers", result, false)
 }

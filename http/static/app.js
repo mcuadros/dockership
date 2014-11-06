@@ -38,13 +38,8 @@ angular.module('dockership').controller(
     'LogTabCtrl',
     function ($scope, socket, ansi2html) {
         $scope.log = [];
-        socket.setHandler('message', function (e) {
-            data = angular.fromJson(e.data);
-            $scope.log.unshift(data.result);
-        });
-
-        socket.setHandler('open', function (data) {
-            console.log(data);
+        socket.addHandler('log', function (result) {
+            $scope.log.unshift(result);
         });
 
         $scope.params = function (params, first) {
@@ -71,29 +66,36 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'MainCtrl',
-    function ($scope, $http, $modal, $log) {
+    function ($scope, $http, socket, $modal, $log) {
         'use strict';
         $scope.processing = false;
+
+        socket.addHandler('containers', function (result) {
+            $scope.processing = false;
+            var modalInstance = $modal.open({
+                templateUrl: 'ContainersContent.html',
+                controller: 'ContainersCtrl',
+                size: 'lg',
+                resolve: {
+                    project: function () {
+                        return "";
+                    },
+                    containers: function () {
+                        return result;
+                    }
+                }
+            });
+        });
+
+        socket.addHandler('status', function (result) {
+            $scope.processing = false;
+            $scope.loaded = true;
+            $scope.groups = result
+        });
+
         $scope.openContainers = function (project) {
             $scope.processing = true;
-            $http.get('/rest/containers/' + project.Name).then(function(res) {
-                $scope.processing = false;
-                var modalInstance = $modal.open({
-                    templateUrl: 'ContainersContent.html',
-                    controller: 'ContainersCtrl',
-                    size: 'lg',
-                    resolve: {
-                        project: function () {
-                            return project;
-                        },
-                        containers: function () {
-                            return res.data;
-                        }
-                    }
-                });
-            }, function(msg) {
-                $scope.log(msg.data);
-            });
+            socket.getContainers(project)
         };
 
         $scope.openDeploy = function (project, environment) {
@@ -130,24 +132,17 @@ angular.module('dockership').controller(
 
         $scope.loaded = false;
         $scope.loadStatus = function() {
-            $http.get('/rest/status/').then(function(res) {
-                $scope.groups = res.data;
-                for (var i in res.data.Errors) {
-                    $scope.log(res.data.Errors[i]);
-                }
-
-                $scope.loaded = true;
-            }, function(msg) {
-                $scope.log(msg.data);
-            });
-        }
+            socket.getStatus();
+        };
 
 
         $scope.log = function(msg) {
             $scope.errors.push(msg);
         };
 
-        $scope.loadStatus()
+        socket.setHandler('open', function() {
+            $scope.loadStatus();
+        })
     }
 );
 
@@ -235,9 +230,36 @@ angular.module('dockership').service('oboe', [
 ]);
 
 angular.module('dockership').factory('socket', function (socketFactory) {
-    return socketFactory({
-    url: '/socket'
-  });
+    var socket = socketFactory({
+        url: '/socket'
+    });
+
+    socket._handlers = {};
+    socket.addHandler = function(name, handler) {
+        socket._handlers[name] = handler;
+    };
+
+    socket.getContainers = function(project) {
+        socket.send(angular.toJson({
+            event: 'containers',
+            request: {project: project.Name}
+        }))
+    };
+
+    socket.getStatus = function(project) {
+        socket.send(angular.toJson({
+            event: 'status',
+            request: {}
+        }))
+    };
+
+    socket.setHandler('message', function (e) {
+        data = angular.fromJson(e.data);
+        socket._handlers[data.event](data.result);
+    });
+
+
+    return socket;
 });
 
 angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {

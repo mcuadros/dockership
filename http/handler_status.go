@@ -1,11 +1,9 @@
 package http
 
 import (
-	"net/http"
-
 	"github.com/mcuadros/dockership/core"
 
-	"github.com/gorilla/mux"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
 type StatusResult struct {
@@ -19,9 +17,9 @@ type StatusRecord struct {
 	*core.ProjectStatus
 }
 
-func (s *server) HandleStatus(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	project := vars["project"]
+func (s *server) HandleStatus(msg Message, session sockjs.Session) {
+	var project string
+	project, _ = msg.Request["project"]
 
 	result := make(map[string]*StatusResult, 0)
 	for name, p := range s.config.Projects {
@@ -43,5 +41,5 @@ func (s *server) HandleStatus(w http.ResponseWriter, r *http.Request) {
 		result[p.Name] = record
 	}
 
-	s.json(w, 200, result)
+	s.sockjs.Send("status", result, false)
 }

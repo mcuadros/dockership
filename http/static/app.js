@@ -1,4 +1,74 @@
-angular.module('dockership', ['ui.bootstrap', 'angular-loading-bar', 'ngAnimate', 'headroom']);
+angular.module('dockership', [
+    'ui.bootstrap', 'angular-loading-bar', 'ansiToHtml', 'ngAnimate',
+    'bd.sockjs', 'headroom'
+]);
+
+angular.module('dockership').controller(
+    'TabsParentController', function ($scope, $window) {
+        var setAllInactive = function() {
+            angular.forEach($scope.workspaces, function(workspace) {
+                workspace.active = false;
+            });
+        };
+
+        var addNewWorkspace = function() {
+            var id = $scope.workspaces.length + 1;
+            $scope.workspaces.push({
+                id: id,
+                name: "Workspace " + id,
+                template: 'DeployContent.html',
+                ctrl: 'DeployCtrl',
+                active: true
+            });
+        };
+
+        $scope.workspaces = [{
+            name: 'List', active:true, ctrl: 'MainCtrl',
+            name: 'Log', active:false, ctrl: 'LogTabCtrl'
+        }];
+
+        $scope.addWorkspace = function () {
+            setAllInactive();
+            addNewWorkspace();
+        };
+    }
+);
+
+angular.module('dockership').controller(
+    'LogTabCtrl',
+    function ($scope, socket, ansi2html) {
+        $scope.log = [];
+        socket.setHandler('message', function (e) {
+            data = angular.fromJson(e.data);
+            $scope.log.unshift(data.result);
+        });
+
+        socket.setHandler('open', function (data) {
+            console.log(data);
+        });
+
+        $scope.params = function (params, first) {
+            var strings = [];
+            angular.forEach(params, function(value, key) {
+                if (key != "t" && key != "msg" && key != "lvl" && key != "revision") {
+                    this.push('<b>' + key + '</b>: ' + value);
+                }
+
+                if (key == "revision") {
+                    this.push('<b>' + key + '</b>: ' + value.slice(0,12));
+                }
+            }, strings);
+
+            if (first) {
+                return strings[0].replace(/<[^>]+>/gm, '');
+            }
+
+            return strings.join("<br /> ");
+        };
+    }
+);
+
+
 angular.module('dockership').controller(
     'MainCtrl',
     function ($scope, $http, $modal, $log) {
@@ -111,38 +181,23 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'DeployCtrl',
-    function ($scope, $modalInstance, $http, oboe, project, environment, loadStatus) {
+    function ($scope, $http, ansi2html, project, environment, loadStatus) {
         $scope.project = project;
         $scope.environment = environment;
+        $scope.log = ""
 
-        $scope.data = [];
-        $scope.data = oboe({
-            url: '/rest/deploy/' + project.Project.Name + '/' + environment.Name,
-            pattern: '{msg}',
+       /* socket.on('deploy', function (msg) {
+            $scope.log += ansi2html.toHtml(msg)
         });
-
-        $scope.params = function (params, first) {
-            var strings = [];
-            angular.forEach(params, function(value, key) {
-                if (key != "t" && key != "msg" && key != "lvl" && key != "revision") {
-                    this.push('<b>' + key + '</b>: ' + value);
-                }
-
-                if (key == "revision") {
-                    this.push('<b>' + key + '</b>: ' + value.slice(0,12));
-                }
-            }, strings);
-
-            if (first) {
-                return strings[0].replace(/<[^>]+>/gm, '');
-            }
-
-            return strings.join("<br /> ");
-        };
+*/
+        $http.get('/rest/deploy/' + project.Project.Name + '/' + environment.Name).then(function(res) {
+            console.log("done");
+        }, function(msg) {
+            $scope.log(msg.data);
+        });
 
         $scope.cancel = function () {
             loadStatus()
-            $modalInstance.dismiss('cancel');
         };
     }
 );
@@ -179,12 +234,17 @@ angular.module('dockership').service('oboe', [
     }
 ]);
 
+angular.module('dockership').factory('socket', function (socketFactory) {
+    return socketFactory({
+    url: '/socket'
+  });
+});
+
 angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {
     return function (val) {
         return $sce.trustAsHtml(val);
     };
 }]);
-
 
 // update popover template for binding unsafe html
 angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {

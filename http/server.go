@@ -5,12 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
-	"time"
+	"sync"
 
 	"github.com/mcuadros/dockership/config"
 	"github.com/mcuadros/dockership/core"
 
 	"github.com/gorilla/mux"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
 var configFile string
@@ -35,7 +36,15 @@ type server struct {
 }
 
 func (s *server) configure() {
+	sjs := NewSockJSWriter()
+	subscribeWriteToEvents(sjs)
+
 	s.mux = mux.NewRouter()
+
+	// socket
+	s.mux.Path("/socket/{any:.*}").Handler(sockjs.NewHandler("/socket", sockjs.DefaultOptions, func(session sockjs.Session) {
+		sjs.AddSessionAndRead(session)
+	}))
 
 	// status
 	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(s.HandleStatus)
@@ -105,49 +114,46 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// AutoFlusherWrite
-type AutoFlusherWriter struct {
-	writer     http.ResponseWriter
-	autoFlush  *time.Ticker
-	closeChan  chan bool
-	closedChan chan bool
+type SockJSWriter struct {
+	sessions []sockjs.Session
+	sync.Mutex
 }
 
-func NewAutoFlusherWriter(writer http.ResponseWriter, duration time.Duration) *AutoFlusherWriter {
-	a := &AutoFlusherWriter{
-		writer:     writer,
-		autoFlush:  time.NewTicker(duration),
-		closeChan:  make(chan bool),
-		closedChan: make(chan bool),
-	}
-
-	go a.loop()
-	return a
-}
-
-func (a *AutoFlusherWriter) loop() {
-	for {
-		select {
-		case <-a.autoFlush.C:
-			a.writer.(http.Flusher).Flush()
-		case <-a.closeChan:
-			a.writer.(http.Flusher).Flush()
-			close(a.closedChan)
-			return
-		}
+func NewSockJSWriter() *SockJSWriter {
+	return &SockJSWriter{
+		sessions: make([]sockjs.Session, 0),
 	}
 }
 
-func (a *AutoFlusherWriter) Write(p []byte) (int, error) {
-	return a.writer.Write(p)
+func (s *SockJSWriter) Write(p []byte) (int, error) {
+	data := fmt.Sprintf("{\"name\":\"log\", \"result\":%s}", p)
+	s.Send(data)
+
+	return len(p), nil
 }
 
-func (a *AutoFlusherWriter) Close() {
+func (s *SockJSWriter) Send(data string) {
+	for _, session := range s.sessions {
+		session.Send(data)
+	}
+}
+
+func (s *SockJSWriter) AddSessionAndRead(session sockjs.Session) {
+	s.Lock()
+	s.sessions = append(s.sessions, session)
+	s.Unlock()
+
+	s.Read(session)
+}
+
+func (s *SockJSWriter) Read(session sockjs.Session) {
 	for {
-		select {
-		case a.closeChan <- true:
-		case <-a.closedChan:
-			return
+		if msg, err := session.Recv(); err == nil {
+			if session.Send(msg) != nil {
+				break
+			}
+		} else {
+			break
 		}
 	}
 }

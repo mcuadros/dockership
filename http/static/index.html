@@ -11,9 +11,13 @@
       src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.6.0/headroom.min.js"
     ></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/headroom/0.6.0/angular.headroom.min.js"></script>
+    <script src="https://cdn.rawgit.com/sockjs/sockjs-client/v1.0.0-beta.2/dist/sockjs.min.js"></script>
+    <script src="https://cdn.rawgit.com/bendrucker/angular-sockjs/master/src/index.js"></script>
+    <script src="https://cdn.rawgit.com/jorgeecardona/ansi-to-html/master/ansi2html.js"></script>
     <script src="/app.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.css" rel="stylesheet">
+
     <style>
         html, body { padding:0 60px 0 60px;}
         .deploy-log { max-height: 420px; overflow-y: auto; }
@@ -80,101 +84,156 @@
             </div>
           </div>
       </headroom>
-      <div ng-controller="MainCtrl" id="main" class="container">
-        <div ng-repeat='p in groups'>
-          <div class="row project">
-            <h3 class="col-md-4">{{p.Project.Name}}</h3>
-            <div class="col-md-8 info">
-              <span class="label label-info">
-                <span class="glyphicon glyphicon-folder-open"></span>{{p.Project.Repository}}
-              </span>
-              <span class="label label-info">
-                <span class="glyphicon glyphicon-inbox"></span>{{p.Project.Branch}}
-              </span>
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+      <div class="container">
+        <tabset>
+          <tab ng-controller="MainCtrl" heading="Projects">
+              <ng-include src="'ProjectListTab.html'"></ng-include>
+          </tab>
+          <tab ng-controller="LogTabCtrl" heading="Log" >
+              <ng-include src="'LogTab.html'"></ng-include>
+          </tab>
+          <tab select="addWorkspace()">
+              <tab-heading>
+                  <i class="icon-plus-sign">Add</i>
+              </tab-heading>
+          </tab>
+        </tabset>
+      </div>
+
+    <script type="text/ng-template" id="LogTab.html">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-md-1">Level</th>
+            <th class="col-md-2">Time</th>
+            <th class="col-md-4">Message</th>
+            <th class="col-md-5">Params</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat='line in log track by $index'>
+            <td>
+                <span class="label label-danger" ng-if="line.lvl == 0">Critical</span>
+                <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
+                <span class="label label-warning" ng-if="line.lvl == 2">Warning</span>
+                <span class="label label-info" ng-if="line.lvl == 3">Info</span>
+                <span class="label label-default" ng-if="line.lvl == 4">Debug</span>
+            </td>
+            <td><small>{{line.t.slice(0,19)}}</small></td>
+            <td><b>{{line.msg}}</b></td>
+            <td>
               <span
-                popover-title="Alias"
-                popover="{{link.split(':')[1]}}" popover-trigger="mouseenter"
-                ng-repeat='link in p.Project.LinkNames'
-                class="label label-success">
-                <span class="glyphicon glyphicon-link"></span>{{link.split(':')[0]}}
-              </span>
-            </div>
-        </div>
-        <div style="clear:both"></div>
-        <div class="panel panel-default">
-          <table class="table table-striped">
-            <thead>
-              <tr>
-                <th class="col-md-2">Environment</th>
-                <th class="col-md-3">Running Revision</th>
-                <th class="col-md-2">Containers</th>
-                <th class="col-md-2">Status</th>
-                <th class="col-md-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat='s in p.Status' ng-class="
-                s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
-                <td><b
-                    popover-title="Docker end-points"
-                    popover="{{s.Environment.DockerEndPoints}}"
-                    popover-placement="right"
-                    popover-trigger="mouseenter"
-                >{{s.Environment.Name}}</b>
-                </td>
-                <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
-                <td>
-                  <a href="#" class="success"
-                    ng-click="processing||openContainers(p.Project)"
-                  >
-                    <span class="badge success">{{s.Containers.length}}</span>
-                  </a>
-                </td>
-                <td>
-                  <span ng-if="s.RunningContainers.length != 0">
-                    {{s.RunningContainers[0].Status}}
-                  </span>
-                  <span ng-if="s.RunningContainers.length == 0">
-                    Down
-                  </span>
-                </td>
-                <td class="text-right">
-                  <button ng-if="!isDeployable(s)"
-                    type="button"
-                    ng-click="openDeploy(p, s.Environment)"
-                    class="btn btn-success btn-xs">
-                       <span class="glyphicon glyphicon-saved"></span>
-                       Up-to-date
-                  </button>
-                  <button ng-if="isDeployable(s)"
-                    type="button"
-                    ng-click="openDeploy(p, s.Environment)"
-                    class="btn btn-primary btn-xs">
-                       <span class="glyphicon glyphicon-import"></span>
-                       Deploy {{s.LastRevisionLabel.slice(0,12)}}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        </div>
-
-        <div class="bs-callout" ng-hide="loaded">
-          <h4>Gathering container status</h4>
-          <p>Dockership is connecting to all the docker end points, please wait.</p>
-        </div>
-
-        <footer ng-show="loaded">
-          <div class=" well well-sm">
-              by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
-              . Under MIT License</a> /
-
-              Logo by
-              <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
+                popover-title="Params" data-html='true'
+                popover="{{params(line)}}"
+                popover-trigger="mouseenter"
+                popover-append-to-body="1"
+                class="label label-default">{{params(line, true)}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </script>
+    <script type="text/ng-template" id="ProjectListTab.html">
+      <div ng-repeat='p in groups'>
+        <div class="row project">
+          <h3 class="col-md-4">{{p.Project.Name}}</h3>
+          <div class="col-md-8 info">
+            <span class="label label-info">
+              <span class="glyphicon glyphicon-folder-open"></span>{{p.Project.Repository}}
+            </span>
+            <span class="label label-info">
+              <span class="glyphicon glyphicon-inbox"></span>{{p.Project.Branch}}
+            </span>
+            <span
+              popover-title="Alias"
+              popover="{{link.split(':')[1]}}" popover-trigger="mouseenter"
+              ng-repeat='link in p.Project.LinkNames'
+              class="label label-success">
+              <span class="glyphicon glyphicon-link"></span>{{link.split(':')[0]}}
+            </span>
           </div>
-        </footer>
-    </div>
+      </div>
+      <div style="clear:both"></div>
+      <div class="panel panel-default">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th class="col-md-2">Environment</th>
+              <th class="col-md-3">Running Revision</th>
+              <th class="col-md-2">Containers</th>
+              <th class="col-md-2">Status</th>
+              <th class="col-md-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat='s in p.Status' ng-class="
+              s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
+              <td><b
+                  popover-title="Docker end-points"
+                  popover="{{s.Environment.DockerEndPoints}}"
+                  popover-placement="right"
+                  popover-trigger="mouseenter"
+              >{{s.Environment.Name}}</b>
+              </td>
+              <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
+              <td>
+                <a href="#" class="success"
+                  ng-click="processing||openContainers(p.Project)"
+                >
+                  <span class="badge success">{{s.Containers.length}}</span>
+                </a>
+              </td>
+              <td>
+                <span ng-if="s.RunningContainers.length != 0">
+                  {{s.RunningContainers[0].Status}}
+                </span>
+                <span ng-if="s.RunningContainers.length == 0">
+                  Down
+                </span>
+              </td>
+              <td class="text-right">
+                <button ng-if="!isDeployable(s)"
+                  type="button"
+                  ng-click="openDeploy(p, s.Environment)"
+                  class="btn btn-success btn-xs">
+                     <span class="glyphicon glyphicon-saved"></span>
+                     Up-to-date
+                </button>
+                <button ng-if="isDeployable(s)"
+                  type="button"
+                  ng-click="openDeploy(p, s.Environment)"
+                  class="btn btn-primary btn-xs">
+                     <span class="glyphicon glyphicon-import"></span>
+                     Deploy {{s.LastRevisionLabel.slice(0,12)}}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+
+      <div class="bs-callout" ng-hide="loaded">
+        <h4>Gathering container status</h4>
+        <p>Dockership is connecting to all the docker end points, please wait.</p>
+      </div>
+
+      <footer ng-show="loaded">
+        <div class=" well well-sm">
+            by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
+            . Under MIT License</a> /
+
+            Logo by
+            <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
+        </div>
+      </footer>
+    </script>
 
     <script type="text/ng-template" id="ContainersContent.html">
         <div class="modal-header">
@@ -222,37 +281,7 @@
             </h3>
         </div>
         <div class="modal-body deploy-log">
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="col-md-1">Level</th>
-                <th class="col-md-2">Time</th>
-                <th class="col-md-6">Message</th>
-                <th class="col-md-3">Params</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat='line in data track by $index'>
-                <td>
-                    <span class="label label-danger" ng-if="line.lvl == 0">Critical</span>
-                    <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
-                    <span class="label label-warning" ng-if="line.lvl == 2">Warning</span>
-                    <span class="label label-info" ng-if="line.lvl == 3">Info</span>
-                    <span class="label label-default" ng-if="line.lvl == 4">Debug</span>
-                </td>
-                <td><small>{{line.t.slice(0,19)}}</small></td>
-                <td><b>{{line.msg}}</b></td>
-                <td>
-                  <span
-                    popover-title="Params" data-html='true'
-                    popover="{{params(line)}}"
-                    popover-trigger="mouseenter"
-                    popover-append-to-body="1"
-                    class="label label-default">{{params(line, true)}}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <pre ng-bind="log"></pre>
         </div>
         <div class="modal-footer">
             <button class="btn btn-info" ng-click="cancel()">Close</button>

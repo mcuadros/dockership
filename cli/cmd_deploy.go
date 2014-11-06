@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"strings"
 
 	"github.com/mcuadros/dockership/core"
@@ -34,7 +35,8 @@ func (c *CmdDeploy) Run(args []string) int {
 
 	if p, ok := c.config.Projects[c.project]; ok {
 		core.Info("Starting deploy", "project", p, "environment", c.environment, "force", c.force)
-		err := p.Deploy(c.environment, c.force)
+		input := bytes.NewBuffer(nil)
+		err := p.Deploy(c.environment, input, c.force)
 		if len(err) != 0 {
 			core.Critical(err[0].Error(), "project", c.project)
 			return 1

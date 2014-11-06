@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"github.com/fsouza/go-dockerclient/testing"
 	. "gopkg.in/check.v1"
 )
@@ -15,7 +16,8 @@ func (s *CoreSuite) TestDockerGroup_BuildImage(c *C) {
 
 	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 	r := Revision{"foo/bar": Commit("qux")}
-	result := dg.BuildImage(p, r, &Dockerfile{blob: []byte("")})
+	input := bytes.NewBuffer(nil)
+	result := dg.BuildImage(p, r, &Dockerfile{blob: []byte("")}, input)
 
 	c.Assert(result, HasLen, 5)
 	for _, r := range result {
@@ -69,8 +71,10 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 	r := Revision{"foo/bar": Commit("qux")}
 
-	errors := dg.Deploy(p, r, &Dockerfile{blob: []byte("")}, true)
+	input := bytes.NewBuffer(nil)
+	errors := dg.Deploy(p, r, &Dockerfile{blob: []byte("")}, input, true)
 	c.Assert(errors, HasLen, 0)
+	c.Assert(string(input.Bytes()), HasLen, 255)
 
 	containers, errors := dg.ListContainers(p)
 	c.Assert(errors, HasLen, 0)

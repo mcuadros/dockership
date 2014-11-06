@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/mcuadros/go-command"
 )
@@ -28,7 +29,7 @@ type Project struct {
 	EnvironmentNames    []string                `gcfg:"Environment"`
 }
 
-func (p *Project) Deploy(environment string, force bool) []error {
+func (p *Project) Deploy(environment string, output io.Writer, force bool) []error {
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
@@ -50,7 +51,7 @@ func (p *Project) Deploy(environment string, force bool) []error {
 
 	file := NewDockerfile(blob, p, r, e)
 
-	return d.Deploy(p, r, file, force)
+	return d.Deploy(p, r, file, output, force)
 }
 
 func (p *Project) mustGetEnvironment(name string) *Environment {

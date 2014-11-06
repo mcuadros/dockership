@@ -28,15 +28,18 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 		Ports:      []string{"0.0.0.0:8080:80/tcp"},
 	}
 
+	input := bytes.NewBuffer(nil)
+
 	d, _ := NewDocker(m.URL())
 	rev := Revision{"foo": "bar"}
-	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, false)
+	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, input, false)
 	c.Assert(err, Equals, nil)
 
 	l, _ := d.ListContainers(p)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].Image.IsRevision(rev), Equals, true)
 	c.Assert(l[0].IsRunning(), Equals, true)
+	c.Assert(string(input.Bytes()), HasLen, 51)
 }
 
 func (s *CoreSuite) TestDocker_BuildImage(c *C) {
@@ -70,9 +73,11 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 		Files:      []string{file},
 	}
 
+	input := bytes.NewBuffer(nil)
+
 	s.Add(1)
 	d, _ := NewDocker(ts.URL)
-	err := d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")})
+	err := d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")}, input)
 	s.Wait()
 
 	c.Assert(err, Equals, nil)

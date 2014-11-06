@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"strings"
 	"time"
 
@@ -23,13 +24,15 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 		GithubToken:  "05bed21c257d935017d85d3398b46ac81035756f",
 	}
 
-	err := p.Deploy("foo", false)
+	input := bytes.NewBuffer(nil)
+	err := p.Deploy("foo", input, false)
 	c.Assert(err, HasLen, 0)
 
 	l, err := p.ListContainers()
 	c.Assert(err, HasLen, 0)
 	c.Assert(l, HasLen, 1)
 	c.Assert(l[0].DockerEndPoint, Equals, e.DockerEndPoints[0])
+	c.Assert(string(input.Bytes()), HasLen, 51)
 }
 
 func (s *CoreSuite) TestProject_Test(c *C) {
@@ -77,10 +80,11 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 		Dockerfile:   "git_mock",
 	}
 
+	input := bytes.NewBuffer(nil)
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, &Dockerfile{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, &Dockerfile{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 
 	r, err := p.Status()
 	c.Assert(err, HasLen, 0)
@@ -107,10 +111,12 @@ func (s *CoreSuite) TestProject_ListContainers(c *C) {
 		Environments: envs,
 	}
 
+	input := bytes.NewBuffer(nil)
+
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, &Dockerfile{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, &Dockerfile{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListContainers()
 	c.Assert(err, HasLen, 0)
@@ -133,10 +139,12 @@ func (s *CoreSuite) TestProject_ListImages(c *C) {
 		Environments: envs,
 	}
 
+	input := bytes.NewBuffer(nil)
+
 	da, _ := NewDocker(envs["a"].DockerEndPoints[0])
-	da.Deploy(p, Revision{}, &Dockerfile{}, false)
+	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	db, _ := NewDocker(envs["b"].DockerEndPoints[0])
-	db.Deploy(p, Revision{}, &Dockerfile{}, false)
+	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListImages()
 	c.Assert(err, HasLen, 0)

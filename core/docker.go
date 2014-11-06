@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -30,13 +31,13 @@ func NewDocker(endPoint string) (*Docker, error) {
 	return &Docker{client: c, endPoint: endPoint}, nil
 }
 
-func (d *Docker) Deploy(p *Project, rev Revision, dockerfile *Dockerfile, force bool) error {
+func (d *Docker) Deploy(p *Project, rev Revision, dockerfile *Dockerfile, output io.Writer, force bool) error {
 	Debug("Deploying dockerfile", "project", p, "revision", rev, "end-point", d.endPoint)
 	if err := d.Clean(p); err != nil {
 		return err
 	}
 
-	if err := d.BuildImage(p, rev, dockerfile); err != nil {
+	if err := d.BuildImage(p, rev, dockerfile, output); err != nil {
 		return err
 	}
 
@@ -189,13 +190,13 @@ func (d *Docker) ListImages(p *Project) ([]*Image, error) {
 	return r, nil
 }
 
-func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile *Dockerfile) error {
+func (d *Docker) BuildImage(
+	p *Project, rev Revision, dockerfile *Dockerfile, output io.Writer,
+) error {
 	Debug("Building image", "project", p, "revision", rev, "end-point", d.endPoint)
 
-	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
-	outputbuf.WriteTo(os.Stdout)
-
-	if err := d.buildTar(p, dockerfile.Get(), inputbuf); err != nil {
+	input := bytes.NewBuffer(nil)
+	if err := d.buildTar(p, dockerfile.Get(), input); err != nil {
 		return err
 	}
 
@@ -204,8 +205,8 @@ func (d *Docker) BuildImage(p *Project, rev Revision, dockerfile *Dockerfile) er
 		Name:           string(image),
 		NoCache:        p.NoCache,
 		RmTmpContainer: p.NoCache,
-		InputStream:    inputbuf,
-		OutputStream:   outputbuf,
+		InputStream:    input,
+		OutputStream:   output,
 	}
 
 	return d.client.BuildImage(opts)

@@ -95,13 +95,11 @@
           <tab ng-controller="MainCtrl" heading="Projects">
               <ng-include src="'ProjectListTab.html'"></ng-include>
           </tab>
-          <tab ng-controller="LogTabCtrl" heading="Log" >
+          <tab ng-controller="LogTabCtrl" heading="Log">
               <ng-include src="'LogTab.html'"></ng-include>
           </tab>
-          <tab select="addWorkspace()">
-              <tab-heading>
-                  <i class="icon-plus-sign">Add</i>
-              </tab-heading>
+          <tab ng-controller="DeployTabCtrl" heading="Deployments">
+              <ng-include src="'DeployTab.html'"></ng-include>
           </tab>
         </tabset>
       </div>
@@ -200,14 +198,14 @@
               <td class="text-right">
                 <button ng-if="!isDeployable(s)"
                   type="button"
-                  ng-click="openDeploy(p, s.Environment)"
+                  ng-click="openDeploy(p.Project, s.Environment)"
                   class="btn btn-success btn-xs">
                      <span class="glyphicon glyphicon-saved"></span>
                      Up-to-date
                 </button>
                 <button ng-if="isDeployable(s)"
                   type="button"
-                  ng-click="openDeploy(p, s.Environment)"
+                  ng-click="openDeploy(p.Project, s.Environment)"
                   class="btn btn-primary btn-xs">
                      <span class="glyphicon glyphicon-import"></span>
                      Deploy {{s.LastRevisionLabel.slice(0,12)}}
@@ -271,20 +269,9 @@
             <button class="btn btn-info" ng-click="cancel()">Close</button>
         </div>
     </script>
-    <script type="text/ng-template" id="DeployContent.html">
-        <div class="modal-header">
-            <h3 class="modal-title">
-                Deploying <b>{{project.Project.Name}}</b> @ <b>{{environment.Name}}</b>
-                <small>
-                    Revision <b>{{project.Status[environment.Name].LastRevisionLabel}}</b>
-                </small>
-            </h3>
-        </div>
+    <script type="text/ng-template" id="DeployTab.html">
         <div class="modal-body deploy-log">
           <pre ng-bind="log"></pre>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-info" ng-click="cancel()">Close</button>
         </div>
     </script>
   </body>

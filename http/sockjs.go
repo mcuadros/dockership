@@ -16,27 +16,17 @@ type Message struct {
 type SockJSHandler func(msg Message, session sockjs.Session)
 
 type SockJS struct {
-	sessions     []sockjs.Session
-	handlers     map[string]SockJSHandler
-	defaultEvent string
+	sessions []sockjs.Session
+	handlers map[string]SockJSHandler
 	sync.Mutex
 }
 
-func NewSockJS(defaultEvent string) *SockJS {
-	s := &SockJS{
-		defaultEvent: defaultEvent,
-		sessions:     make([]sockjs.Session, 0),
-		handlers:     make(map[string]SockJSHandler, 0),
+func NewSockJS() *SockJS {
+	return &SockJS{
+		sessions: make([]sockjs.Session, 0),
+		handlers: make(map[string]SockJSHandler, 0),
 	}
 
-	subscribeWriteToEvents(s)
-	return s
-}
-
-func (s *SockJS) Write(p []byte) (int, error) {
-	s.Send(s.defaultEvent, p, true)
-
-	return len(p), nil
 }
 
 func (s *SockJS) Send(event, data interface{}, isJson bool) {
@@ -89,4 +79,32 @@ func (s *SockJS) handleMessage(raw string, session sockjs.Session) {
 
 func (s *SockJS) AddHandler(event string, handler SockJSHandler) {
 	s.handlers[event] = handler
+}
+
+type SockJSWriter struct {
+	event     string
+	sockjs    *SockJS
+	formatter SockJSWriterFormatter
+}
+
+type SockJSWriterFormatter func(raw []byte) []byte
+
+func NewSockJSWriter(sockjs *SockJS, event string) *SockJSWriter {
+	return &SockJSWriter{
+		event:  event,
+		sockjs: sockjs,
+		formatter: func(raw []byte) []byte {
+			return raw
+		},
+	}
+}
+
+func (s *SockJSWriter) SetFormater(f SockJSWriterFormatter) {
+	s.formatter = f
+}
+
+func (s *SockJSWriter) Write(raw []byte) (int, error) {
+	s.sockjs.Send(s.event, s.formatter(raw), true)
+
+	return len(raw), nil
 }

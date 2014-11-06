@@ -63,6 +63,16 @@ angular.module('dockership').controller(
     }
 );
 
+angular.module('dockership').controller(
+    'DeployTabCtrl',
+    function ($scope, $http, socket, ansi2html) {
+        $scope.log = ""
+        socket.addHandler('deploy', function (result) {
+            console.log(result);
+            $scope.log += ansi2html.toHtml(result.log)
+        });
+    }
+);
 
 angular.module('dockership').controller(
     'MainCtrl',
@@ -90,16 +100,18 @@ angular.module('dockership').controller(
         socket.addHandler('status', function (result) {
             $scope.processing = false;
             $scope.loaded = true;
-            $scope.groups = result
+            $scope.groups = result;
         });
 
         $scope.openContainers = function (project) {
             $scope.processing = true;
-            socket.getContainers(project)
+            socket.getContainers(project);
         };
 
         $scope.openDeploy = function (project, environment) {
-             var modalInstance = $modal.open({
+            console.log(project, environment);
+            socket.doDeploy(project, environment);
+            var modalInstance = $modal.open({
                 templateUrl: 'DeployContent.html',
                 controller: 'DeployCtrl',
                 size: 'lg',
@@ -173,62 +185,6 @@ angular.module('dockership').controller(
     }
 );
 
-
-angular.module('dockership').controller(
-    'DeployCtrl',
-    function ($scope, $http, ansi2html, project, environment, loadStatus) {
-        $scope.project = project;
-        $scope.environment = environment;
-        $scope.log = ""
-
-       /* socket.on('deploy', function (msg) {
-            $scope.log += ansi2html.toHtml(msg)
-        });
-*/
-        $http.get('/rest/deploy/' + project.Project.Name + '/' + environment.Name).then(function(res) {
-            console.log("done");
-        }, function(msg) {
-            $scope.log(msg.data);
-        });
-
-        $scope.cancel = function () {
-            loadStatus()
-        };
-    }
-);
-
-angular.module('dockership').service('oboe', [
-    'OboeStream',
-    function (OboeStream) {
-        return function (params) {
-            var data = [];
-            OboeStream.stream(params, function (node) {
-                data.unshift(node);
-            });
-
-            return data;
-        };
-    }
-]).factory('OboeStream', [
-    '$q',
-    function ($q) {
-        return {
-            stream: function (params, callback) {
-                var defer = $q.defer();
-                var promise = defer.promise;
-
-                oboe(params).start(function () {
-                    defer.resolve();
-                }).node(params.pattern || '.', function (node) {
-                    promise.then(callback(node));
-                    return oboe.drop;
-                });
-                return promise;
-            }
-        };
-    }
-]);
-
 angular.module('dockership').factory('socket', function (socketFactory) {
     var socket = socketFactory({
         url: '/socket'
@@ -237,6 +193,16 @@ angular.module('dockership').factory('socket', function (socketFactory) {
     socket._handlers = {};
     socket.addHandler = function(name, handler) {
         socket._handlers[name] = handler;
+    };
+
+    socket.doDeploy = function(project, environment) {
+        socket.send(angular.toJson({
+            event: 'deploy',
+            request: {
+                project: project.Name,
+                environment: environment.Name
+            }
+        }))
     };
 
     socket.getContainers = function(project) {

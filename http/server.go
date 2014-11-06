@@ -36,19 +36,17 @@ type server struct {
 }
 
 func (s *server) configure() {
-	s.sockjs = NewSockJS("log")
+	s.sockjs = NewSockJS()
 	s.mux = mux.NewRouter()
 
 	s.sockjs.AddHandler("containers", s.HandleContainers)
 	s.sockjs.AddHandler("status", s.HandleStatus)
+	s.sockjs.AddHandler("deploy", s.HandleDeploy)
 
 	// socket
 	s.mux.Path("/socket/{any:.*}").Handler(sockjs.NewHandler("/socket", sockjs.DefaultOptions, func(session sockjs.Session) {
 		s.sockjs.AddSessionAndRead(session)
 	}))
-
-	// deploy
-	s.mux.Path("/rest/deploy/{project:.*}/{environment:.*}").Methods("GET").HandlerFunc(s.HandleDeploy)
 
 	// logged-user
 	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +85,10 @@ func (s *server) readConfig(configFile string) {
 }
 
 func (s *server) run() {
+	writer := NewSockJSWriter(s.sockjs, "log")
+	subs := subscribeWriteToEvents(writer)
+	defer unsubscribeEvents(subs)
+
 	core.Info("HTTP server running", "host:port", s.config.HTTP.Listen)
 	if err := http.ListenAndServe(s.config.HTTP.Listen, s); err != nil {
 		panic(err)

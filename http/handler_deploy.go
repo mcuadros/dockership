@@ -1,29 +1,44 @@
 package http
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/mcuadros/dockership/core"
 
-	"github.com/gorilla/mux"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
-func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
-	//writer := NewSocketioWriter(s.socketio, "deploy", "foo")
-
-	//subs := subscribeWriteToEvents(writer)
-	//defer unsubscribeEvents(subs)
-
-	writer := bytes.NewBuffer([]byte(""))
+func (s *server) HandleDeploy(msg Message, session sockjs.Session) {
 	force := true
-	vars := mux.Vars(r)
-	project := vars["project"]
-	environment := vars["environment"]
+	project, ok := msg.Request["project"]
+	if !ok {
+		core.Error("Missing project", "request", "deploy")
+		return
+	}
+
+	environment, ok := msg.Request["environment"]
+	if !ok {
+		core.Error("Missing environment", "request", "deploy")
+		return
+	}
+
+	writer := NewSockJSWriter(s.sockjs, "deploy")
+	writer.SetFormater(func(raw []byte) []byte {
+		data, _ := json.Marshal(string(raw))
+		str := fmt.Sprintf(
+			"{\"environment\":\"%s\", \"project\":\"%s\", \"log\":%s}",
+			environment,
+			project,
+			data,
+		)
+
+		return []byte(str)
+	})
 
 	if p, ok := s.config.Projects[project]; ok {
 		core.Info("Starting deploy", "project", p, "environment", environment, "force", force)
+
 		err := p.Deploy(environment, writer, force)
 		if len(err) != 0 {
 			for _, e := range err {
@@ -33,6 +48,6 @@ func (s *server) HandleDeploy(w http.ResponseWriter, r *http.Request) {
 			core.Info("Deploy success", "project", p, "environment", environment)
 		}
 	} else {
-		s.json(w, 404, fmt.Sprintf("Project %q not found", project))
+		core.Error("Project not found", "project", p)
 	}
 }

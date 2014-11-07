@@ -37,6 +37,20 @@ angular.module('dockership').controller(
 angular.module('dockership').controller(
     'LogTabCtrl',
     function ($scope, socket, ansi2html) {
+        $scope.level = 4
+        $scope.chageLevel = function(level) {
+            $scope.level = level;
+        };
+        $scope.filter = function(line) {
+            console.log($scope.level);
+            if (line.lvl <= $scope.level) {
+                return true;
+            }
+
+
+            return false;
+        };
+
         $scope.log = [];
         socket.addHandler('log', function (result) {
             $scope.log.unshift(result);

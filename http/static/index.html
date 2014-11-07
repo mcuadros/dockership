@@ -55,11 +55,24 @@
 
         .bs-callout {
           padding: 20px;
-          background-color:  #fff;
+          background-color: #fff;
           margin: 20px 0;
           border: 1px solid #469408;
           border-left-width: 5px;
           border-radius: 3px;
+        }
+        .tab-content {
+          border-left: 1px solid #ddd;
+          border-right: 1px solid #ddd;
+          border-bottom: 1px solid #ddd;
+          padding:20px;
+          background-color: #fff;
+        }
+        li.active > a {
+          background: #fff !important;
+        }
+        .btn-group {
+          margin:6px;
         }
     </style>
   </head>
@@ -105,17 +118,24 @@
       </div>
 
     <script type="text/ng-template" id="LogTab.html">
+      <div class="text-right">
+        <div class="btn-group">
+            <label class="btn btn-sm btn-success" ng-click="chageLevel(2)" ng-model="level" btn-radio="2">Warning</label>
+            <label class="btn btn-sm btn-success" ng-click="chageLevel(3)" ng-model="level" btn-radio="3">Info</label>
+            <label class="btn btn-sm btn-success" ng-click="chageLevel(4)" ng-model="level" btn-radio="4">Debug</label>
+        </div>
+      </div>
       <table class="table">
         <thead>
           <tr>
             <th class="col-md-1">Level</th>
-            <th class="col-md-2">Time</th>
-            <th class="col-md-4">Message</th>
+            <th class="col-md-1">Time</th>
+            <th class="col-md-5">Message</th>
             <th class="col-md-5">Params</th>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat='line in log track by $index'>
+          <tr ng-repeat='line in log | filter: filter'>
             <td>
                 <span class="label label-danger" ng-if="line.lvl == 0">Critical</span>
                 <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
@@ -123,7 +143,7 @@
                 <span class="label label-info" ng-if="line.lvl == 3">Info</span>
                 <span class="label label-default" ng-if="line.lvl == 4">Debug</span>
             </td>
-            <td><small>{{line.t.slice(0,19)}}</small></td>
+            <td><small>{{line.t.slice(11,19)}}</small></td>
             <td><b>{{line.msg}}</b></td>
             <td>
               <span

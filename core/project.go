@@ -9,6 +9,13 @@ import (
 	"github.com/mcuadros/go-command"
 )
 
+const (
+	Deploy         Task = 1
+	Status         Task = 3
+	ListContainers Task = 4
+	ListImages     Task = 5
+)
+
 type Project struct {
 	Name                string
 	Repository          VCS
@@ -27,9 +34,15 @@ type Project struct {
 	LinkedBy            []*Project              `json:"-"`
 	Environments        map[string]*Environment `json:"-"`
 	EnvironmentNames    []string                `gcfg:"Environment"`
+	TaskStatus          TaskStatus
 }
 
 func (p *Project) Deploy(environment string, output io.Writer, force bool) []error {
+	e := p.mustGetEnvironment(environment)
+
+	p.TaskStatus.Start(e, Deploy)
+	defer p.TaskStatus.Stop(e, Deploy)
+
 	Info("Retrieving last dockerfile ...", "project", p)
 
 	c := NewGithub(p.GithubToken)
@@ -43,7 +56,6 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 		return []error{err}
 	}
 
-	e := p.mustGetEnvironment(environment)
 	d, err := NewDockerGroup(e)
 	if err != nil {
 		return []error{err}

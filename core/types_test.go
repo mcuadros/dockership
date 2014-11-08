@@ -5,6 +5,7 @@ import (
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 	. "gopkg.in/check.v1"
@@ -227,4 +228,27 @@ func (s *CoreSuite) TestEnvironment_String(c *C) {
 	e := Environment{Name: "foo"}
 
 	c.Assert(e.String(), Equals, "foo")
+}
+
+func (s *CoreSuite) TestTaskStatus_Start(c *C) {
+	t := Task(1)
+	e := &Environment{Name: "foo"}
+	ts := TaskStatus{}
+	ts.Start(e, t)
+
+	c.Assert(ts, HasLen, 1)
+	c.Assert(ts[e.Name], HasLen, 1)
+	c.Assert(ts[e.Name][t].Year(), Equals, time.Now().Year())
+}
+
+func (s *CoreSuite) TestTaskStatus_Stop(c *C) {
+	t := Task(1)
+	e := &Environment{Name: "foo"}
+
+	ts := TaskStatus{}
+	ts.Start(e, t)
+	c.Assert(ts, HasLen, 1)
+
+	ts.Stop(e, t)
+	c.Assert(ts, HasLen, 0)
 }

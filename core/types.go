@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/sourcegraph/go-vcsurl"
@@ -210,4 +211,27 @@ type Environment struct {
 
 func (e *Environment) String() string {
 	return e.Name
+}
+
+type Task int
+type TaskStatus map[string]map[Task]time.Time
+
+func (ts TaskStatus) Start(e *Environment, t Task) {
+	if _, ok := ts[e.Name]; !ok {
+		ts[e.Name] = make(map[Task]time.Time)
+	}
+
+	ts[e.Name][t] = time.Now()
+}
+
+func (ts TaskStatus) Stop(e *Environment, t Task) {
+	if _, ok := ts[e.Name]; !ok {
+		return
+	}
+
+	delete(ts[e.Name], t)
+
+	if len(ts[e.Name]) == 0 {
+		delete(ts, e.Name)
+	}
 }

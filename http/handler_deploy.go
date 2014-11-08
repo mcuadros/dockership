@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
+	"time"
 
 	"github.com/mcuadros/dockership/core"
 
@@ -24,16 +24,16 @@ func (s *server) HandleDeploy(msg Message, session sockjs.Session) {
 	}
 
 	writer := NewSockJSWriter(s.sockjs, "deploy")
+	now := time.Now()
 	writer.SetFormater(func(raw []byte) []byte {
-		data, _ := json.Marshal(string(raw))
-		str := fmt.Sprintf(
-			"{\"environment\":\"%s\", \"project\":\"%s\", \"log\":%s}",
-			environment,
-			project,
-			data,
-		)
+		str, _ := json.Marshal(map[string]string{
+			"environment": environment,
+			"project":     project,
+			"date":        now.String(),
+			"log":         string(raw),
+		})
 
-		return []byte(str)
+		return str
 	})
 
 	if p, ok := s.config.Projects[project]; ok {

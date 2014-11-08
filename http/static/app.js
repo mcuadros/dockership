@@ -4,37 +4,6 @@ angular.module('dockership', [
 ]);
 
 angular.module('dockership').controller(
-    'TabsParentController', function ($scope, $window) {
-        var setAllInactive = function() {
-            angular.forEach($scope.workspaces, function(workspace) {
-                workspace.active = false;
-            });
-        };
-
-        var addNewWorkspace = function() {
-            var id = $scope.workspaces.length + 1;
-            $scope.workspaces.push({
-                id: id,
-                name: "Workspace " + id,
-                template: 'DeployContent.html',
-                ctrl: 'DeployCtrl',
-                active: true
-            });
-        };
-
-        $scope.workspaces = [{
-            name: 'List', active:true, ctrl: 'MainCtrl',
-            name: 'Log', active:false, ctrl: 'LogTabCtrl'
-        }];
-
-        $scope.addWorkspace = function () {
-            setAllInactive();
-            addNewWorkspace();
-        };
-    }
-);
-
-angular.module('dockership').controller(
     'LogTabCtrl',
     function ($scope, socket, ansi2html) {
         $scope.level = 4
@@ -80,10 +49,17 @@ angular.module('dockership').controller(
 angular.module('dockership').controller(
     'DeployTabCtrl',
     function ($scope, $http, socket, ansi2html) {
-        $scope.log = ""
+        $scope.log = {}
+        $scope.current = "latest"
         socket.addHandler('deploy', function (result) {
-            console.log(result);
-            $scope.log += ansi2html.toHtml(result.log)
+            var key = result.project + " " + result.environment + " " + result.date.slice(0, 16)
+            $scope.current = key;
+
+            if ($scope.log[key] == undefined) {
+                $scope.log[key] = ""
+            }
+
+            $scope.log[key] += ansi2html.toHtml(result.log)
         });
     }
 );
@@ -123,24 +99,7 @@ angular.module('dockership').controller(
         };
 
         $scope.openDeploy = function (project, environment) {
-            console.log(project, environment);
             socket.doDeploy(project, environment);
-            var modalInstance = $modal.open({
-                templateUrl: 'DeployContent.html',
-                controller: 'DeployCtrl',
-                size: 'lg',
-                resolve: {
-                    project: function () {
-                        return project;
-                    },
-                    environment: function () {
-                        return environment;
-                    },
-                    loadStatus: function () {
-                        return $scope.loadStatus;
-                    }
-                }
-            });
         };
 
         $scope.isDeployable = function(status) {

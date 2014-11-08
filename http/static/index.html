@@ -74,6 +74,13 @@
         .btn-group {
           margin:6px;
         }
+
+        pre {
+          margin-top: 20px;
+          color: white;
+          background-color: #7e7e7e;
+
+        }
     </style>
   </head>
   <body ng-cloak>
@@ -111,7 +118,7 @@
           <tab ng-controller="LogTabCtrl" heading="Log">
               <ng-include src="'LogTab.html'"></ng-include>
           </tab>
-          <tab ng-controller="DeployTabCtrl" heading="Deployments">
+          <tab ng-controller="DeployTabCtrl" class="tab-deploy" heading="Deployments">
               <ng-include src="'DeployTab.html'"></ng-include>
           </tab>
         </tabset>
@@ -290,9 +297,12 @@
         </div>
     </script>
     <script type="text/ng-template" id="DeployTab.html">
-        <div class="modal-body deploy-log">
-          <pre ng-bind="log"></pre>
-        </div>
+        <select class="form-control" ng-model="current">
+          <option value="latest">-- latest --</option>
+          <option ng-repeat="(key, value) in log" value="{{key}}">{{key}}</option>
+        </select>
+        <h3 ng-if="current != 'latest'">Deploy <b>{{current}}</b></h3>
+        <pre ng-bind="log[current]"></pre>
     </script>
   </body>
 </html>

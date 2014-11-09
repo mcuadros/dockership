@@ -16,15 +16,12 @@
     <script src="https://cdn.rawgit.com/jorgeecardona/ansi-to-html/master/ansi2html.js"></script>
     <script src="/app.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.rawgit.com/chieffancypants/angular-loading-bar/0.6.0/build/loading-bar.min.css" rel="stylesheet">
 
     <style>
         html, body { padding:0 60px 0 60px;}
         .deploy-log { max-height: 420px; overflow-y: auto; }
         .avatar  {padding-top:10px;}
         .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%;  }
-        #loading-bar .bar { background: #634224; }
-        #loading-bar-spinner .spinner-icon { border-top-color:  #fff; border-left-color: #fff;}
 
         .popover-content, .popover-title { font-size:80%; }
 
@@ -81,6 +78,69 @@
           background-color: #7e7e7e;
 
         }
+        .status {
+          float: left;
+          margin: 1px auto;
+          font-size: 10px;
+          position: relative;
+          text-indent: -9999em;
+          transition: border-color 2s ease;
+        }
+
+        .status- {
+          border-top: 2px solid rgba(197, 39, 22, 0.7);
+          border-right: 2px solid rgba(197, 39, 22, 0.7);
+          border-bottom: 2px solid rgba(197, 39, 22, 0.6);
+          border-left: 2px solid rgba(197, 39, 22, 0.0);
+          -webkit-animation: load8 1.1s infinite linear;
+          animation: load8 1.1s infinite linear;
+        }
+
+        .status-down-partial {
+          border-top: 2px solid red;
+          border-right: 2px solid red;
+          border-bottom: 2px solid green;
+          border-left: 2px solid green;
+        }
+
+        .status-outdated-partial {
+          border-top: 2px solid orange;
+          border-right: 2px solid orange;
+          border-bottom: 2px solid green;
+          border-left: 2px solid green;
+        }
+
+        .status-down { border: 2px solid red; }
+        .status-outdated { border: 2px solid orange; }
+        .status-ok { border: 2px solid green; }
+
+        .status,
+        .status:after {
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+        }
+        @-webkit-keyframes load8 {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+          100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+          }
+        }
+        @keyframes load8 {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+          100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+          }
+        }
+
     </style>
   </head>
   <body ng-cloak>
@@ -113,7 +173,7 @@
       <div class="container">
         <tabset>
           <tab ng-controller="MainCtrl" heading="Projects">
-              <ng-include src="'ProjectListTab.html'"></ng-include>
+              <ng-include src="'ProjectsTab.html'"></ng-include>
           </tab>
           <tab ng-controller="LogTabCtrl" heading="Log">
               <ng-include src="'LogTab.html'"></ng-include>
@@ -122,6 +182,15 @@
               <ng-include src="'DeployTab.html'"></ng-include>
           </tab>
         </tabset>
+           <footer>
+        <div class=" well well-sm">
+            by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
+            . Under MIT License</a> /
+
+            Logo by
+            <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
+        </div>
+      </footer>
       </div>
 
     <script type="text/ng-template" id="LogTab.html">
@@ -164,21 +233,21 @@
         </tbody>
       </table>
     </script>
-    <script type="text/ng-template" id="ProjectListTab.html">
-      <div ng-repeat='p in groups'>
+    <script type="text/ng-template" id="ProjectsTab.html">
+      <div ng-repeat='p in projects'>
         <div class="row project">
-          <h3 class="col-md-4">{{p.Project.Name}}</h3>
+          <h3 class="col-md-4">{{p.Name}}</h3>
           <div class="col-md-8 info">
             <span class="label label-info">
-              <span class="glyphicon glyphicon-folder-open"></span>{{p.Project.Repository}}
+              <span class="glyphicon glyphicon-folder-open"></span>{{p.Repository}}
             </span>
             <span class="label label-info">
-              <span class="glyphicon glyphicon-inbox"></span>{{p.Project.Branch}}
+              <span class="glyphicon glyphicon-inbox"></span>{{p.Branch}}
             </span>
             <span
               popover-title="Alias"
               popover="{{link.split(':')[1]}}" popover-trigger="mouseenter"
-              ng-repeat='link in p.Project.LinkNames'
+              ng-repeat='link in p.LinkNames'
               class="label label-success">
               <span class="glyphicon glyphicon-link"></span>{{link.split(':')[0]}}
             </span>
@@ -197,67 +266,51 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat='s in p.Status' ng-class="
-              s.RunningContainers.length == 0 ? 'danger' : isDeployable(s) ? 'warning': ''">
+            <tr
+              ng-repeat='e in p.Environments'
+              ng-class="status[p.Name].Status[e.Name].Status[0] == 'down' ? 'danger' : status[p.Name].Status[e.Name].Status[0] == 'outdated' ? 'warning': ''">
+
               <td><b
                   popover-title="Docker end-points"
-                  popover="{{s.Environment.DockerEndPoints}}"
+                  popover="{{e.DockerEndPoints}}"
                   popover-placement="right"
                   popover-trigger="mouseenter"
-              >{{s.Environment.Name}}</b>
+              >{{e.Name}}</b>
               </td>
-              <td>{{s.RunningContainers[0].Image.split(':')[1]}}</td>
+              <td>{{status[p.Name].Status[e.Name].RunningContainers[0].Image.split(':')[1]}}</td>
               <td>
                 <a href="#" class="success"
                   ng-click="processing||openContainers(p.Project)"
                 >
-                  <span class="badge success">{{s.Containers.length}}</span>
+                  <span class="badge success">{{status[p.Name].Status[e.Name].Containers.length}}</span>
                 </a>
               </td>
               <td>
-                <span ng-if="s.RunningContainers.length != 0">
-                  {{s.RunningContainers[0].Status}}
-                </span>
-                <span ng-if="s.RunningContainers.length == 0">
-                  Down
-                </span>
+                <div class="status status-{{status[p.Name].Status[e.Name].Status.join('-')}}">{{status[p.Name].Status[e.Name].Status}}</div>
               </td>
               <td class="text-right">
-                <button ng-if="!isDeployable(s)"
-                  type="button"
-                  ng-click="openDeploy(p.Project, s.Environment)"
-                  class="btn btn-success btn-xs">
-                     <span class="glyphicon glyphicon-saved"></span>
-                     Up-to-date
-                </button>
-                <button ng-if="isDeployable(s)"
-                  type="button"
-                  ng-click="openDeploy(p.Project, s.Environment)"
-                  class="btn btn-primary btn-xs">
-                     <span class="glyphicon glyphicon-import"></span>
-                     Deploy {{s.LastRevisionLabel.slice(0,12)}}
-                </button>
+                <div/>
+                  <button ng-if="status[p.Name].Status[e.Name].Status[0] == 'ok'"
+                    type="button"
+                    ng-click="openDeploy(p.Project, s.Environment)"
+                    class="btn btn-success btn-xs">
+                       <span class="glyphicon glyphicon-saved"></span>
+                       Up-to-date
+                  </button>
+                  <button ng-if="status[p.Name].Status[e.Name].Status && status[p.Name].Status[e.Name].Status[0] != 'ok'"
+                    type="button"
+                    ng-click="openDeploy(p.Project, s.Environment)"
+                    class="btn btn-primary btn-xs">
+                       <span class="glyphicon glyphicon-import"></span>
+                       Deploy {{status[p.Name].Status[e.Name].LastRevisionLabel.slice(0,12)}}
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       </div>
-
-      <div class="bs-callout" ng-hide="loaded">
-        <h4>Gathering container status</h4>
-        <p>Dockership is connecting to all the docker end points, please wait.</p>
-      </div>
-
-      <footer ng-show="loaded">
-        <div class=" well well-sm">
-            by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
-            . Under MIT License</a> /
-
-            Logo by
-            <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
-        </div>
-      </footer>
     </script>
 
     <script type="text/ng-template" id="ContainersContent.html">

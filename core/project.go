@@ -28,12 +28,12 @@ type Project struct {
 	Files               []string `gcfg:"File"`
 	TestCommand         string
 	NoCache             bool
-	Ports               []string                `gcfg:"Port"`
-	Links               map[string]*Link        `json:"-"`
-	LinkNames           []LinkDefinition        `gcfg:"Link"`
-	LinkedBy            []*Project              `json:"-"`
-	Environments        map[string]*Environment `json:"-"`
-	EnvironmentNames    []string                `gcfg:"Environment"`
+	Ports               []string         `gcfg:"Port"`
+	Links               map[string]*Link `json:"-"`
+	LinkNames           []LinkDefinition `gcfg:"Link"`
+	LinkedBy            []*Project       `json:"-"`
+	Environments        map[string]*Environment
+	EnvironmentNames    []string `gcfg:"Environment"`
 	TaskStatus          TaskStatus
 }
 

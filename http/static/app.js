@@ -11,11 +11,9 @@ angular.module('dockership').controller(
             $scope.level = level;
         };
         $scope.filter = function(line) {
-            console.log($scope.level);
             if (line.lvl <= $scope.level) {
                 return true;
             }
-
 
             return false;
         };
@@ -87,22 +85,47 @@ angular.module('dockership').controller(
             });
         });
 
-        socket.addHandler('status', function (result) {
-            $scope.processing = false;
-            $scope.loaded = true;
-            $scope.groups = result;
-        });
+        var envStatus = function(status) {
+            if (status == undefined) {
+                return ["loading"];
+            }
 
-        $scope.openContainers = function (project) {
-            $scope.processing = true;
-            socket.getContainers(project);
+            var total = status.Environment.DockerEndPoints.length;
+            var running = status.RunningContainers;
+            var revision = status.LastRevisionLabel;
+            var outdated = 0;
+
+            if (running.length == 0) {
+                return ["down"]
+            }
+
+            if (running.length != total) {
+                return ["down", "partial"]
+            }
+
+            for (var i = running.length - 1; i >= 0; i--) {
+                var tmp = running[i].Image.split(':');
+                if (revision.slice(0, tmp[1].length) != tmp[1]) {
+                    outdated++;
+                }
+            };
+
+            if (outdated == total) {
+                return ["outdated", "partial"]
+            }
+
+            if (outdated != 0) {
+                return ["outdated"]
+            }
+
+            return ["ok"];
         };
 
-        $scope.openDeploy = function (project, environment) {
-            socket.doDeploy(project, environment);
-        };
+        var isDeployable = function(status) {
+            if (status == undefined) {
+                return null;
+            }
 
-        $scope.isDeployable = function(status) {
             var running = status.RunningContainers;
             var revision = status.LastRevisionLabel;
             for (var i = running.length - 1; i >= 0; i--) {
@@ -115,19 +138,41 @@ angular.module('dockership').controller(
             return true;
         };
 
+        socket.addHandler('status', function (result) {
+            $scope.processing = false;
+            $scope.loaded = true;
+            console.log(result);
+
+            angular.forEach(result, function(project, key) {
+                angular.forEach(project.Status, function(status, key) {
+                    status.IsDeployable = isDeployable(status);
+                    status.Status = envStatus(status);
+                });
+            });
+
+            $scope.status = result;
+
+        });
+
+        socket.addHandler('projects', function (result) {
+            $scope.projects = result;
+            $scope.loadStatus();
+        });
+
+        $scope.openContainers = function (project) {
+            $scope.processing = true;
+            socket.getContainers(project);
+        };
+
+        $scope.openDeploy = function (project, environment) {
+            socket.doDeploy(project, environment);
+        };
+
+        
         $scope.loaded = false;
         $scope.loadStatus = function() {
             socket.getStatus();
         };
-
-
-        $scope.log = function(msg) {
-            $scope.errors.push(msg);
-        };
-
-        socket.setHandler('open', function() {
-            $scope.loadStatus();
-        })
     }
 );
 
@@ -206,6 +251,19 @@ angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {
         return $sce.trustAsHtml(val);
     };
 }]);
+
+angular.module('dockership').directive('myStatus', function () {
+    return {
+        scope: false,  // this is the default, so you could remove this line
+        template: "<div><div another-directive></div>{{button}}</div>",
+        replace: true,
+        link: function (scope, element, attrs) {
+           scope.button = "foo";
+           console.log(scope);
+        }
+    };
+});
+
 
 // update popover template for binding unsafe html
 angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {

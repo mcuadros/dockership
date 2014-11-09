@@ -23,6 +23,7 @@ func Start(version, build string) {
 	s := &server{serverId: fmt.Sprintf("dockership %s, build %s", version, build)}
 	s.readConfig(configFile)
 	s.configure()
+	s.configStaticAssets()
 	s.configureAuth()
 	s.run()
 }
@@ -39,6 +40,7 @@ func (s *server) configure() {
 	s.sockjs = NewSockJS()
 	s.mux = mux.NewRouter()
 
+	s.sockjs.AddHandler("connect", s.HandleConnect)
 	s.sockjs.AddHandler("containers", s.HandleContainers)
 	s.sockjs.AddHandler("status", s.HandleStatus)
 	s.sockjs.AddHandler("deploy", s.HandleDeploy)
@@ -53,8 +55,9 @@ func (s *server) configure() {
 		user, _ := s.oauth.getUser(s.oauth.getToken(r))
 		s.json(w, 200, user)
 	})
+}
 
-	// assets
+func (s *server) configStaticAssets() {
 	s.mux.Path("/").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		content, _ := Asset("static/index.html")
@@ -73,7 +76,6 @@ func (s *server) configure() {
 		w.Write(content)
 	})
 }
-
 func (s *server) configureAuth() {
 	s.oauth = NewOAuth(&s.config)
 }

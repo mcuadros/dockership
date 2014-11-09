@@ -26,7 +26,6 @@ func NewSockJS() *SockJS {
 		sessions: make([]sockjs.Session, 0),
 		handlers: make(map[string]SockJSHandler, 0),
 	}
-
 }
 
 func (s *SockJS) Send(event, data interface{}, isJson bool) {
@@ -53,25 +52,34 @@ func (s *SockJS) AddSessionAndRead(session sockjs.Session) {
 	s.sessions = append(s.sessions, session)
 	s.Unlock()
 
+	s.onConnect(session)
 	s.Read(session)
+}
+
+func (s *SockJS) onConnect(session sockjs.Session) {
+	s.handleMessage(Message{Event: "connect"}, session)
 }
 
 func (s *SockJS) Read(session sockjs.Session) {
 	for {
 		if raw, err := session.Recv(); err == nil {
-			s.handleMessage(raw, session)
+			s.processMessage(raw, session)
 		} else {
 			break
 		}
 	}
 }
 
-func (s *SockJS) handleMessage(raw string, session sockjs.Session) {
+func (s *SockJS) processMessage(raw string, session sockjs.Session) {
 	var msg Message
 	if json.Unmarshal([]byte(raw), &msg) != nil {
 		return
 	}
 
+	s.handleMessage(msg, session)
+}
+
+func (s *SockJS) handleMessage(msg Message, session sockjs.Session) {
 	if h, ok := s.handlers[msg.Event]; ok {
 		go h(msg, session)
 	}

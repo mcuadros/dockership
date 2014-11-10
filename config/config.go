@@ -49,6 +49,7 @@ func (c *Config) LoadProjects() {
 
 		p.UseShortRevisions = c.Global.UseShortRevisions
 		p.LinkedBy = make([]*core.Project, 0)
+		p.TaskStatus = core.TaskStatus{}
 	}
 }
 

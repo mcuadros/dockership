@@ -10,10 +10,7 @@ import (
 )
 
 const (
-	Deploy         Task = 1
-	Status         Task = 3
-	ListContainers Task = 4
-	ListImages     Task = 5
+	Deploy Task = "deploy"
 )
 
 type Project struct {
@@ -39,7 +36,6 @@ type Project struct {
 
 func (p *Project) Deploy(environment string, output io.Writer, force bool) []error {
 	e := p.mustGetEnvironment(environment)
-
 	p.TaskStatus.Start(e, Deploy)
 	defer p.TaskStatus.Stop(e, Deploy)
 

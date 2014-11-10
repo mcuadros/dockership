@@ -87,7 +87,7 @@
           transition: border-color 2s ease;
         }
 
-        .status- {
+        .status-, .status-running {
           border-top: 2px solid rgba(197, 39, 22, 0.7);
           border-right: 2px solid rgba(197, 39, 22, 0.7);
           border-bottom: 2px solid rgba(197, 39, 22, 0.6);
@@ -169,28 +169,45 @@
 <br/>
 <br/>
 <br/>
-
       <div class="container">
         <tabset>
-          <tab ng-controller="MainCtrl" heading="Projects">
-              <ng-include src="'ProjectsTab.html'"></ng-include>
+          <tab ng-controller="ProjectsCtrl" heading="Projects">
+            <ng-include src="'ProjectsTab.html'"></ng-include>
           </tab>
-          <tab ng-controller="LogTabCtrl" heading="Log">
-              <ng-include src="'LogTab.html'"></ng-include>
+          <tab ng-controller="LogTabCtrl"
+             active="$root.LogTabActive"
+             select="$root.pendingLogs = 0">
+            <tab-heading>
+              Logs
+              <span
+                ng-hide="$root.LogTabActive || $root.pendingLogs == 0"
+                class="badge success"
+              >{{pendingLogs}}</span>
+            </tab-heading>
+            <ng-include src="'LogTab.html'"></ng-include>
           </tab>
-          <tab ng-controller="DeployTabCtrl" class="tab-deploy" heading="Deployments">
-              <ng-include src="'DeployTab.html'"></ng-include>
+          <tab ng-controller="DeployTabCtrl"
+             active="$root.DeployTabActive"
+             select="$root.pendingDeployments = 0">
+            <tab-heading>
+              Deployments
+              <span
+                ng-hide="$root.DeployTabActive || $root.pendingDeployments == 0"
+                class="badge success"
+              >{{pendingDeployments}}</span>
+            </tab-heading>
+            <ng-include src="'DeployTab.html'"></ng-include>
           </tab>
         </tabset>
-           <footer>
-        <div class=" well well-sm">
+        <footer>
+          <div class=" well well-sm">
             by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
             . Under MIT License</a> /
 
             Logo by
             <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
-        </div>
-      </footer>
+          </div>
+        </footer>
       </div>
 
     <script type="text/ng-template" id="LogTab.html">
@@ -280,26 +297,30 @@
               <td>{{status[p.Name].Status[e.Name].RunningContainers[0].Image.split(':')[1]}}</td>
               <td>
                 <a href="#" class="success"
-                  ng-click="processing||openContainers(p.Project)"
+                  ng-click="processing||openContainers(p)"
                 >
                   <span class="badge success">{{status[p.Name].Status[e.Name].Containers.length}}</span>
                 </a>
               </td>
               <td>
-                <div class="status status-{{status[p.Name].Status[e.Name].Status.join('-')}}">{{status[p.Name].Status[e.Name].Status}}</div>
+                <div class="status status-{{p.TaskStatus[e.Name] ? p.TaskStatus[e.Name].length != 0 ? 'running': status[p.Name].Status[e.Name].Status.join('-') : status[p.Name].Status[e.Name].Status.join('-')}}">{{status[p.Name].Status[e.Name].Status}}</div>
               </td>
               <td class="text-right">
-                <div/>
-                  <button ng-if="status[p.Name].Status[e.Name].Status[0] == 'ok'"
+                <div>
+                  <button
+                    ng-if="status[p.Name].Status[e.Name].Status[0] == 'ok'"
+                    ng-disabled="taskStatus[p.Name][e.Name]['deploy']"
                     type="button"
-                    ng-click="openDeploy(p.Project, s.Environment)"
+                    ng-click="openDeploy(p, e)"
                     class="btn btn-success btn-xs">
                        <span class="glyphicon glyphicon-saved"></span>
                        Up-to-date
                   </button>
-                  <button ng-if="status[p.Name].Status[e.Name].Status && status[p.Name].Status[e.Name].Status[0] != 'ok'"
+                  <button
+                    ng-if="status[p.Name].Status[e.Name].Status && status[p.Name].Status[e.Name].Status[0] != 'ok'"
+                    ng-disabled="taskStatus[p.Name][e.Name]['deploy']"
                     type="button"
-                    ng-click="openDeploy(p.Project, s.Environment)"
+                    ng-click="openDeploy(p, e)"
                     class="btn btn-primary btn-xs">
                        <span class="glyphicon glyphicon-import"></span>
                        Deploy {{status[p.Name].Status[e.Name].LastRevisionLabel.slice(0,12)}}

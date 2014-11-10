@@ -5,8 +5,10 @@ angular.module('dockership', [
 
 angular.module('dockership').controller(
     'LogTabCtrl',
-    function ($scope, socket, ansi2html) {
+    function ($scope, $rootScope, socket, ansi2html) {
         $scope.level = 4
+        $rootScope.pendingLogs = 0;
+
         $scope.chageLevel = function(level) {
             $scope.level = level;
         };
@@ -21,6 +23,9 @@ angular.module('dockership').controller(
         $scope.log = [];
         socket.addHandler('log', function (result) {
             $scope.log.unshift(result);
+            if (result.lvl < 4) {
+                $rootScope.pendingLogs++;
+            }
         });
 
         $scope.params = function (params, first) {
@@ -46,14 +51,17 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'DeployTabCtrl',
-    function ($scope, $http, socket, ansi2html) {
+    function ($scope, $http, $rootScope, socket, ansi2html) {
         $scope.log = {}
         $scope.current = "latest"
+        $rootScope.pendingDeployments = 0;
+
         socket.addHandler('deploy', function (result) {
             var key = result.project + " " + result.environment + " " + result.date.slice(0, 16)
             $scope.current = key;
 
             if ($scope.log[key] == undefined) {
+                $rootScope.pendingDeployments++;
                 $scope.log[key] = ""
             }
 
@@ -63,7 +71,7 @@ angular.module('dockership').controller(
 );
 
 angular.module('dockership').controller(
-    'MainCtrl',
+    'ProjectsCtrl',
     function ($scope, $http, socket, $modal, $log) {
         'use strict';
         $scope.processing = false;
@@ -121,31 +129,12 @@ angular.module('dockership').controller(
             return ["ok"];
         };
 
-        var isDeployable = function(status) {
-            if (status == undefined) {
-                return null;
-            }
-
-            var running = status.RunningContainers;
-            var revision = status.LastRevisionLabel;
-            for (var i = running.length - 1; i >= 0; i--) {
-                var tmp = running[i].Image.split(':');
-                if (revision.slice(0, tmp[1].length) == tmp[1]) {
-                    return false;
-                }
-            };
-
-            return true;
-        };
-
         socket.addHandler('status', function (result) {
             $scope.processing = false;
             $scope.loaded = true;
-            console.log(result);
 
             angular.forEach(result, function(project, key) {
                 angular.forEach(project.Status, function(status, key) {
-                    status.IsDeployable = isDeployable(status);
                     status.Status = envStatus(status);
                 });
             });
@@ -156,6 +145,11 @@ angular.module('dockership').controller(
 
         socket.addHandler('projects', function (result) {
             $scope.projects = result;
+
+            angular.forEach(result, function(project, key) {
+                $scope.taskStatus[project.Name] = project.TaskStatus;
+            });
+
             $scope.loadStatus();
         });
 
@@ -164,11 +158,17 @@ angular.module('dockership').controller(
             socket.getContainers(project);
         };
 
+        $scope.taskStatus = [];
         $scope.openDeploy = function (project, environment) {
+            if ($scope.taskStatus[project.Name][environment.Name] == undefined) {
+                $scope.taskStatus[project.Name][environment.Name] = {};
+            }
+
+            $scope.taskStatus[project.Name][environment.Name]['deploy'] = true;
             socket.doDeploy(project, environment);
         };
 
-        
+
         $scope.loaded = false;
         $scope.loadStatus = function() {
             socket.getStatus();
@@ -251,18 +251,6 @@ angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {
         return $sce.trustAsHtml(val);
     };
 }]);
-
-angular.module('dockership').directive('myStatus', function () {
-    return {
-        scope: false,  // this is the default, so you could remove this line
-        template: "<div><div another-directive></div>{{button}}</div>",
-        replace: true,
-        link: function (scope, element, attrs) {
-           scope.button = "foo";
-           console.log(scope);
-        }
-    };
-});
 
 
 // update popover template for binding unsafe html

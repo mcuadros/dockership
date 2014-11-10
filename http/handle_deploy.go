@@ -39,6 +39,11 @@ func (s *server) HandleDeploy(msg Message, session sockjs.Session) {
 	if p, ok := s.config.Projects[project]; ok {
 		core.Info("Starting deploy", "project", p, "environment", environment, "force", force)
 
+		go func(session sockjs.Session) {
+			time.Sleep(50 * time.Millisecond)
+			s.EmitProjects(session)
+		}(session)
+
 		err := p.Deploy(environment, writer, force)
 		if len(err) != 0 {
 			for _, e := range err {
@@ -50,4 +55,6 @@ func (s *server) HandleDeploy(msg Message, session sockjs.Session) {
 	} else {
 		core.Error("Project not found", "project", p)
 	}
+
+	s.EmitProjects(session)
 }

@@ -213,7 +213,7 @@ func (e *Environment) String() string {
 	return e.Name
 }
 
-type Task int
+type Task string
 type TaskStatus map[string]map[Task]time.Time
 
 func (ts TaskStatus) Start(e *Environment, t Task) {

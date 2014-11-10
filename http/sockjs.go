@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mcuadros/dockership/core"
+
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
@@ -36,6 +38,7 @@ func (s *SockJS) Send(event, data interface{}, isJson bool) {
 		var err error
 		result, err = json.Marshal(data)
 		if err != nil {
+			core.Error(fmt.Sprintf("Error SockJS send: %q", err.Error()))
 			return
 		}
 	}

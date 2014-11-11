@@ -5,7 +5,7 @@
 
 Why?
 ----
-Nowdays we have many powerfull tools for *configuration management* such as [Puppet](http://puppetlabs.com/puppet/what-is-puppet), [Chef](http://www.getchef.com/chef/) and  [Ansible](http://www.ansibleworks.com/) even docker-based deployments tools like [Deis](http://deis.io). This tools are great for medium/big projects, but not optimal for small startups without a DevOps guy, and personal side projects
+Nowdays we have many powerfull tools for *configuration management* such as [Puppet](http://puppetlabs.com/puppet/what-is-puppet), [Chef](http://www.getchef.com/chef/) and  [Ansible](http://www.ansibleworks.com/) even docker-based deployments tools like [Deis](http://deis.io). This tools are great for medium/big projects, but not optimal for small startups without a DevOps guy, and personal side projects.
 
 With Dockership you can deploy your applications, based on a Docker container, to several server without learning complex DSLs or hundreds of new terms. Learns new things is great, but when you deploy from time to time, remember how to do it becomes hard to remember.
 
@@ -15,7 +15,10 @@ Overview
 
 The deploy is based on git repositories (currently only supports Github ones) containing the Dockerfile for each project. Dockership handles the building and running process at one or multiple docker servers, the  version control is made through the git commits, being extremly easy.
 
-> WARNING: Currently the project is under heavy development and undocumented.
+Dockership comes in two flavours CLI and HTTP, here you can see a screenshot from the HTTP view.
+
+![Projects View](https://raw.githubusercontent.com/mcuadros/dockership-site/master/static/images/screenshots/http-project-view-min.png)
+
 
 Example
 -------
@@ -42,4 +45,3 @@ License
 -------
 
 MIT, see [LICENSE](LICENSE)
-

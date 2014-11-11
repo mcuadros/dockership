@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -263,9 +264,15 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 		return err
 	}
 
+	restartPolicy, err := d.formatRestartPolicy(p.Restart)
+	if err != nil {
+		return err
+	}
+
 	return d.client.StartContainer(c.ID, &docker.HostConfig{
-		PortBindings: ports,
-		Links:        d.formatLinks(p.Links),
+		PortBindings:  ports,
+		RestartPolicy: restartPolicy,
+		Links:         d.formatLinks(p.Links),
 	})
 }
 
@@ -276,6 +283,33 @@ func (d *Docker) formatLinks(links map[string]*Link) []string {
 	}
 
 	return r
+}
+
+func (d *Docker) formatRestartPolicy(restart string) (policy docker.RestartPolicy, err error) {
+	values := strings.SplitN(restart, ":", 2)
+	if values[0] == "no" || restart == "" {
+		policy = docker.NeverRestart()
+		return
+	}
+
+	if values[0] == "always" {
+		policy = docker.AlwaysRestart()
+		return
+	}
+
+	if values[0] == "on-failure" {
+		var maxRetry int
+		maxRetry, err = strconv.Atoi(values[1])
+		if err != nil {
+			return
+		}
+
+		policy = docker.RestartOnFailure(maxRetry)
+		return
+	}
+
+	err = errors.New(fmt.Sprintf("Malformed restart policy %q", restart))
+	return
 }
 
 func (d *Docker) formatPorts(ports []string) (map[docker.Port][]docker.PortBinding, error) {

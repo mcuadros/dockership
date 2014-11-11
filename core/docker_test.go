@@ -25,6 +25,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 	p := &Project{
 		Name:       "foo",
 		Repository: "git@github.com:foo/bar.git",
+		Restart:    "always",
 		Ports:      []string{"0.0.0.0:8080:80/tcp"},
 	}
 
@@ -236,6 +237,32 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 	c.Assert(r["80/tcp"][0].HostPort, Equals, "8080")
 	c.Assert(r["80/udp"], HasLen, 1)
 	c.Assert(r["42/tcp"], HasLen, 1)
+}
+
+func (s *CoreSuite) TestDocker_formatRestartPolicy(c *C) {
+	d, _ := NewDocker("")
+
+	r, _ := d.formatRestartPolicy("")
+	c.Assert(r.Name, Equals, "no")
+	c.Assert(r.MaximumRetryCount, Equals, 0)
+
+	r, _ = d.formatRestartPolicy("no")
+	c.Assert(r.Name, Equals, "no")
+	c.Assert(r.MaximumRetryCount, Equals, 0)
+
+	r, _ = d.formatRestartPolicy("always")
+	c.Assert(r.Name, Equals, "always")
+	c.Assert(r.MaximumRetryCount, Equals, 0)
+
+	r, _ = d.formatRestartPolicy("on-failure:10")
+	c.Assert(r.Name, Equals, "on-failure")
+	c.Assert(r.MaximumRetryCount, Equals, 10)
+
+	_, err := d.formatRestartPolicy("on-failure:1a0")
+	c.Assert(err, NotNil)
+
+	_, err = d.formatRestartPolicy("fff")
+	c.Assert(err, NotNil)
 }
 
 func buildImage(client *docker.Client, name string) {

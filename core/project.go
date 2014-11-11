@@ -25,6 +25,7 @@ type Project struct {
 	Files               []string `gcfg:"File"`
 	TestCommand         string
 	NoCache             bool
+	Restart             string
 	Ports               []string         `gcfg:"Port"`
 	Links               map[string]*Link `json:"-"`
 	LinkNames           []LinkDefinition `gcfg:"Link"`

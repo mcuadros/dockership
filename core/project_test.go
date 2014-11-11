@@ -22,6 +22,7 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 		Environments: map[string]*Environment{"foo": e},
 		Dockerfile:   "git_mock",
 		GithubToken:  "05bed21c257d935017d85d3398b46ac81035756f",
+		TaskStatus:   TaskStatus{},
 	}
 
 	input := bytes.NewBuffer(nil)

@@ -75,6 +75,13 @@ func (s *server) configStaticAssets() {
 		content, _ := Asset("static/app.js")
 		w.Write(content)
 	})
+
+	s.mux.Path("/app.css").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		content, _ := Asset("static/app.css")
+		w.Write(content)
+	})
+
 }
 func (s *server) configureAuth() {
 	s.oauth = NewOAuth(&s.config)

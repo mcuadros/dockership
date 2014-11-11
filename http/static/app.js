@@ -1,6 +1,6 @@
 angular.module('dockership', [
     'ui.bootstrap', 'angular-loading-bar', 'ansiToHtml', 'ngAnimate',
-    'bd.sockjs', 'headroom'
+    'bd.sockjs', 'headroom', 'dialogs.main'
 ]);
 
 angular.module('dockership').controller(
@@ -72,7 +72,7 @@ angular.module('dockership').controller(
 
 angular.module('dockership').controller(
     'ProjectsCtrl',
-    function ($scope, $http, socket, $modal, $log) {
+    function ($scope, $http, socket, dialogs, $modal, $log) {
         'use strict';
         $scope.processing = false;
 
@@ -160,12 +160,16 @@ angular.module('dockership').controller(
 
         $scope.taskStatus = [];
         $scope.openDeploy = function (project, environment) {
-            if ($scope.taskStatus[project.Name][environment.Name] == undefined) {
-                $scope.taskStatus[project.Name][environment.Name] = {};
-            }
+            var msg = 'Are you sure want to deploy <b>' + project.Name + '</b> at <b>' + environment.Name + '</b>?'    ;
+            var dlg = dialogs.confirm('Confirm', msg, {size: 'md'});
+            dlg.result.then(function(btn){
+                if ($scope.taskStatus[project.Name][environment.Name] == undefined) {
+                    $scope.taskStatus[project.Name][environment.Name] = {};
+                }
 
-            $scope.taskStatus[project.Name][environment.Name]['deploy'] = true;
-            socket.doDeploy(project, environment);
+                $scope.taskStatus[project.Name][environment.Name]['deploy'] = true;
+                socket.doDeploy(project, environment);
+            });
         };
 
 

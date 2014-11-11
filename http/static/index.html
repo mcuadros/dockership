@@ -2,7 +2,9 @@
 <html ng-app="dockership">
   <head>
     <title>Dockership</title>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular-sanitize.min.js"></script>
+
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.11.2.js"></script>
     <script src="https://cdn.rawgit.com/jimhigson/oboe.js/master/dist/oboe-browser.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.16/angular-animate.js"></script>
@@ -14,134 +16,11 @@
     <script src="https://cdn.rawgit.com/sockjs/sockjs-client/v1.0.0-beta.2/dist/sockjs.min.js"></script>
     <script src="https://cdn.rawgit.com/bendrucker/angular-sockjs/master/src/index.js"></script>
     <script src="https://cdn.rawgit.com/jorgeecardona/ansi-to-html/master/ansi2html.js"></script>
+    <script src="https://cdn.rawgit.com/m-e-conroy/angular-dialog-service/v5.2.5/dist/dialogs.min.js"></script>
+    <script src="https://cdn.rawgit.com/m-e-conroy/angular-dialog-service/v5.2.5/dist/dialogs-default-translations.min.js"></script>
     <script src="/app.js"></script>
-    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        html, body { padding:0 60px 0 60px;}
-        .deploy-log { max-height: 420px; overflow-y: auto; }
-        .avatar  {padding-top:10px;}
-        .avatar img { margin-left:10px; width:30px; height:30px; border-radius:50% 50% 50% 50%;  }
-
-        .popover-content, .popover-title { font-size:80%; }
-
-        .headroom { transition: transform 200ms linear; }
-        .headroom--unpinned { transform: translateY(-100%); }
-        .headroom--pinned { transform: translateY(0%); }
-        .navbar-brand {
-          background-image: url(/dockership.png);
-          background-repeat: no-repeat;
-          background-size: 200px;
-          width: 200px;
-          margin:5px;
-        }
-
-        .navbar-brand span { display: none;}
-        .container {
-          max-width: 60em;
-          margin: 0 auto;
-          padding: 0 1.5em;
-        }
-        #main { margin-top: 80px; }
-
-        .project .info { padding-top: 24px;  }
-        .project .info .label { margin-right: 10px; float: right; }
-        .project .info .label .glyphicon { margin-right: 5px; }
-        footer { padding-top: 60px !important; }
-        footer a { color: #808080; font-weight: bolder; }
-
-        .bs-callout {
-          padding: 20px;
-          background-color: #fff;
-          margin: 20px 0;
-          border: 1px solid #469408;
-          border-left-width: 5px;
-          border-radius: 3px;
-        }
-        .tab-content {
-          border-left: 1px solid #ddd;
-          border-right: 1px solid #ddd;
-          border-bottom: 1px solid #ddd;
-          padding:20px;
-          background-color: #fff;
-        }
-        li.active > a {
-          background: #fff !important;
-        }
-        .btn-group {
-          margin:6px;
-        }
-
-        pre {
-          margin-top: 20px;
-          color: white;
-          background-color: #7e7e7e;
-
-        }
-        .status {
-          float: left;
-          margin: 1px auto;
-          font-size: 10px;
-          position: relative;
-          text-indent: -9999em;
-          transition: border-color 2s ease;
-        }
-
-        .status-, .status-running {
-          border-top: 2px solid rgba(197, 39, 22, 0.7);
-          border-right: 2px solid rgba(197, 39, 22, 0.7);
-          border-bottom: 2px solid rgba(197, 39, 22, 0.6);
-          border-left: 2px solid rgba(197, 39, 22, 0.0);
-          -webkit-animation: load8 1.1s infinite linear;
-          animation: load8 1.1s infinite linear;
-        }
-
-        .status-down-partial {
-          border-top: 2px solid red;
-          border-right: 2px solid red;
-          border-bottom: 2px solid green;
-          border-left: 2px solid green;
-        }
-
-        .status-outdated-partial {
-          border-top: 2px solid orange;
-          border-right: 2px solid orange;
-          border-bottom: 2px solid green;
-          border-left: 2px solid green;
-        }
-
-        .status-down { border: 2px solid red; }
-        .status-outdated { border: 2px solid orange; }
-        .status-ok { border: 2px solid green; }
-
-        .status,
-        .status:after {
-          border-radius: 50%;
-          width: 18px;
-          height: 18px;
-        }
-        @-webkit-keyframes load8 {
-          0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
-          }
-          100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes load8 {
-          0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
-          }
-          100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
-          }
-        }
-
-    </style>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet"></link>
+    <link href="/app.css" rel="stylesheet"></link>
   </head>
   <body ng-cloak>
       <headroom ng-controller="HeaderCtrl"
@@ -213,9 +92,9 @@
     <script type="text/ng-template" id="LogTab.html">
       <div class="text-right">
         <div class="btn-group">
-            <label class="btn btn-sm btn-success" ng-click="chageLevel(2)" ng-model="level" btn-radio="2">Warning</label>
-            <label class="btn btn-sm btn-success" ng-click="chageLevel(3)" ng-model="level" btn-radio="3">Info</label>
-            <label class="btn btn-sm btn-success" ng-click="chageLevel(4)" ng-model="level" btn-radio="4">Debug</label>
+            <label class="btn btn-sm btn-info" ng-click="chageLevel(2)" ng-model="level" btn-radio="2">Warning</label>
+            <label class="btn btn-sm btn-info" ng-click="chageLevel(3)" ng-model="level" btn-radio="3">Info</label>
+            <label class="btn btn-sm btn-info" ng-click="chageLevel(4)" ng-model="level" btn-radio="4">Debug</label>
         </div>
       </div>
       <table class="table">
@@ -230,11 +109,11 @@
         <tbody>
           <tr ng-repeat='line in log | filter: filter'>
             <td>
-                <span class="label label-danger" ng-if="line.lvl == 0">Critical</span>
-                <span class="label label-danger" ng-if="line.lvl == 1">Error</span>
-                <span class="label label-warning" ng-if="line.lvl == 2">Warning</span>
-                <span class="label label-info" ng-if="line.lvl == 3">Info</span>
-                <span class="label label-default" ng-if="line.lvl == 4">Debug</span>
+                <span class="label lvl-critical" ng-if="line.lvl == 0">Critical</span>
+                <span class="label lvl-error" ng-if="line.lvl == 1">Error</span>
+                <span class="label lvl-warning" ng-if="line.lvl == 2">Warning</span>
+                <span class="label lvl-info" ng-if="line.lvl == 3">Info</span>
+                <span class="label lvl-debug" ng-if="line.lvl == 4">Debug</span>
             </td>
             <td><small>{{line.t.slice(11,19)}}</small></td>
             <td><b>{{line.msg}}</b></td>

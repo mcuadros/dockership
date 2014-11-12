@@ -342,7 +342,7 @@ func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBin
 
 	guest = docker.Port(fmt.Sprintf("%s/%s", p2[2], p1[1]))
 	host = docker.PortBinding{
-		HostIp:   p2[0],
+		HostIP:   p2[0],
 		HostPort: p2[1],
 	}
 

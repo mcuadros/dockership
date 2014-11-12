@@ -233,7 +233,7 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 	r, _ := d.formatPorts(p)
 	c.Assert(r, HasLen, 3)
 	c.Assert(r["80/tcp"], HasLen, 2)
-	c.Assert(r["80/tcp"][0].HostIp, Equals, "0.0.0.0")
+	c.Assert(r["80/tcp"][0].HostIP, Equals, "0.0.0.0")
 	c.Assert(r["80/tcp"][0].HostPort, Equals, "8080")
 	c.Assert(r["80/udp"], HasLen, 1)
 	c.Assert(r["42/tcp"], HasLen, 1)

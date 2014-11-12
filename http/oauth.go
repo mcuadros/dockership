@@ -31,7 +31,7 @@ type OAuth struct {
 	PathLogout   string // Path to handle OAuth 2.0 logouts.
 	PathCallback string // Path to handle callback from OAuth 2.0 backend
 	PathError    string // Path to handle error cases.
-	OAuthConfig  *oauth2.Config
+	OAuthFlow    *oauth2.Flow
 	Config       *config.Config
 	users        map[string]*User
 	store        sessions.Store
@@ -42,14 +42,13 @@ func NewOAuth(config *config.Config) *OAuth {
 	authUrl := "https://github.com/login/oauth/authorize"
 	tokenUrl := "https://github.com/login/oauth/access_token"
 
-	opts := &oauth2.Options{
-		ClientID:     config.HTTP.GithubID,
-		ClientSecret: config.HTTP.GithubSecret,
-		RedirectURL:  config.HTTP.GithubRedirectURL,
-		Scopes:       []string{"read:org"},
-	}
+	flow, err := oauth2.New(
+		oauth2.Client(config.HTTP.GithubID, config.HTTP.GithubSecret),
+		oauth2.RedirectURL(config.HTTP.GithubRedirectURL),
+		oauth2.Scope("read:org"),
+		oauth2.Endpoint(authUrl, tokenUrl),
+	)
 
-	oauthConfig, err := oauth2.NewConfig(opts, authUrl, tokenUrl)
 	if err != nil {
 		panic(fmt.Sprintf("oauth2: %s", err))
 	}
@@ -59,10 +58,10 @@ func NewOAuth(config *config.Config) *OAuth {
 		PathLogout:   "/logout",
 		PathCallback: "/oauth2callback",
 		PathError:    "/oauth2error",
-		OAuthConfig:  oauthConfig,
+		OAuthFlow:    flow,
 		Config:       config,
 		users:        make(map[string]*User, 0),
-		store:        sessions.NewCookieStore([]byte("something-very-secret")),
+		store:        sessions.NewCookieStore([]byte("cookie-key")),
 	}
 }
 
@@ -107,7 +106,7 @@ func (o *OAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 
-	t, err := o.OAuthConfig.NewTransportWithCode(code)
+	t, err := o.OAuthFlow.NewTransportFromCode(code)
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
@@ -126,7 +125,7 @@ func (o *OAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, o.OAuthConfig.AuthCodeURL(next, "", ""), CODE_REDIRECT)
+		http.Redirect(w, r, o.OAuthFlow.AuthCodeURL(next, "", ""), CODE_REDIRECT)
 		return
 	}
 

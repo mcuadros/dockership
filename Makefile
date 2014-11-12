@@ -40,9 +40,14 @@ build: assets dependencies
 		$(GOCMD) build $${cmd}.go; \
 	done
 
-test: dependencies
+full-test: dependencies
 	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http --debug $(ASSETS)
 	cd $(BASE_PATH)/core; $(GOTEST) -v . --github --slow
+	cd $(BASE_PATH)/config; $(GOTEST) -v .
+
+test: dependencies
+	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http --debug $(ASSETS)
+	cd $(BASE_PATH)/core; $(GOTEST) -v .
 	cd $(BASE_PATH)/config; $(GOTEST) -v .
 
 dependencies:

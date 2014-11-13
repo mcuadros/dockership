@@ -52,7 +52,7 @@ func (s *server) configure() {
 
 	// logged-user
 	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.oauth.getUser(s.oauth.getToken(r))
+		user, _ := s.oauth.getValidUser(s.oauth.getToken(r))
 		s.json(w, 200, user)
 	})
 }

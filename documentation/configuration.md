@@ -45,7 +45,8 @@ Since the authentication is based on a registered [Github Application](https://g
 * `Listen` (default: 0.0.0.0:80): the TCP network address
 * `GithubID` (mandatory): the `Client ID` provided by Github
 * `GithubSecret` (mandatory): the `Client Secret` provided by Github
-* `GithubOrganization` (optional): if given only the members from this Github Organization are allowed to access.
+* `GithubOrganization` (optional): only the members from this Github Organization are allowed to access.
+* `GithubUser` (multiple, optional): Github user allowed to access into Dockership
 * `GithubRedirectURL` (mandatory): the `Authorization callback URL` configured in Github
 
 ### Environment

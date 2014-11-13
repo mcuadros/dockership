@@ -83,7 +83,7 @@ func (o *OAuth) Handler(w http.ResponseWriter, r *http.Request) bool {
 	token := o.getToken(r)
 	failed := true
 	if token != nil && !token.Expired() {
-		if _, err := o.getUser(token); err == nil {
+		if _, err := o.getValidUser(token); err == nil {
 			failed = false
 		} else {
 			w.Write([]byte(err.Error()))
@@ -95,7 +95,6 @@ func (o *OAuth) Handler(w http.ResponseWriter, r *http.Request) bool {
 	if failed {
 		next := url.QueryEscape(r.URL.RequestURI())
 		http.Redirect(w, r, o.PathLogin+"?next="+next, CODE_REDIRECT)
-		//session.Delete(KEY_TOKEN)
 		return false
 	}
 
@@ -158,7 +157,7 @@ func (s *OAuth) setToken(w http.ResponseWriter, r *http.Request, t *oauth2.Token
 	session.Save(r, w)
 }
 
-func (o *OAuth) getUser(token *oauth2.Token) (*User, error) {
+func (o *OAuth) getValidUser(token *oauth2.Token) (*User, error) {
 	o.Lock()
 	user, ok := o.users[token.AccessToken]
 	o.Unlock()
@@ -177,17 +176,8 @@ func (o *OAuth) getUser(token *oauth2.Token) (*User, error) {
 		return nil, err
 	}
 
-	if org := o.Config.HTTP.GithubOrganization; org != "" {
-		m, _, err := c.Organizations.IsMember(org, *guser.Login)
-		if err != nil {
-			return nil, err
-		}
-
-		if !m {
-			return nil, errors.New(fmt.Sprintf(
-				"User %q should be member of %q", *guser.Login, org,
-			))
-		}
+	if err := o.isValidUser(c, guser); err != nil {
+		return nil, err
 	}
 
 	user = &User{}
@@ -206,6 +196,54 @@ func (o *OAuth) getUser(token *oauth2.Token) (*User, error) {
 	o.Unlock()
 
 	return user, nil
+}
+
+func (o *OAuth) isValidUser(c *github.Client, u *github.User) error {
+	if err := o.validateGithubOrganization(c, u); err != nil {
+		return err
+	}
+
+	if err := o.validateGithubUser(c, u); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *OAuth) validateGithubOrganization(c *github.Client, u *github.User) error {
+	org := o.Config.HTTP.GithubOrganization
+	if org == "" {
+		return nil
+	}
+
+	m, _, err := c.Organizations.IsMember(org, *u.Login)
+	if err != nil {
+		return err
+	}
+
+	if !m {
+		return errors.New(fmt.Sprintf(
+			"User %q should be member of %q", *u.Login, org,
+		))
+	}
+
+	return nil
+}
+
+func (o *OAuth) validateGithubUser(c *github.Client, u *github.User) error {
+	if len(o.Config.HTTP.GithubUsers) == 0 {
+		return nil
+	}
+
+	for _, user := range o.Config.HTTP.GithubUsers {
+		if user == *u.Login {
+			return nil
+		}
+	}
+
+	return errors.New(fmt.Sprintf(
+		"User %q not allowed, not in the access list.", *u.Login,
+	))
 }
 
 func extractPath(next string) string {

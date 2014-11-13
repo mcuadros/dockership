@@ -7,11 +7,11 @@ Scaffolding Strategies
 
 This document describes the different possibilities to define the scaffolding of applications to be used with Dockership. 
 
-The easiest strategy for working with Dockership is to use self-contained repositiories: every repository to be deployed should contain his Dockerfile. Alternatively, the Dockefiles of the different applications of a company can be centralized in a single repository. 
+The easiest strategy to working with Dockership is to use self-contained repositiories: every repository to be deployed should contain his Dockerfile. Alternatively, the Dockefiles of the different applications of a company can be centralized in a single repository. 
 
 ## Self-contained Repositories
 
-This is the simplest way to work with Dockership: Just place a `Dockerfile` at the root of you repository. (This is the default location, you can configure your own). 
+This is the simplest way to work with Dockership: Just place a `Dockerfile` at the root of your repository. (This is the default location, you can configure your own). 
 
 In this example we deploy an AngularJS tool using [dockerfile/nginx](https://github.com/dockerfile/nginx), the container should retrieve the code through a git clone and execute all the required command to work properly.
 
@@ -49,7 +49,7 @@ Environment = live
 
 ## Centralised dockerfiles repository
 
-Maybe you prefer keep all your company's `dockerfiles` at the same repository, keeping away from the development team those files.
+Maybe you prefer keep all your company's `dockerfiles` in the same repository, keeping away from the development team those files.
 
 Based on this hypothetic scaffolding: 
 ```

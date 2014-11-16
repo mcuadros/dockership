@@ -37,7 +37,7 @@ assets:
 
 build: assets dependencies
 	for cmd in $(COMMANDS); do \
-		$(GOCMD) build $${cmd}.go; \
+		$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" $${cmd}.go; \
 	done
 
 full-test: dependencies
@@ -54,6 +54,11 @@ dependencies:
 	$(GOGET) -d -v ./...
 	for i in $(DEPENDENCIES); do $(GOGET) $$i; done
 
+install:
+	for cmd in $(COMMANDS); do \
+		cp -rf $${cmd} /usr/bin/; \
+	done
+
 packages: clean assets
 	for os in $(PKG_OS); do \
 		for arch in $(PKG_ARCH); do \
@@ -68,7 +73,6 @@ packages: clean assets
 			cd  $(BUILD_PATH) && tar -cvzf $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}.tar.gz $(PROJECT)_$(VERSION)_$${os}_$${arch}/; \
 		done; \
 	done;
-
 
 clean:
 	echo $(VERSION)

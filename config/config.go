@@ -20,6 +20,7 @@ type Config struct {
 		GithubID           string
 		GithubSecret       string
 		GithubOrganization string
+		GithubUsers        []string `gcfg:"GithubUser"`
 		GithubRedirectURL  string
 	}
 	Projects     map[string]*core.Project     `gcfg:"Project"`

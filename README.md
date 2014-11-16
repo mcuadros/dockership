@@ -19,6 +19,13 @@ Dockership comes in two flavours CLI and HTTP, here you can see a screenshot fro
 
 ![Projects View](https://raw.githubusercontent.com/mcuadros/dockership-site/master/static/images/screenshots/http-project-view-min.png)
 
+Documentation
+-------------
+
+* [Configuration](http://docker.sh/ip/documentation/configuration/)
+* [Creating Your Dockerfiles](http://docker.sh/ip/documentation/creating_your_dockerfiles/)
+* [Scaffolding Strategies](http://docker.sh/ip/documentation/scaffolding_strategies/)
+
 
 Example
 -------

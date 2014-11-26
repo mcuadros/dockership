@@ -5,7 +5,7 @@ Title: Configuration
 Configuration
 =============
 
-The **dockership** configuration is based on a INI-formatted config file.
+The **dockership** configuration is based on an INI-formatted config file.
 
 Dockership will look at `/etc/dockership/dockership.conf` for this config file by default. The `-config` flag may be passed to the `dockershipd` or `dockership` binaries to use a custom config file location.
 
@@ -32,7 +32,7 @@ A miscellaneous of configuration variables used across the whole tool.
 
 * `GithubToken` (mandatory): a Github [personal access token](https://github.com/settings/tokens/new) used in every request to the [Github API](https://developer.github.com/).
 
-* `UseShortRevisions` (default: true): if is false all the images and containers will be defined using full length revision names, instead the short one.
+* `UseShortRevisions` (default: true): if it is false all the images and containers will be defined using full length revision names, instead the short ones.
 
 * `EtcdServer` (multiple, optional): etcd server, needed for etcd variables at the Dockerfiles.
 
@@ -51,9 +51,9 @@ Since the authentication is based on a registered [Github Application](https://g
 
 ### Environment
 
-A environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Environment "production"]`
+An environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Environment "production"]`
 
-* `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
+* `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and Docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
 
 * `EtcdServer` (multiple, optional): if none is configured the `Global.EtcdServer` will be used
 
@@ -71,7 +71,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 * `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`)
 * `Restart` (optional, default: no): restart policy to apply when a container exits (no, on-failure[:max-retry], always)  (like --restart at `docker run`)
 * `Link` (multiple, optional): creates a Link to other project, when this project is deployed the linked projects are restarted (like -P at `docker run`)
-* `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if is different from the global one.
+* `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if it is different from the global one.
 * `Environment` (multiple, mandatory): Environment name where this project could be deployed
 
 ## Example
@@ -80,7 +80,7 @@ A environment is a logical group of any number of Docker servers. Dockership sup
 #### rest-service project
 REST webservice in Python running under a uwsgi+nginx on port 8080
 
-This repository requires the python package `domain`, so we want detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository does not have new commits.
+This repository requires the python package `domain`, so we want to detect if the rest-service has pending changes to be deployed when the domain has new commits, even when the `rest-service` repository does not have new commits.
 
 #### frontend project
 An AngularJS frontend running on a nginx server, with a `reverse_proxy` pointing to the port 8080 at rest-service container, in the path `/rest`.

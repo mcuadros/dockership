@@ -119,11 +119,11 @@ angular.module('dockership').controller(
             };
 
             if (outdated == total) {
-                return ["outdated", "partial"]
+                return ["outdated"]
             }
 
             if (outdated != 0) {
-                return ["outdated"]
+                return ["outdated", "partial"]
             }
 
             return ["ok"];

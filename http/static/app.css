@@ -61,6 +61,10 @@ footer a {
     color: #808080;
     font-weight: bolder;
 }
+.col-centered{
+    float: none;
+    margin: 0 auto;
+}
 .bs-callout {
     padding: 20px;
     background-color: #fff;
@@ -88,7 +92,6 @@ pre {
     background-color: #7e7e7e;
 }
 .status {
-    float: left;
     margin: 1px auto;
     font-size: 10px;
     position: relative;

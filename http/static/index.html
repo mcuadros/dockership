@@ -156,8 +156,8 @@
             <tr>
               <th class="col-md-2">Environment</th>
               <th class="col-md-3">Running Revision</th>
-              <th class="col-md-2">Containers</th>
-              <th class="col-md-2">Status</th>
+              <th class="col-md-2 text-center">Containers</th>
+              <th class="col-md-2 text-center">Status</th>
               <th class="col-md-3"></th>
             </tr>
           </thead>
@@ -174,7 +174,7 @@
               >{{e.Name}}</b>
               </td>
               <td>{{status[p.Name].Status[e.Name].RunningContainers[0].Image.split(':')[1]}}</td>
-              <td>
+              <td class="text-center">
                 <a href="#" class="success"
                   ng-click="processing||openContainers(p)"
                 >

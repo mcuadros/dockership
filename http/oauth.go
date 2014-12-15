@@ -31,7 +31,7 @@ type OAuth struct {
 	PathLogout   string // Path to handle OAuth 2.0 logouts.
 	PathCallback string // Path to handle callback from OAuth 2.0 backend
 	PathError    string // Path to handle error cases.
-	OAuthFlow    *oauth2.Flow
+	OAuthOptions *oauth2.Options
 	Config       *config.Config
 	users        map[string]*User
 	store        sessions.Store
@@ -42,7 +42,7 @@ func NewOAuth(config *config.Config) *OAuth {
 	authUrl := "https://github.com/login/oauth/authorize"
 	tokenUrl := "https://github.com/login/oauth/access_token"
 
-	flow, err := oauth2.New(
+	options, err := oauth2.New(
 		oauth2.Client(config.HTTP.GithubID, config.HTTP.GithubSecret),
 		oauth2.RedirectURL(config.HTTP.GithubRedirectURL),
 		oauth2.Scope("read:org"),
@@ -58,7 +58,7 @@ func NewOAuth(config *config.Config) *OAuth {
 		PathLogout:   "/logout",
 		PathCallback: "/oauth2callback",
 		PathError:    "/oauth2error",
-		OAuthFlow:    flow,
+		OAuthOptions: options,
 		Config:       config,
 		users:        make(map[string]*User, 0),
 		store:        sessions.NewCookieStore([]byte("cookie-key")),
@@ -105,7 +105,7 @@ func (o *OAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 
-	t, err := o.OAuthFlow.NewTransportFromCode(code)
+	t, err := o.OAuthOptions.NewTransportFromCode(code)
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
@@ -124,7 +124,7 @@ func (o *OAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, o.OAuthFlow.AuthCodeURL(next, "", ""), CODE_REDIRECT)
+		http.Redirect(w, r, o.OAuthOptions.AuthCodeURL(next, "", ""), CODE_REDIRECT)
 		return
 	}
 

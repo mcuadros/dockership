@@ -33,7 +33,7 @@ func NewGithub(token string) *Github {
 
 func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
 	info := p.Repository.Info()
-	commit, err := g.doGetLastCommit(info)
+	commit, err := g.doGetLastCommit(info, p.Branch)
 	if err != nil {
 		return
 	}
@@ -43,7 +43,7 @@ func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
 }
 
 func (g *Github) GetLastCommit(p *Project) (Commit, error) {
-	return g.doGetLastCommit(p.Repository.Info())
+	return g.doGetLastCommit(p.Repository.Info(), p.Branch)
 }
 
 func (g *Github) GetLastRevision(p *Project) (Revision, error) {
@@ -64,7 +64,7 @@ func (g *Github) GetLastRevision(p *Project) (Revision, error) {
 		g.Add(1)
 		go func(repository VCS) {
 			defer g.Done()
-			commit, err := g.doGetLastCommit(repository.Info())
+			commit, err := g.doGetLastCommit(repository.Info(), p.Branch)
 			c <- msg{repository, commit, err}
 		}(repository)
 	}
@@ -84,9 +84,9 @@ func (g *Github) GetLastRevision(p *Project) (Revision, error) {
 	return revision, nil
 }
 
-func (g *Github) doGetLastCommit(vcs *VCSInfo) (Commit, error) {
+func (g *Github) doGetLastCommit(vcs *VCSInfo, branch string) (Commit, error) {
 	Debug("Retrieving last commit", "repository", vcs.Origin)
-	c, r, err := g.client.Repositories.GetBranch(vcs.Username, vcs.Name, vcs.Branch)
+	c, r, err := g.client.Repositories.GetBranch(vcs.Username, vcs.Name, branch)
 	if err != nil {
 		return "", err
 	}

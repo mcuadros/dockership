@@ -73,13 +73,15 @@ func (c *Config) LinkProjectsAndEnviroments() {
 
 		p.Links = make(map[string]*core.Link, 0)
 		for _, l := range p.LinkNames {
-			linked := c.mustGetProject(p, l.GetProjectName())
+			linked := c.getProject(p, l.GetProjectName())
 			p.Links[l.GetProjectName()] = &core.Link{
 				Alias:   l.GetAlias(),
 				Project: linked,
 			}
 
-			linked.LinkedBy = append(linked.LinkedBy, p)
+			if linked != nil {
+				linked.LinkedBy = append(linked.LinkedBy, p)
+			}
 		}
 	}
 }
@@ -95,12 +97,11 @@ func (c *Config) mustGetEnvironment(p *core.Project, name string) *core.Environm
 	return nil
 }
 
-func (c *Config) mustGetProject(p *core.Project, name string) *core.Project {
+func (c *Config) getProject(p *core.Project, name string) *core.Project {
 	if e, ok := c.Projects[name]; ok {
 		defaults.SetDefaults(e)
 		return e
 	}
 
-	core.Critical("Undefined project", "project", name, "project", p)
 	return nil
 }

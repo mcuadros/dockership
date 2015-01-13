@@ -44,4 +44,11 @@ func (s *ConfigSuite) TestConfig_LoadFile(c *C) {
 
 	c.Assert(projectA.Environments["testing"].EtcdServers, HasLen, 1)
 	c.Assert(projectB.Environments["live"].EtcdServers, HasLen, 2)
+
+	c.Assert(projectB.Links, HasLen, 2)
+	c.Assert(projectB.Links["project"].Alias, Equals, "alias")
+	c.Assert(projectB.Links["project"].Project.Name, Equals, projectA.Name)
+
+	c.Assert(projectB.Links["mysql"].Alias, Equals, "db")
+	c.Assert(projectB.Links["mysql"].Project, IsNil)
 }

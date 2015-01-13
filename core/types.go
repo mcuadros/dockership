@@ -177,12 +177,13 @@ func (c *Container) BelongsTo(p *Project) bool {
 }
 
 type Link struct {
-	Project *Project
-	Alias   string
+	Project   *Project
+	Container string
+	Alias     string
 }
 
 func (l *Link) String() string {
-	return fmt.Sprintf("%s:%s", l.Project.Name, l.Alias)
+	return fmt.Sprintf("%s:%s", l.Container, l.Alias)
 }
 
 type LinkDefinition string

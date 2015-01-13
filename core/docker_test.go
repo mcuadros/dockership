@@ -122,10 +122,17 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 	linked := &Project{Name: "qux", Repository: "git@github.com:qux/bar.git"}
 	project := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git"}
 
-	project.Links = map[string]*Link{"x": &Link{
-		Alias:   "qux",
-		Project: linked,
-	}}
+	project.Links = map[string]*Link{
+		"qux": &Link{
+			Alias:     "qux",
+			Project:   linked,
+			Container: "qux",
+		},
+		"foo": &Link{
+			Alias:     "foo",
+			Container: "foo",
+		},
+	}
 
 	linked.LinkedBy = []*Project{project}
 

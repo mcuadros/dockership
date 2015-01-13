@@ -190,10 +190,8 @@ func (s *CoreSuite) TestContainer_BelongsToByImage(c *C) {
 
 func (s *CoreSuite) TestLink_String(c *C) {
 	l := Link{
-		Alias: "foo",
-		Project: &Project{
-			Name: "qux",
-		},
+		Alias:     "foo",
+		Container: "qux",
 	}
 
 	c.Assert(l.String(), Equals, "qux:foo")

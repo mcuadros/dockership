@@ -75,8 +75,9 @@ func (c *Config) LinkProjectsAndEnviroments() {
 		for _, l := range p.LinkNames {
 			linked := c.getProject(p, l.GetProjectName())
 			p.Links[l.GetProjectName()] = &core.Link{
-				Alias:   l.GetAlias(),
-				Project: linked,
+				Alias:     l.GetAlias(),
+				Container: l.GetProjectName(),
+				Project:   linked,
 			}
 
 			if linked != nil {

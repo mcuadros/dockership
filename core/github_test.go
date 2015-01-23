@@ -15,7 +15,6 @@ func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 
 	p := &Project{
 		Repository:          "git@github.com:github/gem-builder.git",
-		Branch:              "master",
 		RelatedRepositories: []VCS{"git@github.com:github/jquery-hotkeys.git"},
 	}
 
@@ -32,7 +31,6 @@ func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 
 	p := &Project{
 		Repository: "git@github.com:github/gem-builder.git",
-		Branch:     "master",
 	}
 
 	g := NewGithub("")
@@ -47,8 +45,7 @@ func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 	}
 
 	p := &Project{
-		Repository: "git@github.com:github/windows-msysgit.git",
-		Branch:     "diffuse",
+		Repository: "git@github.com:github/windows-msysgit.git!diffuse",
 	}
 
 	g := NewGithub("")
@@ -64,7 +61,6 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 
 	p := &Project{
 		Repository: "git@github.com:github/gem-builder.git",
-		Branch:     "master",
 		Dockerfile: "git_mock",
 	}
 
@@ -81,7 +77,6 @@ func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {
 
 	p := &Project{
 		Repository: "git@github.com:github/gem-builder.git",
-		Branch:     "master",
 		Dockerfile: "foo",
 	}
 

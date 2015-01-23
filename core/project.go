@@ -17,7 +17,6 @@ type Project struct {
 	Name                string
 	Repository          VCS
 	RelatedRepositories []VCS    `gcfg:"RelatedRepository"`
-	Branch              string   `default:"master"`
 	Dockerfile          string   `default:"Dockerfile"`
 	GithubToken         string   `json:"-"`
 	History             int      `default:"3"`
@@ -198,5 +197,5 @@ func (p *Project) ListImages() ([]*Image, []error) {
 
 func (p *Project) String() string {
 	i := p.Repository.Info()
-	return fmt.Sprintf("%s/%s@%s", i.Username, i.Name, p.Branch)
+	return fmt.Sprintf("%s/%s!%s", i.Username, i.Name, i.Branch)
 }

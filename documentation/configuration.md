@@ -64,8 +64,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 
 `Project` section defines the configuration for every project to be deployed in the environments. The relation between repositories is one-to-one, so the repository should contain the `Dockerfile` and all the files needed to build the Docker image. The Project as Environment is defined as a section with subsection: `[Project "disruptive-app"]`
 
-* `Repository` (mandatory): Github repository SSH clone URL (eg.: `git@github.com:mcuadros/dockership.git`)
-* `Branch` (optional): branch to be deployed
+* `Repository` (mandatory): Github repository SSH clone URL, the branch can be added to the end of the URL preceded of a `!` (eg.: `git@github.com:mcuadros/dockership.git!master`)
 * `Dockerfile` (default: Dockerfile): the path to the Dockerfile at the repository.
 * `RelatedRepositories` (optional, multiple): SSH clone URL to dependent repositories. (Link to more explanatory document)
 * `History` (default: 3): Number to old images you want to keep in each Docker server. 

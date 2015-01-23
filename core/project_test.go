@@ -18,7 +18,6 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	e := &Environment{Name: "a", DockerEndPoints: []string{m.URL()}}
 	p := &Project{
 		Repository:   "git@github.com:github/gem-builder.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: map[string]*Environment{"foo": e},
 		Dockerfile:   "git_mock",
 		GithubToken:  "05bed21c257d935017d85d3398b46ac81035756f",
@@ -39,7 +38,6 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 func (s *CoreSuite) TestProject_Test(c *C) {
 	p := &Project{
 		Repository:   "git@github.com:foo/bar.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: map[string]*Environment{"a": &Environment{}},
 		TestCommand:  "foo",
 	}
@@ -51,7 +49,6 @@ func (s *CoreSuite) TestProject_Test(c *C) {
 func (s *CoreSuite) TestProject_TestFail(c *C) {
 	p := &Project{
 		Repository:   "git@github.com:foo/bar.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: map[string]*Environment{"a": &Environment{}},
 		TestCommand:  "echo",
 	}
@@ -76,7 +73,6 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	p := &Project{
 		Name:         "foo",
 		Repository:   "git@github.com:github/gem-builder.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: envs,
 		Dockerfile:   "git_mock",
 	}
@@ -108,7 +104,6 @@ func (s *CoreSuite) TestProject_ListContainers(c *C) {
 	p := &Project{
 		Name:         "foo",
 		Repository:   "git@github.com:foo/bar.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: envs,
 	}
 
@@ -136,7 +131,6 @@ func (s *CoreSuite) TestProject_ListImages(c *C) {
 
 	p := &Project{
 		Repository:   "git@github.com:foo/bar.git",
-		Branch:       DEFAULT_BRANCH,
 		Environments: envs,
 	}
 

@@ -233,15 +233,18 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 		"0.0.0.0:8080:80/tcp",
 		"0.0.0.0:8080:80/udp",
 		"0.0.0.0:42:42/tcp",
-		"1.1.1.1:42:80/tcp",
+		"1.1.1.1:42:80/tcp@bar",
+		"2.2.2.2:42:80/tcp@foo",
 	}
 
-	d, _ := NewDocker("", nil)
+	d, _ := NewDocker("tcp://foo", &Environment{Name: "foo"})
 	r, _ := d.formatPorts(p)
-	c.Assert(r, HasLen, 3)
+	c.Assert(r, HasLen, 4)
 	c.Assert(r["80/tcp"], HasLen, 2)
 	c.Assert(r["80/tcp"][0].HostIP, Equals, "0.0.0.0")
 	c.Assert(r["80/tcp"][0].HostPort, Equals, "8080")
+	c.Assert(r["80/tcp"][1].HostIP, Equals, "2.2.2.2")
+	c.Assert(r["80/tcp"][1].HostPort, Equals, "42")
 	c.Assert(r["80/udp"], HasLen, 1)
 	c.Assert(r["42/tcp"], HasLen, 1)
 }

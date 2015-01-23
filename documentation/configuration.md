@@ -69,7 +69,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 * `RelatedRepositories` (optional, multiple): SSH clone URL to dependent repositories. (Link to more explanatory document)
 * `History` (default: 3): Number to old images you want to keep in each Docker server. 
 * `NoCache` (optional): Avoid to use the Docker cache (like --no-cache at `docker build`)
-* `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`)
+* `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`), additionaly the port can be configured just for one enviroment adding it to end of the port preceded by a `@` (eg: `2.2.2.2:80:80/tcp@live`)
 * `Restart` (optional, default: no): restart policy to apply when a container exits (no, on-failure[:max-retry], always)  (like --restart at `docker run`)
 * `Link` (multiple, optional): creates a Link to other project, when this project is deployed the linked projects are restarted (like -P at `docker run`)
 * `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if it is different from the global one.

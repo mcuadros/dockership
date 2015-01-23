@@ -19,6 +19,7 @@ import (
 
 type Docker struct {
 	endPoint string
+	env      *Environment
 	client   *docker.Client
 }
 
@@ -42,7 +43,7 @@ func NewDocker(endPoint string, env *Environment) (*Docker, error) {
 		return nil, err
 	}
 
-	return &Docker{client: c, endPoint: endPoint}, nil
+	return &Docker{client: c, endPoint: endPoint, env: env}, nil
 }
 
 func (d *Docker) Deploy(p *Project, rev Revision, dockerfile *Dockerfile, output io.Writer, force bool) error {
@@ -345,18 +346,23 @@ func (d *Docker) formatPorts(ports []string) (map[docker.Port][]docker.PortBindi
 
 // <host_interface>:<host_port>:<container_port>/<proto>
 func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBinding, err error) {
-	p1 := strings.SplitN(port, "/", 2)
-	p2 := strings.SplitN(p1[0], ":", 3)
+	p1 := strings.SplitN(port, "@", 2)
+	if len(p1) == 2 && d.env != nil && d.env.Name != p1[1] {
+		return
+	}
 
-	if len(p1) != 2 || len(p2) != 3 {
+	p2 := strings.SplitN(p1[0], "/", 2)
+	p3 := strings.SplitN(p2[0], ":", 3)
+
+	if len(p2) != 2 || len(p3) != 3 {
 		err = errors.New(fmt.Sprintf("Malformed port %q", port))
 		return
 	}
 
-	guest = docker.Port(fmt.Sprintf("%s/%s", p2[2], p1[1]))
+	guest = docker.Port(fmt.Sprintf("%s/%s", p3[2], p2[1]))
 	host = docker.PortBinding{
-		HostIP:   p2[0],
-		HostPort: p2[1],
+		HostIP:   p3[0],
+		HostPort: p3[1],
 	}
 
 	return

@@ -86,9 +86,12 @@ li.active > a {
 .btn-group {
     margin: 6px;
 }
-pre {
+.log {
+    white-space: pre;
     margin-top: 20px;
     color: white;
+    font-family: monospace;
+    padding: 5px 10px 5px 10px;
     background-color: #7e7e7e;
 }
 .status {
@@ -169,4 +172,7 @@ pre {
 }
 .lvl-debug {
   background-color: #777777;
+}
+.log {
+  font-family: 
 }

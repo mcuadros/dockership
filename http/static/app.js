@@ -6,7 +6,7 @@ angular.module('dockership', [
 angular.module('dockership').controller(
     'LogTabCtrl',
     function ($scope, $rootScope, socket, ansi2html) {
-        $scope.level = 4
+        $scope.level = 3
         $rootScope.pendingLogs = 0;
 
         $scope.chageLevel = function(level) {
@@ -31,11 +31,11 @@ angular.module('dockership').controller(
         $scope.params = function (params, first) {
             var strings = [];
             angular.forEach(params, function(value, key) {
-                if (key != "t" && key != "msg" && key != "lvl" && key != "revision") {
+                if (key != 't' && key != 'msg' && key != 'lvl' && key != 'revision') {
                     this.push('<b>' + key + '</b>: ' + value);
                 }
 
-                if (key == "revision") {
+                if (key == 'revision') {
                     this.push('<b>' + key + '</b>: ' + value.slice(0,12));
                 }
             }, strings);
@@ -44,7 +44,7 @@ angular.module('dockership').controller(
                 return strings[0].replace(/<[^>]+>/gm, '');
             }
 
-            return strings.join("<br /> ");
+            return strings.join('<br /> ');
         };
     }
 );
@@ -53,19 +53,19 @@ angular.module('dockership').controller(
     'DeployTabCtrl',
     function ($scope, $http, $rootScope, socket, ansi2html) {
         $scope.log = {}
-        $scope.current = "latest"
+        $scope.current = 'latest'
         $rootScope.pendingDeployments = 0;
 
         socket.addHandler('deploy', function (result) {
-            var key = result.project + " " + result.environment + " " + result.date.slice(0, 16)
+            var key = result.project + ' ' + result.environment + ' ' + result.date.slice(0, 16)
             $scope.current = key;
 
             if ($scope.log[key] == undefined) {
                 $rootScope.pendingDeployments++;
-                $scope.log[key] = ""
+                $scope.log[key] = ''
             }
 
-            $scope.log[key] += ansi2html.toHtml(result.log)
+            $scope.log[key] += ansi2html.toHtml(result.log);
         });
     }
 );
@@ -84,7 +84,7 @@ angular.module('dockership').controller(
                 size: 'lg',
                 resolve: {
                     project: function () {
-                        return "";
+                        return '';
                     },
                     containers: function () {
                         return result;
@@ -95,7 +95,7 @@ angular.module('dockership').controller(
 
         var envStatus = function(status) {
             if (status == undefined) {
-                return ["loading"];
+                return ['loading'];
             }
 
             var total = status.Environment.DockerEndPoints.length;
@@ -104,11 +104,11 @@ angular.module('dockership').controller(
             var outdated = 0;
 
             if (running.length == 0) {
-                return ["down"]
+                return ['down']
             }
 
             if (running.length != total) {
-                return ["down", "partial"]
+                return ['down', 'partial']
             }
 
             for (var i = running.length - 1; i >= 0; i--) {
@@ -119,14 +119,14 @@ angular.module('dockership').controller(
             };
 
             if (outdated == total) {
-                return ["outdated"]
+                return ['outdated']
             }
 
             if (outdated != 0) {
-                return ["outdated", "partial"]
+                return ['outdated', 'partial']
             }
 
-            return ["ok"];
+            return ['ok'];
         };
 
         socket.addHandler('status', function (result) {
@@ -258,7 +258,7 @@ angular.module('dockership').filter('unsafe', ['$sce', function ($sce) {
 
 
 // update popover template for binding unsafe html
-angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
+angular.module('template/popover/popover.html', []).run(['$templateCache', function ($templateCache) {
     $templateCache.put("template/popover/popover.html",
       "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
       "  <div class=\"arrow\"></div>\n" +

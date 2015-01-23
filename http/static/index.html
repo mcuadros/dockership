@@ -255,7 +255,7 @@
           <option ng-repeat="(key, value) in log" value="{{key}}">{{key}}</option>
         </select>
         <h3 ng-if="current != 'latest'">Deploy <b>{{current}}</b></h3>
-        <pre ng-bind="log[current]"></pre>
+        <div class="log" ng-bind-html="log[current]"></div>
     </script>
   </body>
 </html>

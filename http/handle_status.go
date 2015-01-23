@@ -28,9 +28,13 @@ func (s *server) HandleStatus(msg Message, session sockjs.Session) {
 		}
 
 		record := &StatusResult{Project: p}
-		sl, err := p.Status()
-		if len(err) != 0 {
-			record.Error = err
+		sl, errs := p.Status()
+		if len(errs) != 0 {
+			for _, err := range errs {
+				core.Error(err.Error(), "project", p)
+			}
+
+			record.Error = errs
 		} else {
 			record.Status = make(map[string]*StatusRecord, 0)
 			for _, s := range sl {

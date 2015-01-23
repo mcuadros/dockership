@@ -53,7 +53,9 @@ Since the authentication is based on a registered [Github Application](https://g
 
 An environment is a logical group of any number of Docker servers. Dockership supports multiple environments. Each `Environment` is defined as a section with subsection: `[Environment "production"]`
 
-* `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and Docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `http://172.17.42.1:4243`)
+* `DockerEndPoint` (mandatory, multiple): [Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api/) address, if dockership and Docker are running in the same host you can use `unix:///var/run/docker.sock` if not you should enable remote access at the docker daemon (with -H parameter) and use a TCP endpoint. (eg.: `tcp://172.17.42.1:4243`)
+
+* `CertPath` (optional): If you are running Docker with TLS support you must provide the path to your keys files, just like the [DOCKER_CERT_PATH](https://docs.docker.com/articles/https/) looks.
 
 * `EtcdServer` (multiple, optional): if none is configured the `Global.EtcdServer` will be used
 

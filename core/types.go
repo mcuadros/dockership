@@ -206,6 +206,7 @@ func (c ContainersByCreated) Less(i, j int) bool { return c[i].Created < c[j].Cr
 
 type Environment struct {
 	DockerEndPoints []string `gcfg:"DockerEndPoint"`
+	CertPath        string   `json:"-"`
 	EtcdServers     []string `gcfg:"EtcdServer"`
 	Name            string
 }

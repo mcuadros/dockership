@@ -22,9 +22,22 @@ type Docker struct {
 	client   *docker.Client
 }
 
-func NewDocker(endPoint string) (*Docker, error) {
+func NewDocker(endPoint string, env *Environment) (*Docker, error) {
 	Debug("Connected to docker", "end-point", endPoint)
-	c, err := docker.NewClient(endPoint)
+
+	var c *docker.Client
+	var err error
+	if env != nil && env.CertPath != "" {
+		c, err = docker.NewTLSClient(
+			endPoint,
+			env.CertPath+"/cert.pem",
+			env.CertPath+"/key.pem",
+			env.CertPath+"/ca.pem",
+		)
+	} else {
+		c, err = docker.NewClient(endPoint)
+	}
+
 	if err != nil {
 		return nil, err
 	}

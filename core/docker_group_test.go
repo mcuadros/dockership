@@ -10,7 +10,7 @@ func (s *CoreSuite) TestDockerGroup_BuildImage(c *C) {
 	dg := &DockerGroup{dockers: make(map[string]*Docker, 0)}
 	for i := 0; i < 5; i++ {
 		m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-		dg.dockers[m.URL()], _ = NewDocker(m.URL())
+		dg.dockers[m.URL()], _ = NewDocker(m.URL(), nil)
 		m.Stop()
 	}
 
@@ -29,7 +29,7 @@ func (s *CoreSuite) TestDockerGroup_Run(c *C) {
 	dg := &DockerGroup{dockers: make(map[string]*Docker, 0)}
 	for i := 0; i < 5; i++ {
 		m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-		dg.dockers[m.URL()], _ = NewDocker(m.URL())
+		dg.dockers[m.URL()], _ = NewDocker(m.URL(), nil)
 		m.Stop()
 	}
 
@@ -47,7 +47,7 @@ func (s *CoreSuite) TestDockerGroup_Clean(c *C) {
 	dg := &DockerGroup{dockers: make(map[string]*Docker, 0)}
 	for i := 0; i < 5; i++ {
 		m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
-		dg.dockers[m.URL()], _ = NewDocker(m.URL())
+		dg.dockers[m.URL()], _ = NewDocker(m.URL(), nil)
 		m.Stop()
 	}
 
@@ -65,7 +65,7 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	for i := 0; i < 5; i++ {
 		m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 		defer m.Stop()
-		dg.dockers[m.URL()], _ = NewDocker(m.URL())
+		dg.dockers[m.URL()], _ = NewDocker(m.URL(), nil)
 	}
 
 	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}

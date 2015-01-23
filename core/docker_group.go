@@ -18,7 +18,7 @@ func NewDockerGroup(environment *Environment) (*DockerGroup, error) {
 	}
 
 	for _, endPoint := range environment.DockerEndPoints {
-		if d, err := NewDocker(endPoint); err == nil {
+		if d, err := NewDocker(endPoint, environment); err == nil {
 			dg.dockers[endPoint] = d
 		} else {
 			return nil, err

@@ -31,7 +31,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 
 	input := bytes.NewBuffer(nil)
 
-	d, _ := NewDocker(m.URL())
+	d, _ := NewDocker(m.URL(), nil)
 	rev := Revision{"foo": "bar"}
 	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, input, false)
 	c.Assert(err, Equals, nil)
@@ -77,7 +77,7 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	input := bytes.NewBuffer(nil)
 
 	s.Add(1)
-	d, _ := NewDocker(ts.URL)
+	d, _ := NewDocker(ts.URL, nil)
 	err := d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")}, input)
 	s.Wait()
 
@@ -99,7 +99,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	buildImage(d, "foo:qux")
 	rev = Revision{"foo/bar": "qux"}
 
-	dc, err := NewDocker(m.URL())
+	dc, err := NewDocker(m.URL(), nil)
 	c.Assert(err, Equals, nil)
 
 	err = dc.Run(p, rev)
@@ -139,7 +139,7 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 	buildImage(d, "foo:qux")
 	buildImage(d, "qux:qux")
 
-	dc, err := NewDocker(m.URL())
+	dc, err := NewDocker(m.URL(), nil)
 	c.Assert(err, Equals, nil)
 
 	err = dc.Run(project, Revision{"foo/bar": "qux"})
@@ -171,7 +171,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
 	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
-	docker, _ := NewDocker(m.URL())
+	docker, _ := NewDocker(m.URL(), nil)
 
 	for i := 0; i < 5; i++ {
 		time.Sleep(1 * time.Second)
@@ -215,7 +215,7 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 func (s *CoreSuite) TestDocker_ListImages(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	d, _ := docker.NewClient(m.URL())
-	docker, _ := NewDocker(m.URL())
+	docker, _ := NewDocker(m.URL(), nil)
 	p := &Project{Name: "foo", Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 
 	buildImage(d, "foo:qux")
@@ -236,7 +236,7 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 		"1.1.1.1:42:80/tcp",
 	}
 
-	d, _ := NewDocker("")
+	d, _ := NewDocker("", nil)
 	r, _ := d.formatPorts(p)
 	c.Assert(r, HasLen, 3)
 	c.Assert(r["80/tcp"], HasLen, 2)
@@ -247,7 +247,7 @@ func (s *CoreSuite) TestDocker_formatPorts(c *C) {
 }
 
 func (s *CoreSuite) TestDocker_formatRestartPolicy(c *C) {
-	d, _ := NewDocker("")
+	d, _ := NewDocker("", nil)
 
 	r, _ := d.formatRestartPolicy("")
 	c.Assert(r.Name, Equals, "no")

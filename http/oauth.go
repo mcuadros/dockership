@@ -11,9 +11,9 @@ import (
 	"github.com/mcuadros/dockership/config"
 
 	"code.google.com/p/goauth2/oauth"
-	"github.com/golang/oauth2"
 	"github.com/google/go-github/github"
 	"github.com/gorilla/sessions"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -31,7 +31,7 @@ type OAuth struct {
 	PathLogout   string // Path to handle OAuth 2.0 logouts.
 	PathCallback string // Path to handle callback from OAuth 2.0 backend
 	PathError    string // Path to handle error cases.
-	OAuthOptions *oauth2.Options
+	OAuthConfig  *oauth2.Config
 	Config       *config.Config
 	users        map[string]*User
 	store        sessions.Store
@@ -42,26 +42,23 @@ func NewOAuth(config *config.Config) *OAuth {
 	authUrl := "https://github.com/login/oauth/authorize"
 	tokenUrl := "https://github.com/login/oauth/access_token"
 
-	options, err := oauth2.New(
-		oauth2.Client(config.HTTP.GithubID, config.HTTP.GithubSecret),
-		oauth2.RedirectURL(config.HTTP.GithubRedirectURL),
-		oauth2.Scope("read:org"),
-		oauth2.Endpoint(authUrl, tokenUrl),
-	)
-
-	if err != nil {
-		panic(fmt.Sprintf("oauth2: %s", err))
-	}
-
 	return &OAuth{
 		PathLogin:    "/login",
 		PathLogout:   "/logout",
 		PathCallback: "/oauth2callback",
 		PathError:    "/oauth2error",
-		OAuthOptions: options,
-		Config:       config,
-		users:        make(map[string]*User, 0),
-		store:        sessions.NewCookieStore([]byte("cookie-key")),
+		OAuthConfig: &oauth2.Config{
+			ClientID:     config.HTTP.GithubID,
+			ClientSecret: config.HTTP.GithubSecret,
+			Scopes:       []string{"read:org"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  authUrl,
+				TokenURL: tokenUrl,
+			},
+		},
+		Config: config,
+		users:  make(map[string]*User, 0),
+		store:  sessions.NewCookieStore([]byte("cookie-key")),
 	}
 }
 
@@ -82,7 +79,7 @@ func (o *OAuth) Handler(w http.ResponseWriter, r *http.Request) bool {
 
 	token := o.getToken(r)
 	failed := true
-	if token != nil && !token.Expired() {
+	if token != nil && token.Valid() {
 		if _, err := o.getValidUser(token); err == nil {
 			failed = false
 		} else {
@@ -105,7 +102,7 @@ func (o *OAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("state"))
 	code := r.URL.Query().Get("code")
 
-	t, err := o.OAuthOptions.NewTransportFromCode(code)
+	tok, err := o.OAuthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
@@ -113,8 +110,15 @@ func (o *OAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	o.setToken(w, r, t.Token())
+	o.setToken(w, r, tok)
 	http.Redirect(w, r, next, CODE_REDIRECT)
+}
+
+func (s *OAuth) setToken(w http.ResponseWriter, r *http.Request, t *oauth2.Token) {
+	session, _ := s.store.Get(r, KEY_TOKEN)
+	val, _ := json.Marshal(t)
+	session.Values["token"] = val
+	session.Save(r, w)
 }
 
 func (o *OAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +128,7 @@ func (o *OAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, o.OAuthOptions.AuthCodeURL(next, "", ""), CODE_REDIRECT)
+		http.Redirect(w, r, o.OAuthConfig.AuthCodeURL(next), CODE_REDIRECT)
 		return
 	}
 
@@ -143,18 +147,11 @@ func (s *OAuth) getToken(r *http.Request) *oauth2.Token {
 	if raw, ok := session.Values["token"]; !ok {
 		return nil
 	} else {
-		var tk oauth2.Token
-		json.Unmarshal(raw.([]byte), &tk)
+		var tok oauth2.Token
+		json.Unmarshal(raw.([]byte), &tok)
 
-		return &tk
+		return &tok
 	}
-}
-
-func (s *OAuth) setToken(w http.ResponseWriter, r *http.Request, t *oauth2.Token) {
-	session, _ := s.store.Get(r, KEY_TOKEN)
-	val, _ := json.Marshal(t)
-	session.Values["token"] = val
-	session.Save(r, w)
 }
 
 func (o *OAuth) getValidUser(token *oauth2.Token) (*User, error) {

@@ -48,11 +48,16 @@ func NewDocker(endPoint string, env *Environment) (*Docker, error) {
 
 func (d *Docker) Deploy(p *Project, rev Revision, dockerfile *Dockerfile, output io.Writer, force bool) error {
 	Debug("Deploying dockerfile", "project", p, "revision", rev, "end-point", d.endPoint)
-	if err := d.Clean(p); err != nil {
+
+	if err := d.cleanImages(p); err != nil {
 		return err
 	}
 
 	if err := d.BuildImage(p, rev, dockerfile, output); err != nil {
+		return err
+	}
+
+	if err := d.cleanContainers(p); err != nil {
 		return err
 	}
 
@@ -182,7 +187,7 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 func (d *Docker) ListImages(p *Project) ([]*Image, error) {
 	Debug("Retrieving current containers", "project", p, "end-point", d.endPoint)
 
-	l, err := d.client.ListImages(true)
+	l, err := d.client.ListImages(docker.ListImagesOptions{All: true})
 
 	if err != nil {
 		return nil, err

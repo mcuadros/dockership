@@ -182,7 +182,7 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 func (d *Docker) ListImages(p *Project) ([]*Image, error) {
 	Debug("Retrieving current containers", "project", p, "end-point", d.endPoint)
 
-	l, err := d.client.ListImages(true)
+	l, err := d.client.ListImages(docker.ListImagesOptions{All: true})
 
 	if err != nil {
 		return nil, err

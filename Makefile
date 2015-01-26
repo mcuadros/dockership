@@ -2,7 +2,7 @@
 PROJECT = dockership
 COMMANDS = dockership dockershipd
 DEPENDENCIES = gopkg.in/check.v1 \
-code.google.com/p/go.tools/cmd/cover \
+golang.org/x/tools/cmd/cover \
 github.com/jteeuwen/go-bindata/... \
 github.com/gorilla/mux \
 github.com/laher/goxc

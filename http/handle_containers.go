@@ -22,7 +22,12 @@ func (s *server) HandleContainers(msg Message, session sockjs.Session) {
 		return
 	}
 
+	s.sockjs.Send("containers", s.GetContainers(project), false)
+}
+
+func (s *server) GetContainers(project string) []*ContainersRecord {
 	result := make([]*ContainersRecord, 0)
+
 	for name, p := range s.config.Projects {
 		if project != "" && project != name {
 			continue
@@ -38,5 +43,5 @@ func (s *server) HandleContainers(msg Message, session sockjs.Session) {
 		}
 	}
 
-	s.sockjs.Send("containers", result, false)
+	return result
 }

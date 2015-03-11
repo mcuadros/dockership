@@ -1,10 +1,13 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/mcuadros/go-command"
 )
@@ -32,6 +35,7 @@ type Project struct {
 	Environments        map[string]*Environment
 	EnvironmentNames    []string `gcfg:"Environment"`
 	TaskStatus          TaskStatus
+	WebHook             string `gcfg:"WebHook"`
 }
 
 func (p *Project) Deploy(environment string, output io.Writer, force bool) []error {
@@ -47,6 +51,10 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 		return []error{err}
 	}
 
+	status, errs := p.StatusByEnvironment(e)
+	if len(errs) != 0 {
+		return errs
+	}
 	r, err := c.GetLastRevision(p)
 	if err != nil {
 		return []error{err}
@@ -59,7 +67,32 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 
 	file := NewDockerfile(blob, p, r, e)
 
-	return d.Deploy(p, r, file, output, force)
+	errs = d.Deploy(p, r, file, output, force)
+	if len(errs) == 0 {
+		p.afterSuccessfulDeploy(status)
+	}
+	return errs
+}
+
+func (p *Project) afterSuccessfulDeploy(status *ProjectStatus) {
+	if p.WebHook == "" {
+		return
+	}
+	go func() {
+		if len(status.RunningContainers) == 0 {
+			return
+		}
+		prevRev := strings.Split(string(status.RunningContainers[0].Image), ":")[1]
+		currRev := status.LastRevision.GetShort()
+		payload, _ := json.Marshal(map[string]interface{}{
+			"project":           p.Name,
+			"repository":        p.Repository,
+			"previous_revision": prevRev,
+			"current_revision":  currRev,
+		})
+		Info("Calling WebHook at "+p.WebHook, "project", p)
+		http.Post(p.WebHook, "application/json", bytes.NewReader(payload))
+	}()
 }
 
 func (p *Project) mustGetEnvironment(name string) *Environment {

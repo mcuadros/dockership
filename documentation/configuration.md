@@ -36,6 +36,7 @@ A miscellaneous of configuration variables used across the whole tool.
 
 * `EtcdServer` (multiple, optional): etcd server, needed for etcd variables at the Dockerfiles.
 
+
 ### HTTP
 
 Configuration of the web server from `dockershipd`. *This section is only required by dockershipd*
@@ -74,6 +75,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 * `Link` (multiple, optional): creates a Link to other project, when this project is deployed the linked projects are restarted (like -P at `docker run`)
 * `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if it is different from the global one.
 * `Environment` (multiple, mandatory): Environment name where this project could be deployed
+* `WebHook` (optional): An HTTP address to which a POST request will be sent when a deploy succeeds for this project. The request will have a JSON object body with keys `previous_revision`, `current_revision` and `project`.
 
 ## Example
 

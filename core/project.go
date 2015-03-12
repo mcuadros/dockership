@@ -51,7 +51,7 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 		return []error{err}
 	}
 
-	status, errs := p.StatusByEnvironment(e)
+	prevStatus, errs := p.StatusByEnvironment(e)
 	if len(errs) != 0 {
 		return errs
 	}
@@ -68,31 +68,41 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 	file := NewDockerfile(blob, p, r, e)
 
 	errs = d.Deploy(p, r, file, output, force)
-	if len(errs) == 0 {
-		p.afterSuccessfulDeploy(status)
-	}
+	p.afterDeploy(prevStatus, e, errs)
 	return errs
 }
 
-func (p *Project) afterSuccessfulDeploy(status *ProjectStatus) {
+func (p *Project) afterDeploy(prevStatus *ProjectStatus, e *Environment, errs []error) {
 	if p.WebHook == "" {
 		return
 	}
 	go func() {
-		if len(status.RunningContainers) == 0 {
-			return
+		prevRev := getRunningRevFromStatus(prevStatus)
+		currStatus, _ := p.StatusByEnvironment(e)
+		currRev := getRunningRevFromStatus(currStatus)
+		errStrings := make([]string, 0, len(errs))
+		for _, err := range errs {
+			errStrings = append(errStrings, err.Error())
 		}
-		prevRev := strings.Split(string(status.RunningContainers[0].Image), ":")[1]
-		currRev := status.LastRevision.GetShort()
 		payload, _ := json.Marshal(map[string]interface{}{
 			"project":           p.Name,
 			"repository":        p.Repository,
+			"environment":       e.Name,
 			"previous_revision": prevRev,
 			"current_revision":  currRev,
+			"errors":            errs,
 		})
 		Info("Calling WebHook at "+p.WebHook, "project", p)
 		http.Post(p.WebHook, "application/json", bytes.NewReader(payload))
 	}()
+}
+
+func getRunningRevFromStatus(status *ProjectStatus) *string {
+	var s *string
+	if status != nil && len(status.RunningContainers) > 0 {
+		s = &strings.Split(string(status.RunningContainers[0].Image), ":")[1]
+	}
+	return s
 }
 
 func (p *Project) mustGetEnvironment(name string) *Environment {

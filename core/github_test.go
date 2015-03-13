@@ -14,14 +14,14 @@ func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 	}
 
 	p := &Project{
-		Repository:          "git@github.com:github/gem-builder.git",
-		RelatedRepositories: []VCS{"git@github.com:github/jquery-hotkeys.git"},
+		Repository:          "git@github.com:mcuadros/go-syslog.git",
+		RelatedRepositories: []VCS{"git@github.com:mcuadros/go-version.git"},
 	}
 
 	g := NewGithub("")
 	revision, err := g.GetLastRevision(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(revision.Get(), Equals, "c63571780c76de6cf43a04b1ac902f0c")
+	c.Assert(revision.Get(), Equals, "21064e19b5887d6a96b2e7638de83bd1")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
@@ -30,13 +30,13 @@ func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 	}
 
 	p := &Project{
-		Repository: "git@github.com:github/gem-builder.git",
+		Repository: "git@github.com:mcuadros/go-syslog.git",
 	}
 
 	g := NewGithub("")
 	commit, err := g.GetLastCommit(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(string(commit), Equals, "d170057eca4622d25d3bde81d891ef3f3a2cf060")
+	c.Assert(string(commit), Equals, "0c7b4a44c4f61cbe0f51b3d983164b0b0bfdb2cb")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
@@ -45,13 +45,13 @@ func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 	}
 
 	p := &Project{
-		Repository: "git@github.com:github/windows-msysgit.git!diffuse",
+		Repository: "git@github.com:mcuadros/dockership.git!socket.io",
 	}
 
 	g := NewGithub("")
 	commit, err := g.GetLastCommit(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(string(commit), Equals, "9ef1d6523c8640e04680da27c385d1469e369aa9")
+	c.Assert(string(commit), Equals, "1a38193480b3f5fbc10790753f04a406ca460b9c")
 }
 
 func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
@@ -60,14 +60,14 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 	}
 
 	p := &Project{
-		Repository: "git@github.com:github/gem-builder.git",
-		Dockerfile: "git_mock",
+		Repository: "git@github.com:mcuadros/dockership.git",
+		Dockerfile: ".gitignore",
 	}
 
 	g := NewGithub("")
 	content, err := g.GetDockerFile(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(string(content), Equals, "#!/usr/bin/env ruby\n\n`mkdir -p #{ARGV.last}`\n")
+	c.Assert(string(content), Equals, "build\nhttp/bindata.go\n")
 }
 
 func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {

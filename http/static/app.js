@@ -1,11 +1,11 @@
 angular.module('dockership', [
     'ui.bootstrap', 'angular-loading-bar', 'ansiToHtml', 'ngAnimate',
-    'bd.sockjs', 'headroom', 'dialogs.main'
+    'bd.sockjs', 'headroom', 'dialogs.main', 'notification',
 ]);
 
 angular.module('dockership').controller(
     'LogTabCtrl',
-    function ($scope, $rootScope, socket, ansi2html) {
+    function ($scope, $rootScope, socket, ansi2html, Notification) {
         $scope.level = 3
         $rootScope.pendingLogs = 0;
 
@@ -22,10 +22,18 @@ angular.module('dockership').controller(
         };
 
         $scope.log = [];
-        socket.addHandler('log', function (result) {
-            $scope.log.unshift(result);
-            if (result.lvl < 4) {
+        socket.addHandler('log', function (log) {
+            $scope.log.unshift(log);
+            if (log.lvl < 4) {
                 $rootScope.pendingLogs++;
+            }
+
+            if (log.lvl < 1) {
+                var notification = new Notification('[Critical Error]', {
+                  body: log.msg,
+                  icon: '/logo.png',
+                  delay: 4000
+                });
             }
         });
 

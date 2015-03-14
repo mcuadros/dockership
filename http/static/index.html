@@ -138,7 +138,7 @@
               <span class="glyphicon glyphicon-folder-open"></span>{{p.Repository}}
             </span>
             <span class="label label-info">
-              <span class="glyphicon glyphicon-inbox"></span>{{p.Branch}}
+              <span class="glyphicon glyphicon-inbox"></span>{{p.Repository.split('!').length == 1 ? "master" : p.Repository.split('!')[1]}}
             </span>
             <span
               popover-title="Alias"

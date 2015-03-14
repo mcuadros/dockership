@@ -12,6 +12,7 @@ angular.module('dockership').controller(
         $scope.chageLevel = function(level) {
             $scope.level = level;
         };
+
         $scope.filter = function(line) {
             if (line.lvl <= $scope.level) {
                 return true;

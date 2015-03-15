@@ -291,7 +291,6 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 		RestartPolicy: restartPolicy,
 		Links:         d.formatLinks(p.Links),
 		VolumesFrom:   p.VolumesFrom,
-		Volumes:       p.Volumes,
 	})
 }
 

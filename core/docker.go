@@ -290,7 +290,8 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 		PortBindings:  ports,
 		RestartPolicy: restartPolicy,
 		Links:         d.formatLinks(p.Links),
-		VolumesFrom:   p.Volumes,
+		VolumesFrom:   p.VolumesFrom,
+		Volumes:       p.Volumes,
 	})
 }
 

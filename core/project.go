@@ -30,6 +30,7 @@ type Project struct {
 	Restart             string
 	Ports               []string         `gcfg:"Port"`
 	Volumes             []string         `gcfg:"Volume"`
+	VolumesFrom         []string         `gcfg:"VolumeFrom"`
 	Links               map[string]*Link `json:"-"`
 	LinkNames           []LinkDefinition `gcfg:"Link"`
 	LinkedBy            []*Project       `json:"-"`

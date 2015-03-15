@@ -74,6 +74,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 * `Restart` (optional, default: no): restart policy to apply when a container exits (no, on-failure[:max-retry], always)  (like --restart at `docker run`)
 * `Link` (multiple, optional): creates a Link to other project, when this project is deployed the linked projects are restarted (like -P at `docker run`)
 * `Volume` (multiple, optional): mounts a Data Volume Container (like -v at `docker run`)
+* `VolumeFrom` (multiple, optional): mounts a Data Volumes From  a specified container (like --volumes-from at `docker run`)
 * `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if it is different from the global one.
 * `Environment` (multiple, mandatory): Environment name where this project could be deployed
 * `WebHook` (optional): An HTTP address to which a POST request will be sent when a deploy succeeds for this project. The request will have a JSON object body with keys `previous_revision`, `current_revision`, `project`, `environment` and `errors`.

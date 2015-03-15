@@ -5,7 +5,7 @@ MAINTAINER Máximo Cuadros <mcuadros@gmail.com>
 RUN mkdir -p $GOPATH/src/github.com/mcuadros/dockership
 WORKDIR $GOPATH/src/github.com/mcuadros/dockership/
 
-RUN git clone https://github.com/mcuadros/dockership.git .
+RUN git clone https://github.com/herveleclerc/dockership.git .
 RUN make
 RUN make install
 

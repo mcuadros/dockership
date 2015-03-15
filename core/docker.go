@@ -264,7 +264,8 @@ func (d *Docker) createContainer(p *Project, image ImageId) (*Container, error) 
 	c, err := d.client.CreateContainer(docker.CreateContainerOptions{
 		Name: p.Name,
 		Config: &docker.Config{
-			Image: string(image),
+			Image:   string(image),
+			Volumes: p.Volumes,
 		},
 	})
 

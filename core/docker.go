@@ -264,8 +264,7 @@ func (d *Docker) createContainer(p *Project, image ImageId) (*Container, error) 
 	c, err := d.client.CreateContainer(docker.CreateContainerOptions{
 		Name: p.Name,
 		Config: &docker.Config{
-			Image:   string(image),
-			Volumes: p.Volumes,
+			Image: string(image),
 		},
 	})
 
@@ -292,6 +291,7 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 		RestartPolicy: restartPolicy,
 		Links:         d.formatLinks(p.Links),
 		VolumesFrom:   p.VolumesFrom,
+		Binds:         p.Binds,
 	})
 }
 

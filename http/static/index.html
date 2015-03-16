@@ -18,6 +18,7 @@
     <script src="https://cdn.rawgit.com/jorgeecardona/ansi-to-html/master/ansi2html.js"></script>
     <script src="https://cdn.rawgit.com/m-e-conroy/angular-dialog-service/v5.2.5/dist/dialogs.min.js"></script>
     <script src="https://cdn.rawgit.com/m-e-conroy/angular-dialog-service/v5.2.5/dist/dialogs-default-translations.min.js"></script>
+    <script src="https://cdn.rawgit.com/neoziro/angular-notification/v0.2.3/angular-notification.min.js"></script>
     <script src="/app.js"></script>
     <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet"></link>
     <link href="/app.css" rel="stylesheet"></link>
@@ -138,7 +139,7 @@
               <span class="glyphicon glyphicon-folder-open"></span>{{p.Repository}}
             </span>
             <span class="label label-info">
-              <span class="glyphicon glyphicon-inbox"></span>{{p.Branch}}
+              <span class="glyphicon glyphicon-inbox"></span>{{p.Repository.split('!').length == 1 ? "master" : p.Repository.split('!')[1]}}
             </span>
             <span
               popover-title="Alias"

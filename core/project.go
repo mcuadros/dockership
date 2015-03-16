@@ -1,10 +1,13 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/mcuadros/go-command"
 )
@@ -26,12 +29,14 @@ type Project struct {
 	NoCache             bool
 	Restart             string
 	Ports               []string         `gcfg:"Port"`
+	Volumes             []string         `gcfg:"Volume"`
 	Links               map[string]*Link `json:"-"`
 	LinkNames           []LinkDefinition `gcfg:"Link"`
 	LinkedBy            []*Project       `json:"-"`
 	Environments        map[string]*Environment
 	EnvironmentNames    []string `gcfg:"Environment"`
 	TaskStatus          TaskStatus
+	WebHook             string `gcfg:"WebHook"`
 }
 
 func (p *Project) Deploy(environment string, output io.Writer, force bool) []error {
@@ -47,6 +52,10 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 		return []error{err}
 	}
 
+	prevStatus, errs := p.StatusByEnvironment(e)
+	if len(errs) != 0 {
+		return errs
+	}
 	r, err := c.GetLastRevision(p)
 	if err != nil {
 		return []error{err}
@@ -59,7 +68,42 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 
 	file := NewDockerfile(blob, p, r, e)
 
-	return d.Deploy(p, r, file, output, force)
+	errs = d.Deploy(p, r, file, output, force)
+	p.afterDeploy(prevStatus, e, errs)
+	return errs
+}
+
+func (p *Project) afterDeploy(prevStatus *ProjectStatus, e *Environment, errs []error) {
+	if p.WebHook == "" {
+		return
+	}
+	go func() {
+		prevRev := getRunningRevFromStatus(prevStatus)
+		currStatus, _ := p.StatusByEnvironment(e)
+		currRev := getRunningRevFromStatus(currStatus)
+		errStrings := make([]string, 0, len(errs))
+		for _, err := range errs {
+			errStrings = append(errStrings, err.Error())
+		}
+		payload, _ := json.Marshal(map[string]interface{}{
+			"project":           p.Name,
+			"repository":        p.Repository,
+			"environment":       e.Name,
+			"previous_revision": prevRev,
+			"current_revision":  currRev,
+			"errors":            errs,
+		})
+		Info("Calling WebHook at "+p.WebHook, "project", p)
+		http.Post(p.WebHook, "application/json", bytes.NewReader(payload))
+	}()
+}
+
+func getRunningRevFromStatus(status *ProjectStatus) *string {
+	var s *string
+	if status != nil && len(status.RunningContainers) > 0 {
+		s = &strings.Split(string(status.RunningContainers[0].Image), ":")[1]
+	}
+	return s
 }
 
 func (p *Project) mustGetEnvironment(name string) *Environment {

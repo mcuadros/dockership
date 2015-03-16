@@ -82,6 +82,12 @@ func (s *server) configStaticAssets() {
 		w.Write(content)
 	})
 
+	s.mux.Path("/logo.png").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		content, _ := Asset("static/logo.png")
+		w.Write(content)
+	})
+
 	s.mux.Path("/app.js").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		content, _ := Asset("static/app.js")

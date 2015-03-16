@@ -84,13 +84,11 @@ func (d *Docker) cleanContainers(p *Project) error {
 
 	Debug("Cleaning containers", "project", p, "count", len(l), "end-point", d.endPoint)
 	for _, c := range l {
-		if !c.IsRunning() {
-			continue
-		}
-
-		Debug("Stoping container and image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
-		if err := d.killContainer(c); err != nil {
-			return err
+		if c.IsRunning() {
+			Debug("Stoping container and image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
+			if err := d.killContainer(c); err != nil {
+				return err
+			}
 		}
 
 		Debug("Removing container", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
@@ -292,6 +290,7 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 		PortBindings:  ports,
 		RestartPolicy: restartPolicy,
 		Links:         d.formatLinks(p.Links),
+		VolumesFrom:   p.Volumes,
 	})
 }
 

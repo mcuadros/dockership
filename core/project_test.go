@@ -17,10 +17,10 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
 	e := &Environment{Name: "a", DockerEndPoints: []string{m.URL()}}
 	p := &Project{
-		Repository:   "git@github.com:github/gem-builder.git",
+		Repository:   "git@github.com:mcuadros/dockership.git",
 		Environments: map[string]*Environment{"foo": e},
-		Dockerfile:   "git_mock",
-		GithubToken:  "05bed21c257d935017d85d3398b46ac81035756f",
+		Dockerfile:   "Dockerfile",
+		GithubToken:  "",
 		TaskStatus:   TaskStatus{},
 	}
 
@@ -72,9 +72,9 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 
 	p := &Project{
 		Name:         "foo",
-		Repository:   "git@github.com:github/gem-builder.git",
+		Repository:   "git@github.com:mcuadros/gearman-hooks.git",
 		Environments: envs,
-		Dockerfile:   "git_mock",
+		Dockerfile:   ".gitignore",
 	}
 
 	input := bytes.NewBuffer(nil)
@@ -87,7 +87,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	c.Assert(err, HasLen, 0)
 	c.Assert(r, HasLen, 2)
 	c.Assert(r[0].Environment, Equals, envs["a"])
-	c.Assert(r[0].LastRevision.GetShort(), Equals, "d170057eca46")
+	c.Assert(r[0].LastRevision.GetShort(), Equals, "8ad0084f3063")
 	c.Assert(r[0].Containers, HasLen, 1)
 	c.Assert(r[0].RunningContainers, HasLen, 1)
 	c.Assert(r[0].Containers[0], Equals, r[0].RunningContainers[0])

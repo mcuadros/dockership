@@ -112,6 +112,7 @@ func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, r
 	c.Assert(l[0].IsRunning(), Equals, true)
 	c.Assert(l[0].Names, HasLen, 1)
 	c.Assert(l[0].Names[0], Equals, "/foo")
+
 	return
 }
 

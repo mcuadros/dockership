@@ -20,8 +20,12 @@ type StatusRecord struct {
 func (s *server) HandleStatus(msg Message, session sockjs.Session) {
 	var project string
 	project, _ = msg.Request["project"]
+	s.sockjs.Send("status", s.GetStatus(project), false)
+}
 
+func (s *server) GetStatus(project string) map[string]*StatusResult {
 	result := make(map[string]*StatusResult, 0)
+
 	for name, p := range s.config.Projects {
 		if project != "" && project != name {
 			continue
@@ -45,5 +49,5 @@ func (s *server) HandleStatus(msg Message, session sockjs.Session) {
 		result[p.Name] = record
 	}
 
-	s.sockjs.Send("status", result, false)
+	return result
 }

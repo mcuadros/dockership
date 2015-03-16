@@ -55,6 +55,18 @@ func (s *server) configure() {
 		user, _ := s.oauth.getValidUser(s.oauth.getToken(r))
 		s.json(w, 200, user)
 	})
+
+	s.mux.Path("/rest/projects").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.json(w, 200, s.config.Projects)
+	})
+
+	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.json(w, 200, s.GetStatus(""))
+	})
+
+	s.mux.Path("/rest/status/{project}").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.json(w, 200, s.GetStatus(mux.Vars(r)["project"]))
+	})
 }
 
 func (s *server) configStaticAssets() {

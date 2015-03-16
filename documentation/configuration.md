@@ -76,7 +76,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 * `Volume` (multiple, optional): mounts a Data Volume Container (like -v at `docker run`)
 * `GithubToken` (default: Global.GithubToken): the token needed to access this repository, if it is different from the global one.
 * `Environment` (multiple, mandatory): Environment name where this project could be deployed
-* `WebHook` (optional): An HTTP address to which a POST request will be sent when a deploy succeeds for this project. The request will have a JSON object body with keys `previous_revision`, `current_revision`, `project`, `environment` and `errors`.
+* `WebHook` (optional): An HTTP address. See [Extending Dockership](https://github.com/mcuadros/dockership/blob/master/documentation/extending_dockership.md#web-hooks) for details.
 
 ## Example
 

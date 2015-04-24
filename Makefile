@@ -1,11 +1,8 @@
 # Package configuration
 PROJECT = dockership
 COMMANDS = dockership dockershipd
-DEPENDENCIES = gopkg.in/check.v1 \
-golang.org/x/tools/cmd/cover \
+DEPENDENCIES = \
 github.com/jteeuwen/go-bindata/... \
-github.com/gorilla/mux \
-github.com/laher/goxc
 
 # Environment
 BASE_PATH := $(shell pwd)
@@ -17,6 +14,7 @@ ASSETS := static
 # PACKAGES
 PKG_OS = darwin linux
 PKG_ARCH = amd64
+PACKAGES = $(foreach os, $(PKG_OS), $(foreach arch, $(PKG_ARCH), $(os)_$(arch)))
 PKG_CONTENT = README.md LICENSE
 
 # Go parameters
@@ -25,20 +23,25 @@ GOBUILD = $(GOCMD) build
 GOCLEAN = $(GOCMD) clean
 GOGET = $(GOCMD) get
 GOTEST = $(GOCMD) test
-GOXC = goxc
-GOXC_CONFIG = .goxc.json
 BINDATA = go-bindata
 
-# Rules
+.PHONY: dependencies $(DEPENDENCIES) packages $(PACKAGES)
+
 all: test build
 
 assets:
 	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http $(ASSETS)
 
-build: assets dependencies
-	for cmd in $(COMMANDS); do \
-		$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" $${cmd}.go; \
-	done
+dependencies: $(DEPENDENCIES)
+	$(GOGET) -d -v -t ./...
+
+$(DEPENDENCIES):
+	$(GOGET) $@
+
+build: assets dependencies $(COMMANDS)
+
+$(COMMANDS): %: %.go
+	$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" $@.go
 
 full-test: dependencies
 	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http --debug $(ASSETS)
@@ -50,29 +53,21 @@ test: dependencies
 	cd $(BASE_PATH)/core; $(GOTEST) -v .
 	cd $(BASE_PATH)/config; $(GOTEST) -v .
 
-dependencies:
-	$(GOGET) -d -v ./...
-	for i in $(DEPENDENCIES); do $(GOGET) $$i; done
+install: $(COMMANDS)
+	cp -rf $^ /usr/bin/
 
-install:
+packages: clean assets $(PACKAGES)
+
+$(PACKAGES):
+	cd $(BASE_PATH)
+	mkdir -p $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$@
 	for cmd in $(COMMANDS); do \
-		cp -rf $${cmd} /usr/bin/; \
+		GOOS=`echo $@ | sed 's/_.*//'` \
+		GOARCH=`echo $@ | sed 's/.*_//'` \
+		$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" -o $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$@/$${cmd} $${cmd}.go ; \
 	done
-
-packages: clean assets
-	for os in $(PKG_OS); do \
-		for arch in $(PKG_ARCH); do \
-			cd $(BASE_PATH); \
-			mkdir -p $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}; \
-			for cmd in $(COMMANDS); do \
-				GOOS=$${os} GOARCH=$${arch} $(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" -o $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}/$${cmd} $${cmd}.go ; \
-			done; \
-			for content in $(PKG_CONTENT); do \
-				cp -rf $${content} $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}/; \
-			done; \
-			cd  $(BUILD_PATH) && tar -cvzf $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$${os}_$${arch}.tar.gz $(PROJECT)_$(VERSION)_$${os}_$${arch}/; \
-		done; \
-	done;
+	cp -rf $(PKG_CONTENT) $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$@/
+	cd  $(BUILD_PATH) && tar -cvzf $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$@.tar.gz $(PROJECT)_$(VERSION)_$@/
 
 clean:
 	echo $(VERSION)

@@ -176,3 +176,12 @@ li.active > a {
 .log {
   font-family: 
 }
+.log-controls {
+  display: flex;
+}
+.log-controls>.ansii-checkbox {
+  white-space: nowrap;
+  margin: 0;
+  margin-left: 20px;
+  line-height: 38px;
+}

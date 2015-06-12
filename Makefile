@@ -41,7 +41,7 @@ dependencies: $(DEPENDENCIES)
 $(DEPENDENCIES):
 	$(GOGET) $@
 
-build: build-assets assets dependencies $(COMMANDS)
+build: dependencies build-assets assets  $(COMMANDS)
 
 $(COMMANDS): %: %.go
 	$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" $@.go
@@ -59,7 +59,7 @@ test: dependencies
 install: $(COMMANDS)
 	cp -rf $^ /usr/bin/
 
-packages: clean assets $(PACKAGES)
+packages: clean dependencies build-assets assets $(PACKAGES)
 
 $(PACKAGES):
 	cd $(BASE_PATH)

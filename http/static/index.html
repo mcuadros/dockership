@@ -20,8 +20,8 @@
     <script src="https://cdn.rawgit.com/m-e-conroy/angular-dialog-service/v5.2.5/dist/dialogs-default-translations.min.js"></script>
     <script src="https://cdn.rawgit.com/neoziro/angular-notification/v0.2.3/angular-notification.min.js"></script>
     <script src="/app.js"></script>
-    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet"></link>
-    <link href="/app.css" rel="stylesheet"></link>
+    <link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/app.css" rel="stylesheet"/>
   </head>
   <body ng-cloak>
       <headroom ng-controller="HeaderCtrl"
@@ -82,7 +82,7 @@
         <footer>
           <div class=" well well-sm">
             by <a target="_blank"  href="https://github.com/mcuadros">M&aacute;ximo Cuadros</a>
-            . Under MIT License</a> /
+            . Under MIT License /
 
             Logo by
             <a target="_blank" href="https://dribbble.com/cayeromero">Caye Romero</a>
@@ -251,12 +251,18 @@
         </div>
     </script>
     <script type="text/ng-template" id="DeployTab.html">
+      <div class="log-controls">
         <select class="form-control" ng-model="current">
           <option value="latest">-- latest --</option>
           <option ng-repeat="(key, value) in log" value="{{key}}">{{key}}</option>
         </select>
-        <h3 ng-if="current != 'latest'">Deploy <b>{{current}}</b></h3>
-        <div class="log" ng-bind-html="log[current]"></div>
+        <label class="ansii-checkbox" title="WARNING: Huge performance impact">
+          <input type="checkbox" ng-model="ansii">
+          <span>ANSII Color</span>
+        </label>
+      </div>
+      <h3 ng-if="current != 'latest'">Deploy <b>{{current}}</b></h3>
+      <div class="log" ng-bind-html="log[current]"></div>
     </script>
   </body>
 </html>

@@ -29,6 +29,9 @@ BINDATA = go-bindata
 
 all: test build
 
+build-assets:
+	cd $(BASE_PATH)/client; npm install; npm install gulp -g; gulp javascript
+
 assets:
 	cd $(BASE_PATH)/http; $(BINDATA) -pkg=http $(ASSETS)
 
@@ -38,7 +41,7 @@ dependencies: $(DEPENDENCIES)
 $(DEPENDENCIES):
 	$(GOGET) $@
 
-build: assets dependencies $(COMMANDS)
+build: build-assets assets dependencies $(COMMANDS)
 
 $(COMMANDS): %: %.go
 	$(GOCMD) build -ldflags "-X main.version $(VERSION) -X main.build \"$(BUILD)\"" $@.go

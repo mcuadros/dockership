@@ -209,6 +209,7 @@ type Environment struct {
 	CertPath        string   `json:"-"`
 	EtcdServers     []string `gcfg:"EtcdServer"`
 	Name            string
+	Host            string `gcfg:"Host"`
 }
 
 func (e *Environment) String() string {

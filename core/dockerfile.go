@@ -40,6 +40,7 @@ func (d *Dockerfile) resolveInfoVariables(result []byte) []byte {
 		"ENV":     d.environment.Name,
 		"VCS":     string(d.project.Repository),
 		"REV":     d.revision.GetShort(),
+		"HOST":    d.environment.Host,
 	}
 
 	for name, value := range vars {

@@ -21,6 +21,7 @@ This kind of variables are sourced from the internal process of Dockerfile given
 * `$DOCKERSHIP_VCS`: Repository URLs, the `Repository` variable from the project.
 * `$DOCKERSHIP_REV`: Revision identifier
 * `$DOCKERSHIP_ENV`: Environment name where the Dockerfile is being deployed.
+* `$DOCKERSHIP_HOST`: Hostname of the environment.
 
 ### etcd support
 

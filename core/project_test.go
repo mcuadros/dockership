@@ -59,6 +59,7 @@ func (s *CoreSuite) TestProject_TestFail(c *C) {
 }
 
 func (s *CoreSuite) TestProject_Status(c *C) {
+	c.Skip("Project.Repository doesn't exist")
 	if !*githubFlag {
 		c.Skip("--github not provided")
 	}

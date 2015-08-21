@@ -10,7 +10,7 @@ var githubFlag = flag.Bool("github", false, "Skips Github tests")
 
 func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	p := &Project{
@@ -26,7 +26,7 @@ func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 
 func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	p := &Project{
@@ -41,7 +41,7 @@ func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 
 func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	p := &Project{
@@ -56,7 +56,7 @@ func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 
 func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	p := &Project{
@@ -72,7 +72,7 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 
 func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	p := &Project{

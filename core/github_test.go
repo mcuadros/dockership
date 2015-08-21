@@ -21,7 +21,7 @@ func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 	g := NewGithub("")
 	revision, err := g.GetLastRevision(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(revision.Get(), Equals, "21064e19b5887d6a96b2e7638de83bd1")
+	c.Assert(revision.Get(), Equals, "f7e051ff8c42a6b7cc20b1da6f09de22")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
@@ -36,7 +36,7 @@ func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 	g := NewGithub("")
 	commit, err := g.GetLastCommit(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(string(commit), Equals, "0c7b4a44c4f61cbe0f51b3d983164b0b0bfdb2cb")
+	c.Assert(string(commit), Equals, "e079f554382028527e4509d7bb58793b5e98194e")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {

@@ -20,7 +20,7 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 		Repository:   "git@github.com:mcuadros/dockership.git",
 		Environments: map[string]*Environment{"foo": e},
 		Dockerfile:   "Dockerfile",
-		GithubToken:  "",
+		GithubToken:  githubToken,
 		TaskStatus:   TaskStatus{},
 	}
 
@@ -73,6 +73,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	p := &Project{
 		Name:         "foo",
 		Repository:   "git@github.com:mcuadros/gearman-hooks.git",
+		GithubToken:  githubToken,
 		Environments: envs,
 		Dockerfile:   ".gitignore",
 	}

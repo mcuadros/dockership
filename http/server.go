@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/mcuadros/dockership/config"
@@ -51,54 +52,86 @@ func (s *server) configure() {
 	}))
 
 	// logged-user
-	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.oauth.getValidUser(s.oauth.getToken(r))
-		s.json(w, 200, user)
-	})
+	s.mux.Path("/rest/user").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			user, _ := s.oauth.getValidUser(s.oauth.getToken(r))
+			s.json(w, 200, user)
+		},
+	)
 
-	s.mux.Path("/rest/projects").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.json(w, 200, s.config.Projects)
-	})
+	s.mux.Path("/rest/projects").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			s.json(w, 200, s.config.Projects)
+		},
+	)
 
-	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.json(w, 200, s.GetStatus(""))
-	})
+	s.mux.Path("/rest/status").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			s.json(w, 200, s.GetStatus(""))
+		},
+	)
 
-	s.mux.Path("/rest/status/{project}").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.json(w, 200, s.GetStatus(mux.Vars(r)["project"]))
-	})
+	s.mux.Path("/rest/status/{project}").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			s.json(w, 200, s.GetStatus(mux.Vars(r)["project"]))
+		},
+	)
+
+	s.mux.Path("/rest/deploy/{project}/{environment}").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			vars := mux.Vars(r)
+
+			status := 200
+			result := s.DoDeploy(ioutil.Discard, vars["project"], vars["environment"], true)
+			if !result.Done {
+				status = 500
+			}
+
+			s.json(w, status, result)
+		},
+	)
 }
 
 func (s *server) configStaticAssets() {
-	s.mux.Path("/").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		content, _ := Asset("static/index.html")
-		w.Write(content)
-	})
+	s.mux.Path("/").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/html")
+			content, _ := Asset("static/index.html")
+			w.Write(content)
+		},
+	)
 
-	s.mux.Path("/dockership.png").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/png")
-		content, _ := Asset("static/dockership.png")
-		w.Write(content)
-	})
+	s.mux.Path("/dockership.png").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "image/png")
+			content, _ := Asset("static/dockership.png")
+			w.Write(content)
+		},
+	)
 
-	s.mux.Path("/logo.png").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "image/png")
-		content, _ := Asset("static/logo.png")
-		w.Write(content)
-	})
+	s.mux.Path("/logo.png").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "image/png")
+			content, _ := Asset("static/logo.png")
+			w.Write(content)
+		},
+	)
 
-	s.mux.Path("/app.js").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/javascript")
-		content, _ := Asset("static/app.js")
-		w.Write(content)
-	})
+	s.mux.Path("/app.js").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/javascript")
+			content, _ := Asset("static/app.js")
+			w.Write(content)
+		},
+	)
 
-	s.mux.Path("/app.css").Methods("GET").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css")
-		content, _ := Asset("static/app.css")
-		w.Write(content)
-	})
+	s.mux.Path("/app.css").Methods("GET").HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/css")
+			content, _ := Asset("static/app.css")
+			w.Write(content)
+		},
+	)
 
 }
 func (s *server) configureAuth() {

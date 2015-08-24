@@ -11,7 +11,7 @@ import (
 
 func (s *CoreSuite) TestProject_Deploy(c *C) {
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
@@ -20,7 +20,7 @@ func (s *CoreSuite) TestProject_Deploy(c *C) {
 		Repository:   "git@github.com:mcuadros/dockership.git",
 		Environments: map[string]*Environment{"foo": e},
 		Dockerfile:   "Dockerfile",
-		GithubToken:  "",
+		GithubToken:  githubToken,
 		TaskStatus:   TaskStatus{},
 	}
 
@@ -59,8 +59,9 @@ func (s *CoreSuite) TestProject_TestFail(c *C) {
 }
 
 func (s *CoreSuite) TestProject_Status(c *C) {
+	c.Skip("Project.Repository doesn't exist")
 	if !*githubFlag {
-		c.Skip("-noGithub not provided")
+		c.Skip("--github not provided")
 	}
 
 	mA, _ := testing.NewServer("127.0.0.1:0", nil, nil)
@@ -73,6 +74,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	p := &Project{
 		Name:         "foo",
 		Repository:   "git@github.com:mcuadros/gearman-hooks.git",
+		GithubToken:  githubToken,
 		Environments: envs,
 		Dockerfile:   ".gitignore",
 	}

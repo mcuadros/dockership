@@ -181,10 +181,9 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	}
 
 	lc, _ := docker.ListContainers(p)
-	c.Assert(lc, HasLen, 5)
+	c.Assert(lc, HasLen, 1)
 	c.Assert(lc[0].Image.GetRevisionString(), Equals, "0")
-	c.Assert(lc[4].Image.GetRevisionString(), Equals, "4")
-	c.Assert(lc[4].IsRunning(), Equals, true)
+	c.Assert(lc[0].IsRunning(), Equals, true)
 
 	li, _ := docker.ListImages(p)
 	c.Assert(li, HasLen, 5)

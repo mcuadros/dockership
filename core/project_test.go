@@ -59,7 +59,6 @@ func (s *CoreSuite) TestProject_TestFail(c *C) {
 }
 
 func (s *CoreSuite) TestProject_Status(c *C) {
-	c.Skip("Project.Repository doesn't exist")
 	if !*githubFlag {
 		c.Skip("--github not provided")
 	}
@@ -73,7 +72,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 
 	p := &Project{
 		Name:         "foo",
-		Repository:   "git@github.com:mcuadros/gearman-hooks.git",
+		Repository:   "git@github.com:mcuadros/cli-array-editor.git",
 		GithubToken:  githubToken,
 		Environments: envs,
 		Dockerfile:   ".gitignore",
@@ -89,7 +88,7 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	c.Assert(err, HasLen, 0)
 	c.Assert(r, HasLen, 2)
 	c.Assert(r[0].Environment, Equals, envs["a"])
-	c.Assert(r[0].LastRevision.GetShort(), Equals, "8ad0084f3063")
+	c.Assert(r[0].LastRevision.GetShort(), Equals, "a44ffbb10515")
 	c.Assert(r[0].Containers, HasLen, 1)
 	c.Assert(r[0].RunningContainers, HasLen, 1)
 	c.Assert(r[0].Containers[0], Equals, r[0].RunningContainers[0])

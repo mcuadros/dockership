@@ -166,7 +166,7 @@ func (s *CoreSuite) TestDocker_RunLinked(c *C) {
 
 func (s *CoreSuite) TestDocker_Clean(c *C) {
 	if !*slowFlag {
-		c.Skip("-slowFlag not provided")
+		c.Skip("-slow not provided")
 	}
 
 	m, _ := testing.NewServer("127.0.0.1:0", nil, nil)
@@ -177,19 +177,21 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	for i := 0; i < 5; i++ {
 		time.Sleep(1 * time.Second)
 		buildImage(d, fmt.Sprintf("foo:%d", i))
-		docker.Run(p, Revision{"foo/bar": Commit(fmt.Sprintf("%d", i))})
 	}
+
+	err := docker.Run(p, Revision{"foo/bar": Commit("4")})
+	c.Assert(err, IsNil)
 
 	lc, _ := docker.ListContainers(p)
 	c.Assert(lc, HasLen, 1)
-	c.Assert(lc[0].Image.GetRevisionString(), Equals, "0")
+	c.Assert(lc[0].Image.GetRevisionString(), Equals, "4")
 	c.Assert(lc[0].IsRunning(), Equals, true)
 
 	li, _ := docker.ListImages(p)
 	c.Assert(li, HasLen, 5)
 
 	p.History = 3
-	err := docker.Clean(p)
+	err = docker.Clean(p)
 	c.Assert(err, Equals, nil)
 
 	lc, _ = docker.ListContainers(p)

@@ -12,38 +12,38 @@ var githubFlag = flag.Bool("github", false, "Skips Github tests")
 
 func (s *CoreSuite) TestGithub_GetLastRevision(c *C) {
 	if !*githubFlag {
-		c.Skip("--github not provided")
+		c.Skip("-github not provided")
 	}
 
 	p := &Project{
-		Repository:          "git@github.com:mcuadros/go-syslog.git",
-		RelatedRepositories: []VCS{"git@github.com:mcuadros/go-version.git"},
+		Repository:          "git@github.com:mcuadros/cli-array-editor.git",
+		RelatedRepositories: []VCS{"git@github.com:mcuadros/silex-hateoas.git"},
 	}
 
 	g := NewGithub(githubToken)
 	revision, err := g.GetLastRevision(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(revision.Get(), Equals, "f7e051ff8c42a6b7cc20b1da6f09de22")
+	c.Assert(revision.Get(), Equals, "476e1056780a5912677ec4864478601d")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommit(c *C) {
 	if !*githubFlag {
-		c.Skip("--github not provided")
+		c.Skip("-github not provided")
 	}
 
 	p := &Project{
-		Repository: "git@github.com:mcuadros/go-syslog.git",
+		Repository: "git@github.com:mcuadros/cli-array-editor.git",
 	}
 
 	g := NewGithub(githubToken)
 	commit, err := g.GetLastCommit(p)
 	c.Assert(err, Equals, nil)
-	c.Assert(string(commit), Equals, "e079f554382028527e4509d7bb58793b5e98194e")
+	c.Assert(string(commit), Equals, "a44ffbb10515ea575056703238114463034131ca")
 }
 
 func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 	if !*githubFlag {
-		c.Skip("--github not provided")
+		c.Skip("-github not provided")
 	}
 
 	p := &Project{
@@ -58,7 +58,7 @@ func (s *CoreSuite) TestGithub_GetLastCommitBranch(c *C) {
 
 func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 	if !*githubFlag {
-		c.Skip("--github not provided")
+		c.Skip("-github not provided")
 	}
 
 	p := &Project{
@@ -74,7 +74,7 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 
 func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {
 	if !*githubFlag {
-		c.Skip("--github not provided")
+		c.Skip("-github not provided")
 	}
 
 	p := &Project{

@@ -46,7 +46,12 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	var request *http.Request
 	files := make(map[string]string, 0)
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.String() == "/version" {
+			return
+		}
+
 		defer r.Body.Close()
 		defer s.Done()
 

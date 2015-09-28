@@ -10,7 +10,6 @@ import (
 
 	"github.com/mcuadros/dockership/config"
 
-	"code.google.com/p/goauth2/oauth"
 	"github.com/google/go-github/github"
 	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
@@ -163,11 +162,11 @@ func (o *OAuth) getValidUser(token *oauth2.Token) (*User, error) {
 		return user, nil
 	}
 
-	t := &oauth.Transport{
-		Token: &oauth.Token{AccessToken: token.AccessToken},
-	}
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token.AccessToken},
+	)
 
-	c := github.NewClient(t.Client())
+	c := github.NewClient(oauth2.NewClient(oauth2.NoContext, ts))
 	guser, _, err := c.Users.Get("")
 	if err != nil {
 		return nil, err

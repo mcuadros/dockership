@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sync"
 
-	"code.google.com/p/goauth2/oauth"
 	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 type Github struct {
@@ -19,11 +19,11 @@ func NewGithub(token string) *Github {
 	var client *http.Client
 
 	if token != "" {
-		t := &oauth.Transport{
-			Token: &oauth.Token{AccessToken: token},
-		}
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token},
+		)
 
-		client = t.Client()
+		client = oauth2.NewClient(oauth2.NoContext, ts)
 	}
 
 	return &Github{

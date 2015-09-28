@@ -55,7 +55,7 @@ func (s *CoreSuite) TestProject_TestFail(c *C) {
 
 	r, err := p.Test("a")
 	c.Assert(err, Equals, nil)
-	c.Assert(strings.HasPrefix(string(r.Stdout), "a"), Equals, true)
+	c.Assert(strings.HasPrefix(r.Stdout.String(), "a"), Equals, true)
 }
 
 func (s *CoreSuite) TestProject_Status(c *C) {

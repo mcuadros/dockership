@@ -14,6 +14,7 @@ type Config struct {
 		UseShortRevisions bool `default:"true"`
 		GithubToken       string
 		EtcdServers       []string `gcfg:"EtcdServer"`
+		Repository        string   `default:"dockership"`
 	}
 	HTTP struct {
 		Listen             string `default:":8080"`
@@ -60,6 +61,10 @@ func (c *Config) LoadEnvironments() {
 		defaults.SetDefaults(e)
 		if e.EtcdServers == nil || len(e.EtcdServers) == 0 {
 			e.EtcdServers = c.Global.EtcdServers
+		}
+
+		if len(e.Repository) == 0 {
+			e.Repository = c.Global.Repository
 		}
 	}
 }

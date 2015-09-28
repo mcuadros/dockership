@@ -79,9 +79,9 @@ func (s *CoreSuite) TestProject_Status(c *C) {
 	}
 
 	input := bytes.NewBuffer(nil)
-	da, _ := NewDocker(envs["a"].DockerEndPoints[0], nil)
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
-	db, _ := NewDocker(envs["b"].DockerEndPoints[0], nil)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 
 	r, err := p.Status()
@@ -110,9 +110,9 @@ func (s *CoreSuite) TestProject_ListContainers(c *C) {
 
 	input := bytes.NewBuffer(nil)
 
-	da, _ := NewDocker(envs["a"].DockerEndPoints[0], nil)
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
-	db, _ := NewDocker(envs["b"].DockerEndPoints[0], nil)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListContainers()
@@ -137,9 +137,9 @@ func (s *CoreSuite) TestProject_ListImages(c *C) {
 
 	input := bytes.NewBuffer(nil)
 
-	da, _ := NewDocker(envs["a"].DockerEndPoints[0], nil)
+	da, _ := NewDocker(envs["a"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	da.Deploy(p, Revision{}, &Dockerfile{}, input, false)
-	db, _ := NewDocker(envs["b"].DockerEndPoints[0], nil)
+	db, _ := NewDocker(envs["b"].DockerEndPoints[0], &Environment{Repository: "foo"})
 	db.Deploy(p, Revision{}, &Dockerfile{}, input, false)
 	time.Sleep(1 * time.Second)
 	l, err := p.ListImages()

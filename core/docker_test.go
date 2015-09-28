@@ -31,7 +31,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 
 	input := bytes.NewBuffer(nil)
 
-	d, _ := NewDocker(m.URL(), nil)
+	d, _ := NewDocker(m.URL(), &Environment{Repository: "foo"})
 	rev := Revision{"foo": "bar"}
 	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, input, false)
 	c.Assert(err, Equals, nil)
@@ -44,7 +44,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 }
 
 func (s *CoreSuite) TestDocker_BuildImage(c *C) {
-	var request *http.Request
+	var requests []*http.Request
 	files := make(map[string]string, 0)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,18 +55,20 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 		defer r.Body.Close()
 		defer s.Done()
 
-		tr := tar.NewReader(r.Body)
-		for {
-			header, err := tr.Next()
-			if err != nil {
-				break
+		requests = append(requests, r)
+
+		if r.URL.Path == "/build" {
+			tr := tar.NewReader(r.Body)
+			for {
+				header, err := tr.Next()
+				if err != nil {
+					break
+				}
+
+				content, _ := ioutil.ReadAll(tr)
+				files[header.Name] = string(content)
 			}
-
-			content, _ := ioutil.ReadAll(tr)
-			files[header.Name] = string(content)
 		}
-
-		request = r
 	}))
 
 	defer ts.Close()
@@ -81,18 +83,28 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 
 	input := bytes.NewBuffer(nil)
 
-	s.Add(1)
-	d, _ := NewDocker(ts.URL, nil)
-	err := d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")}, input)
+	s.Add(3)
+	d, err := NewDocker(ts.URL, &Environment{Repository: "foo"})
+	c.Assert(err, IsNil)
+
+	err = d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")}, input)
+	c.Assert(err, IsNil)
 	s.Wait()
 
-	c.Assert(err, Equals, nil)
 	c.Assert(files, HasLen, 2)
 	c.Assert(files["Dockerfile"], Equals, "FROM base\n")
 	c.Assert(files[path.Base(file)], Equals, "qux")
-	c.Assert(request.URL.Query().Get("t"), Equals, "image:qux")
-	c.Assert(request.URL.Query().Get("nocache"), Equals, "1")
-	c.Assert(request.URL.Query().Get("rm"), Equals, "1")
+	c.Assert(requests[0].URL.Query().Get("t"), Equals, "image:qux")
+	c.Assert(requests[0].URL.Query().Get("nocache"), Equals, "1")
+	c.Assert(requests[0].URL.Query().Get("rm"), Equals, "1")
+
+	c.Assert(requests[1].URL.Query().Get("tag"), Equals, "latest")
+	c.Assert(requests[1].URL.Query().Get("repo"), Equals, "foo")
+	c.Assert(requests[1].URL.Query().Get("force"), Equals, "1")
+
+	c.Assert(requests[2].URL.Query().Get("tag"), Equals, "qux")
+	c.Assert(requests[2].URL.Query().Get("repo"), Equals, "foo")
+	c.Assert(requests[2].URL.Query().Get("force"), Equals, "1")
 }
 
 func (s *CoreSuite) TestDocker_Run(c *C) (p *Project, m *testing.DockerServer, rev Revision) {

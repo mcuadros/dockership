@@ -34,6 +34,8 @@ A miscellaneous of configuration variables used across the whole tool.
 
 * `UseShortRevisions` (default: true): if it is false all the images and containers will be defined using full length revision names, instead the short ones.
 
+* `Repository` (default: dockership): this is the name of the repository used to tag your images. `<repository>/<image>`.
+
 * `EtcdServer` (multiple, optional): etcd server, needed for etcd variables at the Dockerfiles.
 
 
@@ -69,7 +71,7 @@ An environment is a logical group of any number of Docker servers. Dockership su
 * `Repository` (mandatory): Github repository SSH clone URL, the branch can be added to the end of the URL preceded of a `!` (eg.: `git@github.com:mcuadros/dockership.git!master`)
 * `Dockerfile` (default: Dockerfile): the path to the Dockerfile at the repository.
 * `RelatedRepositories` (optional, multiple): SSH clone URL to dependent repositories. (Link to more explanatory document)
-* `History` (default: 3): Number to old images you want to keep in each Docker server. 
+* `History` (default: 3): Number to old images you want to keep in each Docker server.
 * `NoCache` (optional): Avoid to use the Docker cache (like --no-cache at `docker build`)
 * `Port` (multiple, optional): container port to expose, format: `<host-addr>:<host-port>:<container-port>/<proto>` (like -p at `docker run`), additionaly the port can be configured just for one enviroment adding it to end of the port preceded by a `@` (eg: `2.2.2.2:80:80/tcp@live`)
 * `Restart` (optional, default: no): restart policy to apply when a container exits (no, on-failure[:max-retry], always)  (like --restart at `docker run`)

@@ -17,6 +17,8 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
+const LatestTag = "latest"
+
 type Docker struct {
 	endPoint string
 	env      *Environment
@@ -227,7 +229,27 @@ func (d *Docker) BuildImage(
 		OutputStream:   output,
 	}
 
-	return d.client.BuildImage(opts)
+	if err := d.client.BuildImage(opts); err != nil {
+		return err
+	}
+
+	return d.tagImage(image)
+}
+
+func (d *Docker) tagImage(image ImageId) error {
+	for _, tag := range []string{LatestTag, image.GetRevisionString()} {
+		err := d.client.TagImage(string(image), docker.TagImageOptions{
+			Force: true,
+			Repo:  d.env.Repository,
+			Tag:   tag,
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d *Docker) Run(p *Project, rev Revision) error {

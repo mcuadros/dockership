@@ -208,6 +208,7 @@ type Environment struct {
 	DockerEndPoints []string `gcfg:"DockerEndPoint"`
 	CertPath        string   `json:"-"`
 	EtcdServers     []string `gcfg:"EtcdServer"`
+	Repository      string
 	Name            string
 	Host            string `gcfg:"Host"`
 }

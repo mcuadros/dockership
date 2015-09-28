@@ -1,32 +1,47 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/coreos/go-etcd/etcd"
+	"golang.org/x/net/context"
+
+	etcd "github.com/coreos/etcd/client"
 )
 
 type Etcd struct {
-	machines []string
-	client   *etcd.Client
+	endPoints []string
+	client    etcd.Client
+	kAPI      etcd.KeysAPI
 }
 
-func NewEtcd(machines []string) *Etcd {
-	Debug("Connected to etcd", "machines", strings.Join(machines, ", "))
+func NewEtcd(endPoints []string) (*Etcd, error) {
+	Debug("Connected to etcd", "endPoints", strings.Join(endPoints, ", "))
 
-	return &Etcd{client: etcd.NewClient(machines), machines: machines}
+	client, err := etcd.New(etcd.Config{
+		Endpoints: endPoints,
+		Transport: etcd.DefaultTransport,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Etcd{
+		endPoints: endPoints,
+		client:    client,
+		kAPI:      etcd.NewKeysAPI(client),
+	}, nil
 }
 
 func (e *Etcd) Get(key string) (string, error) {
-	r, err := e.client.Get(key, false, false)
+	r, err := e.kAPI.Get(context.Background(), key, nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Error retrieving %q: %s", key, err)
 	}
 
 	if r.Node.Dir {
-		return "", errors.New(fmt.Sprintf("Key %q is a directory", key))
+		return "", fmt.Errorf("Key %q is a directory", key)
 	}
 
 	return r.Node.Value, err

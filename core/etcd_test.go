@@ -9,7 +9,9 @@ import (
 func (_ *CoreSuite) TestEtcd_Get(c *C) {
 	go startEtcdMockServer()
 
-	e := NewEtcd([]string{"http://127.0.0.1:3000/"})
+	e, err := NewEtcd([]string{"http://127.0.0.1:3000/"})
+	c.Assert(err, IsNil)
+
 	r, err := e.Get("foo")
 	c.Assert(err, Equals, nil)
 	c.Assert(r, Equals, "foofoo")
@@ -18,8 +20,10 @@ func (_ *CoreSuite) TestEtcd_Get(c *C) {
 func (_ *CoreSuite) TestEtcd_GetDir(c *C) {
 	go startEtcdMockServer()
 
-	e := NewEtcd([]string{"http://127.0.0.1:3000/"})
-	_, err := e.Get("dir")
+	e, err := NewEtcd([]string{"http://127.0.0.1:3000/"})
+	c.Assert(err, IsNil)
+
+	_, err = e.Get("dir")
 	c.Assert(err, ErrorMatches, "Key \"dir\" is a directory")
 }
 

@@ -58,7 +58,11 @@ func (d *Dockerfile) resolveEtcdVariables(result []byte) []byte {
 		return result
 	}
 
-	etcd := NewEtcd(d.environment.EtcdServers)
+	etcd, err := NewEtcd(d.environment.EtcdServers)
+	if err != nil {
+		Warning("Unable to connect to etcd", "err", err, "environment", d.environment.Name)
+	}
+
 	for _, m := range etcdVars.FindAllSubmatch(result, -1) {
 		val, err := d.getEtcdValue(etcd, m[1])
 		if err == nil {

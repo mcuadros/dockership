@@ -1,7 +1,6 @@
 package core
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -114,7 +113,7 @@ func (g *Github) doGetFileContent(vcs *VCSInfo, commit Commit, file string) ([]b
 	}
 
 	if f == nil {
-		return nil, errors.New(fmt.Sprintf("Unable to find %q file", file))
+		return nil, fmt.Errorf("Unable to find %q file", file)
 	}
 
 	return f.Decode()

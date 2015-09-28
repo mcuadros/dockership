@@ -217,9 +217,9 @@ func (s *CoreSuite) TestDocker_Clean(c *C) {
 	li, _ = docker.ListImages(p)
 	c.Assert(li, HasLen, 3)
 
-	c.Assert(li[0].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "2")
-	c.Assert(li[1].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "3")
-	c.Assert(li[2].GetRepoTagsAsImageId()[0].GetRevisionString(), Equals, "4")
+	c.Assert(li[0].GetRepoTagsAsImageID()[0].GetRevisionString(), Equals, "2")
+	c.Assert(li[1].GetRepoTagsAsImageID()[0].GetRevisionString(), Equals, "3")
+	c.Assert(li[2].GetRepoTagsAsImageID()[0].GetRevisionString(), Equals, "4")
 
 	p.History = -10
 	err = docker.Clean(p)

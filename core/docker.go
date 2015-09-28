@@ -87,13 +87,13 @@ func (d *Docker) cleanContainers(p *Project) error {
 	Debug("Cleaning containers", "project", p, "count", len(l), "end-point", d.endPoint)
 	for _, c := range l {
 		if c.IsRunning() {
-			Debug("Stoping container and image", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
+			Debug("Stoping container and image", "project", p, "container", c.GetShortID(), "end-point", d.endPoint)
 			if err := d.killContainer(c); err != nil {
 				return err
 			}
 		}
 
-		Debug("Removing container", "project", p, "container", c.GetShortId(), "end-point", d.endPoint)
+		Debug("Removing container", "project", p, "container", c.GetShortID(), "end-point", d.endPoint)
 		if err := d.removeContainer(c); err != nil {
 			return err
 		}
@@ -166,10 +166,10 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 		return nil, err
 	}
 
-	r := make([]*Container, 0)
+	var r []*Container
 	for _, c := range l {
 		container := &Container{
-			Image:          ImageId(c.Image),
+			Image:          ImageID(c.Image),
 			APIContainers:  c,
 			DockerEndPoint: d.endPoint,
 		}
@@ -193,7 +193,7 @@ func (d *Docker) ListImages(p *Project) ([]*Image, error) {
 		return nil, err
 	}
 
-	r := make([]*Image, 0)
+	var r []*Image
 	for _, i := range l {
 		image := &Image{
 			APIImages:      i,
@@ -236,7 +236,7 @@ func (d *Docker) BuildImage(
 	return d.tagImage(image)
 }
 
-func (d *Docker) tagImage(image ImageId) error {
+func (d *Docker) tagImage(image ImageID) error {
 	for _, tag := range []string{LatestTag, image.GetRevisionString()} {
 		err := d.client.TagImage(string(image), docker.TagImageOptions{
 			Force: true,
@@ -262,7 +262,7 @@ func (d *Docker) Run(p *Project, rev Revision) error {
 	Info("Running new container",
 		"project", p,
 		"revision", rev.GetShort(),
-		"container", c.GetShortId(),
+		"container", c.GetShortID(),
 		"end-point", d.endPoint,
 	)
 
@@ -273,16 +273,16 @@ func (d *Docker) Run(p *Project, rev Revision) error {
 	return d.restartLinkedContainers(p)
 }
 
-func (d *Docker) getImageName(p *Project, rev Revision) ImageId {
+func (d *Docker) getImageName(p *Project, rev Revision) ImageID {
 	c := rev.String()
 	if p.UseShortRevisions {
 		c = rev.GetShort()
 	}
 
-	return ImageId(fmt.Sprintf("%s:%s", p.Name, c))
+	return ImageID(fmt.Sprintf("%s:%s", p.Name, c))
 }
 
-func (d *Docker) createContainer(p *Project, image ImageId) (*Container, error) {
+func (d *Docker) createContainer(p *Project, image ImageID) (*Container, error) {
 	c, err := d.client.CreateContainer(docker.CreateContainerOptions{
 		Name: p.Name,
 		Config: &docker.Config{
@@ -318,7 +318,7 @@ func (d *Docker) startContainer(p *Project, c *Container) error {
 }
 
 func (d *Docker) formatLinks(links map[string]*Link) []string {
-	r := make([]string, 0)
+	var r []string
 	for _, link := range links {
 		r = append(r, link.String())
 	}
@@ -349,7 +349,7 @@ func (d *Docker) formatRestartPolicy(restart string) (policy docker.RestartPolic
 		return
 	}
 
-	err = errors.New(fmt.Sprintf("Malformed restart policy %q", restart))
+	err = fmt.Errorf("Malformed restart policy %q", restart)
 	return
 }
 
@@ -382,7 +382,7 @@ func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBin
 	p3 := strings.SplitN(p2[0], ":", 3)
 
 	if len(p2) != 2 || len(p3) != 3 {
-		err = errors.New(fmt.Sprintf("Malformed port %q", port))
+		err = fmt.Errorf("Malformed port %q", port)
 		return
 	}
 
@@ -460,10 +460,10 @@ func (d *Docker) restartLinkedContainers(p *Project) error {
 		}
 
 		for _, lc := range list {
-			Info("Restarting linked container", "project", linked, "container", lc.GetShortId())
+			Info("Restarting linked container", "project", linked, "container", lc.GetShortID())
 			if err := d.restartContainer(linked, lc); err != nil {
 				failed = true
-				Error("Unable to restart container", "project", linked, "container", lc.GetShortId())
+				Error("Unable to restart container", "project", linked, "container", lc.GetShortID())
 			}
 		}
 	}

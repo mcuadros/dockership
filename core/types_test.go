@@ -72,14 +72,14 @@ func (s *CoreSuite) TestRevision_String(c *C) {
 }
 
 func (s *CoreSuite) TestImageId_IsCommit(c *C) {
-	i := ImageId("foo/bar:bar")
+	i := ImageID("foo/bar:bar")
 
 	c.Assert(i.IsRevision(Revision{"foo": "bar"}), Equals, true)
 	c.Assert(i.IsRevision(Revision{"foo": "qux"}), Equals, false)
 }
 
 func (s *CoreSuite) TestImageId_BelongsTo(c *C) {
-	i := ImageId("foo:qux")
+	i := ImageID("foo:qux")
 
 	c.Assert(i.BelongsTo(&Project{
 		Name: "foo",
@@ -91,7 +91,7 @@ func (s *CoreSuite) TestImageId_BelongsTo(c *C) {
 }
 
 func (s *CoreSuite) TestImageId_GetRevisionString(c *C) {
-	i := ImageId("foo/bar:qux")
+	i := ImageID("foo/bar:qux")
 
 	c.Assert(i.GetRevisionString(), Equals, "qux")
 }
@@ -113,7 +113,7 @@ func (s *CoreSuite) TestImage_BelongsTo(c *C) {
 }
 
 func (s *CoreSuite) TestImageId_GetProjectString(c *C) {
-	i := ImageId("foo/bar:qux")
+	i := ImageID("foo/bar:qux")
 
 	c.Assert(i.GetProjectString(), Equals, "foo/bar")
 }
@@ -133,13 +133,13 @@ func (s *CoreSuite) TestContainer_IsRunningDown(c *C) {
 func (s *CoreSuite) TestContainer_GetShortIdLong(c *C) {
 	co := Container{APIContainers: docker.APIContainers{ID: "123456789123456789"}}
 
-	c.Assert(co.GetShortId(), Equals, "123456789123")
+	c.Assert(co.GetShortID(), Equals, "123456789123")
 }
 
 func (s *CoreSuite) TestContainer_GetShortId(c *C) {
 	co := Container{APIContainers: docker.APIContainers{ID: "123456"}}
 
-	c.Assert(co.GetShortId(), Equals, "123456")
+	c.Assert(co.GetShortID(), Equals, "123456")
 }
 
 func (s *CoreSuite) TestContainer_GetPortsString(c *C) {
@@ -169,7 +169,7 @@ func (s *CoreSuite) TestContainer_BelongsTo(c *C) {
 
 func (s *CoreSuite) TestContainer_BelongsToByImage(c *C) {
 	co := Container{
-		Image: ImageId("foo:bar"),
+		Image: ImageID("foo:bar"),
 		APIContainers: docker.APIContainers{
 			Names: []string{"/qux"},
 		},

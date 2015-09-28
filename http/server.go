@@ -18,10 +18,10 @@ var configFile string
 
 func Start(version, build string) {
 	core.Info("Starting HTTP daemon", "version", version, "build", build)
-	flag.StringVar(&configFile, "config", config.DEFAULT_CONFIG, "config file")
+	flag.StringVar(&configFile, "config", config.DefaultConfig, "config file")
 	flag.Parse()
 
-	s := &server{serverId: fmt.Sprintf("dockership %s, build %s", version, build)}
+	s := &server{serverID: fmt.Sprintf("dockership %s, build %s", version, build)}
 	s.readConfig(configFile)
 	s.configure()
 	s.configStaticAssets()
@@ -30,7 +30,7 @@ func Start(version, build string) {
 }
 
 type server struct {
-	serverId string
+	serverID string
 	sockjs   *SockJS
 	mux      *mux.Router
 	oauth    *OAuth
@@ -164,7 +164,7 @@ func (s *server) json(w http.ResponseWriter, code int, response interface{}) {
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if s.oauth.Handler(w, r) {
 		core.Debug("Handling request", "url", r.URL)
-		w.Header().Set("Server", s.serverId)
+		w.Header().Set("Server", s.serverID)
 		s.mux.ServeHTTP(w, r)
 	}
 }

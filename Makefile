@@ -1,6 +1,6 @@
 # Package configuration
 PROJECT = dockership
-COMMANDS = dockership dockershipd
+COMMANDS = dockershipd
 DEPENDENCIES = \
 github.com/jteeuwen/go-bindata/... \
 
@@ -73,7 +73,5 @@ $(PACKAGES):
 	cd  $(BUILD_PATH) && tar -cvzf $(BUILD_PATH)/$(PROJECT)_$(VERSION)_$@.tar.gz $(PROJECT)_$(VERSION)_$@/
 
 clean:
-	echo $(VERSION)
 	rm -rf $(BUILD_PATH)
-
 	$(GOCLEAN) .

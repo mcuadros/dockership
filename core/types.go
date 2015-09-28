@@ -12,7 +12,7 @@ import (
 	"github.com/sourcegraph/go-vcsurl"
 )
 
-const DEFAULT_BRANCH = "master"
+const DefaultBranch = "master"
 
 type VCS string
 type VCSInfo struct {
@@ -33,7 +33,7 @@ func (v VCS) Info() *VCSInfo {
 
 func (v VCS) parse() (*VCSInfo, error) {
 	origin := string(v)
-	branch := DEFAULT_BRANCH
+	branch := DefaultBranch
 	data := strings.SplitN(origin, "!", 2)
 	if len(data) == 2 {
 		branch = data[1]
@@ -54,7 +54,7 @@ func (r Revision) Get() string {
 		}
 	}
 
-	s := make([]string, 0)
+	var s []string
 	for _, commit := range r {
 		s = append(s, string(commit))
 	}
@@ -77,23 +77,23 @@ func (r Revision) String() string {
 	return r.Get()
 }
 
-type ImageId string
+type ImageID string
 
-func (i ImageId) BelongsTo(p *Project) bool {
+func (i ImageID) BelongsTo(p *Project) bool {
 	return strings.HasPrefix(string(i), p.Name)
 }
 
-func (i ImageId) IsRevision(rev Revision) bool {
+func (i ImageID) IsRevision(rev Revision) bool {
 	s := strings.Split(string(i), ":")
 	return strings.HasPrefix(s[1], rev.GetShort())
 }
 
-func (i ImageId) GetRevisionString() string {
+func (i ImageID) GetRevisionString() string {
 	tmp := strings.SplitN(string(i), ":", 2)
 	return tmp[1]
 }
 
-func (i ImageId) GetProjectString() string {
+func (i ImageID) GetProjectString() string {
 	tmp := strings.SplitN(string(i), ":", 2)
 	return tmp[0]
 }
@@ -113,10 +113,10 @@ func (i Image) BelongsTo(p *Project) bool {
 	return false
 }
 
-func (i Image) GetRepoTagsAsImageId() []ImageId {
-	r := make([]ImageId, 0)
+func (i Image) GetRepoTagsAsImageID() []ImageID {
+	var r []ImageID
 	for _, tag := range i.RepoTags {
-		r = append(r, ImageId(tag))
+		r = append(r, ImageID(tag))
 	}
 
 	return r
@@ -132,7 +132,7 @@ var statusUp = regexp.MustCompile("^Up (.*)")
 
 type Container struct {
 	DockerEndPoint string
-	Image          ImageId
+	Image          ImageID
 	docker.APIContainers
 }
 
@@ -152,7 +152,7 @@ func (c *Container) GetPortsString() string {
 	return strings.Join(result, ", ")
 }
 
-func (c *Container) GetShortId() string {
+func (c *Container) GetShortID() string {
 	shortLen := 12
 	if len(c.ID) < shortLen {
 		shortLen = len(c.ID)

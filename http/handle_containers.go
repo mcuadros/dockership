@@ -26,8 +26,7 @@ func (s *server) HandleContainers(msg Message, session sockjs.Session) {
 }
 
 func (s *server) GetContainers(project string) []*ContainersRecord {
-	result := make([]*ContainersRecord, 0)
-
+	var result []*ContainersRecord
 	for name, p := range s.config.Projects {
 		if project != "" && project != name {
 			continue

@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -144,7 +143,7 @@ func (p *Project) Test(environment string) (*ProjectDeployResult, error) {
 	result := &ProjectDeployResult{ExecutionResponse: response}
 
 	if response.Failed {
-		return result, errors.New(fmt.Sprintf("Test script %q failed", p.TestCommand))
+		return result, fmt.Errorf("Test script %q failed", p.TestCommand)
 	}
 
 	return result, nil
@@ -158,8 +157,8 @@ type ProjectStatus struct {
 }
 
 func (p *Project) Status() ([]*ProjectStatus, []error) {
-	e := make([]error, 0)
-	r := make([]*ProjectStatus, 0)
+	var e []error
+	var r []*ProjectStatus
 	for _, env := range p.Environments {
 		if s, err := p.StatusByEnvironment(env); err != nil {
 			e = append(e, err...)
@@ -173,25 +172,26 @@ func (p *Project) Status() ([]*ProjectStatus, []error) {
 
 func (p *Project) StatusByEnvironment(e *Environment) (*ProjectStatus, []error) {
 	s := &ProjectStatus{Environment: e}
-
 	c := NewGithub(p.GithubToken)
-	if rev, err := c.GetLastRevision(p); err != nil {
+
+	rev, err := c.GetLastRevision(p)
+	if err != nil {
 		return nil, []error{err}
-	} else {
-		s.LastRevision = rev
 	}
+
+	s.LastRevision = rev
 
 	d, err := NewDockerGroup(e)
 	if err != nil {
 		return nil, []error{err}
 	}
 
-	if l, err := d.ListContainers(p); len(err) != 0 {
-		return nil, err
-	} else {
-		s.Containers = l
+	l, errs := d.ListContainers(p)
+	if len(errs) != 0 {
+		return nil, errs
 	}
 
+	s.Containers = l
 	s.RunningContainers = make([]*Container, 0)
 	for _, c := range s.Containers {
 		if c.IsRunning() {
@@ -203,8 +203,8 @@ func (p *Project) StatusByEnvironment(e *Environment) (*ProjectStatus, []error) 
 }
 
 func (p *Project) ListContainers() ([]*Container, []error) {
-	e := make([]error, 0)
-	r := make([]*Container, 0)
+	var e []error
+	var r []*Container
 	for _, env := range p.Environments {
 		d, err := NewDockerGroup(env)
 		if err != nil {
@@ -222,8 +222,8 @@ func (p *Project) ListContainers() ([]*Container, []error) {
 }
 
 func (p *Project) ListImages() ([]*Image, []error) {
-	e := make([]error, 0)
-	r := make([]*Image, 0)
+	var e []error
+	var r []*Image
 	for _, env := range p.Environments {
 		d, err := NewDockerGroup(env)
 		if err != nil {

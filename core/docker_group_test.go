@@ -81,7 +81,7 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	c.Assert(errors, HasLen, 0)
 	c.Assert(containers, HasLen, 5)
 	for _, r := range containers {
-		c.Assert(r.Image, Equals, ImageId("foo:qux"))
+		c.Assert(r.Image, Equals, ImageID("foo:qux"))
 	}
 
 	images, errors := dg.ListImages(p)

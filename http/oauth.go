@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -16,8 +15,8 @@ import (
 )
 
 const (
-	CODE_REDIRECT = 302
-	KEY_TOKEN     = "oauth2_token"
+	CodeRedirect = 302
+	KeyToken     = "oauth2_token"
 )
 
 type User struct {
@@ -38,8 +37,8 @@ type OAuth struct {
 }
 
 func NewOAuth(config *config.Config) *OAuth {
-	authUrl := "https://github.com/login/oauth/authorize"
-	tokenUrl := "https://github.com/login/oauth/access_token"
+	authURL := "https://github.com/login/oauth/authorize"
+	tokenURL := "https://github.com/login/oauth/access_token"
 
 	return &OAuth{
 		PathLogin:    "/login",
@@ -51,8 +50,8 @@ func NewOAuth(config *config.Config) *OAuth {
 			ClientSecret: config.HTTP.GithubSecret,
 			Scopes:       []string{"read:org"},
 			Endpoint: oauth2.Endpoint{
-				AuthURL:  authUrl,
-				TokenURL: tokenUrl,
+				AuthURL:  authURL,
+				TokenURL: tokenURL,
 			},
 		},
 		Config: config,
@@ -90,7 +89,7 @@ func (o *OAuth) Handler(w http.ResponseWriter, r *http.Request) bool {
 
 	if failed {
 		next := url.QueryEscape(r.URL.RequestURI())
-		http.Redirect(w, r, o.PathLogin+"?next="+next, CODE_REDIRECT)
+		http.Redirect(w, r, o.PathLogin+"?next="+next, CodeRedirect)
 		return false
 	}
 
@@ -105,16 +104,16 @@ func (o *OAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Pass the error message, or allow dev to provide its own
 		// error handler.
-		http.Redirect(w, r, o.PathError, CODE_REDIRECT)
+		http.Redirect(w, r, o.PathError, CodeRedirect)
 		return
 	}
 
 	o.setToken(w, r, tok)
-	http.Redirect(w, r, next, CODE_REDIRECT)
+	http.Redirect(w, r, next, CodeRedirect)
 }
 
 func (s *OAuth) setToken(w http.ResponseWriter, r *http.Request, t *oauth2.Token) {
-	session, _ := s.store.Get(r, KEY_TOKEN)
+	session, _ := s.store.Get(r, KeyToken)
 	val, _ := json.Marshal(t)
 	session.Values["token"] = val
 	session.Save(r, w)
@@ -127,30 +126,31 @@ func (o *OAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		if next == "" {
 			next = "/"
 		}
-		http.Redirect(w, r, o.OAuthConfig.AuthCodeURL(next), CODE_REDIRECT)
+		http.Redirect(w, r, o.OAuthConfig.AuthCodeURL(next), CodeRedirect)
 		return
 	}
 
 	// No need to login, redirect to the next page.
-	http.Redirect(w, r, next, CODE_REDIRECT)
+	http.Redirect(w, r, next, CodeRedirect)
 }
 
 func (o *OAuth) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	next := extractPath(r.URL.Query().Get("next"))
 	//s.Delete(KEY_TOKEN)
-	http.Redirect(w, r, next, CODE_REDIRECT)
+	http.Redirect(w, r, next, CodeRedirect)
 }
 
 func (s *OAuth) getToken(r *http.Request) *oauth2.Token {
-	session, _ := s.store.Get(r, KEY_TOKEN)
-	if raw, ok := session.Values["token"]; !ok {
+	session, _ := s.store.Get(r, KeyToken)
+	raw, ok := session.Values["token"]
+	if !ok {
 		return nil
-	} else {
-		var tok oauth2.Token
-		json.Unmarshal(raw.([]byte), &tok)
-
-		return &tok
 	}
+
+	var tok oauth2.Token
+	json.Unmarshal(raw.([]byte), &tok)
+
+	return &tok
 }
 
 func (o *OAuth) getValidUser(token *oauth2.Token) (*User, error) {
@@ -218,9 +218,7 @@ func (o *OAuth) validateGithubOrganization(c *github.Client, u *github.User) err
 	}
 
 	if !m {
-		return errors.New(fmt.Sprintf(
-			"User %q should be member of %q", *u.Login, org,
-		))
+		return fmt.Errorf("User %q should be member of %q", *u.Login, org)
 	}
 
 	return nil
@@ -237,9 +235,7 @@ func (o *OAuth) validateGithubUser(c *github.Client, u *github.User) error {
 		}
 	}
 
-	return errors.New(fmt.Sprintf(
-		"User %q not allowed, not in the access list.", *u.Login,
-	))
+	return fmt.Errorf("User %q not allowed, not in the access list.", *u.Login)
 }
 
 func extractPath(next string) string {

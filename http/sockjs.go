@@ -30,9 +30,9 @@ func NewSockJS() *SockJS {
 	}
 }
 
-func (s *SockJS) Send(event, data interface{}, isJson bool) {
+func (s *SockJS) Send(event, data interface{}, isJSON bool) {
 	var result []byte
-	if isJson {
+	if isJSON {
 		result = data.([]byte)
 	} else {
 		var err error

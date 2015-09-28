@@ -53,8 +53,8 @@ func (d *DockerGroup) ListContainers(p *Project) ([]*Container, []error) {
 		return &listContainersResult{c, e}
 	}
 
-	errors := make([]error, 0)
-	containers := make([]*Container, 0)
+	var errors []error
+	var containers []*Container
 	for _, e := range d.batchInterfaceResult(f) {
 		l := e.(*listContainersResult)
 		if l.err != nil {
@@ -77,8 +77,8 @@ func (d *DockerGroup) ListImages(p *Project) ([]*Image, []error) {
 		return &listImagesResult{c, e}
 	}
 
-	errors := make([]error, 0)
-	images := make([]*Image, 0)
+	var errors []error
+	var images []*Image
 	for _, e := range d.batchInterfaceResult(f) {
 		l := e.(*listImagesResult)
 		if l.err != nil {
@@ -106,7 +106,7 @@ func (d *DockerGroup) Run(p *Project, rev Revision) []error {
 type errorResult struct{ err error }
 
 func (d *DockerGroup) batchErrorResult(f func(docker *Docker) interface{}) []error {
-	r := make([]error, 0)
+	var r []error
 	for _, e := range d.batchInterfaceResult(f) {
 		if err := e.(*errorResult).err; err != nil {
 			r = append(r, err)
@@ -130,7 +130,7 @@ func (d *DockerGroup) batchInterfaceResult(f func(docker *Docker) interface{}) [
 	}
 	d.Wait()
 
-	r := make([]interface{}, 0)
+	var r []interface{}
 	for i := 0; i < count; i++ {
 		r = append(r, <-c)
 	}

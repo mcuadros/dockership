@@ -25,6 +25,10 @@ GOGET = $(GOCMD) get
 GOTEST = $(GOCMD) test
 BINDATA = go-bindata
 
+ifneq ($(origin TRAVIS_TAG), undefined)
+	VERSION := $(TRAVIS_TAG)
+endif
+
 .PHONY: dependencies $(DEPENDENCIES) packages $(PACKAGES)
 
 all: test build

@@ -41,6 +41,10 @@ module.exports = [
 
       for (var i = running.length - 1; i >= 0; i--) {
         var tmp = running[i].Image.split(':');
+        if (tmp.length < 2) {
+            continue;
+        }
+
         if (revision.slice(0, tmp[1].length) != tmp[1]) {
           outdated++;
         }

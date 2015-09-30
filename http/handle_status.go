@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/mcuadros/dockership/core"
 
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
@@ -49,5 +51,6 @@ func (s *server) GetStatus(project string) map[string]*StatusResult {
 		result[p.Name] = record
 	}
 
+	fmt.Println("terminado", result)
 	return result
 }

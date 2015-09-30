@@ -6,9 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -185,10 +182,9 @@ func (d *Docker) ListContainers(p *Project) ([]*Container, error) {
 }
 
 func (d *Docker) ListImages(p *Project) ([]*Image, error) {
-	Debug("Retrieving current containers", "project", p, "end-point", d.endPoint)
+	Debug("Retrieving current images", "project", p, "end-point", d.endPoint)
 
 	l, err := d.client.ListImages(docker.ListImagesOptions{All: true})
-
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +212,7 @@ func (d *Docker) BuildImage(
 	Debug("Building image", "project", p, "revision", rev, "end-point", d.endPoint)
 
 	input := bytes.NewBuffer(nil)
-	if err := d.buildTar(p, dockerfile.Get(), input); err != nil {
+	if err := d.buildTar(p, dockerfile, input); err != nil {
 		return err
 	}
 
@@ -395,52 +391,36 @@ func (d *Docker) formatPort(port string) (guest docker.Port, host docker.PortBin
 	return
 }
 
-func (d *Docker) buildTar(p *Project, dockerfile []byte, buf *bytes.Buffer) error {
-	t := time.Now()
-
+func (d *Docker) buildTar(p *Project, df *Dockerfile, buf *bytes.Buffer) error {
 	tr := tar.NewWriter(buf)
-	tr.WriteHeader(&tar.Header{
-		Name:       "Dockerfile",
-		Size:       int64(len(dockerfile)),
-		ModTime:    t,
-		AccessTime: t,
-		ChangeTime: t,
-	})
+	defer tr.Close()
 
-	if _, err := tr.Write(dockerfile); err != nil {
+	if err := d.addDockerFileToTar(tr, df); err != nil {
 		return err
 	}
 
-	for _, file := range p.Files {
-		if err := d.addFileToTar(file, tr); err != nil {
+	for _, f := range df.Files {
+		if err := d.addFileToTar(tr, f.Name, f.Content); err != nil {
 			return err
 		}
 	}
 
-	tr.Close()
 	return nil
 }
 
-func (d *Docker) addFileToTar(file string, tr *tar.Writer) error {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
+func (d *Docker) addDockerFileToTar(tr *tar.Writer, df *Dockerfile) error {
+	return d.addFileToTar(tr, "Dockerfile", df.Get())
+}
 
-	fInfo, err := os.Lstat(file)
-	if err != nil {
-		return err
-	}
-
-	h, err := tar.FileInfoHeader(fInfo, "")
-	h.Name = path.Base(file)
-	if err != nil {
-		return err
-	}
-
-	if err := tr.WriteHeader(h); err != nil {
-		return err
-	}
+func (d *Docker) addFileToTar(tr *tar.Writer, file string, content []byte) error {
+	t := time.Now()
+	tr.WriteHeader(&tar.Header{
+		Name:       file,
+		Size:       int64(len(content)),
+		ModTime:    t,
+		AccessTime: t,
+		ChangeTime: t,
+	})
 
 	if _, err := tr.Write(content); err != nil {
 		return err

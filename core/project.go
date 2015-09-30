@@ -67,6 +67,10 @@ func (p *Project) Deploy(environment string, output io.Writer, force bool) []err
 	}
 
 	file := NewDockerfile(blob, p, r, e)
+	file.Files, err = c.GetFiles(p)
+	if err != nil {
+		return []error{err}
+	}
 
 	errs = d.Deploy(p, r, file, output, force)
 	p.afterDeploy(prevStatus, e, errs)

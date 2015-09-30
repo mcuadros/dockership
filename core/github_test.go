@@ -72,6 +72,24 @@ func (s *CoreSuite) TestGithub_GetDockerFile(c *C) {
 	c.Assert(string(content), Equals, "build\nhttp/bindata.go\n")
 }
 
+func (s *CoreSuite) TestGithub_GetFiles(c *C) {
+	if !*githubFlag {
+		c.Skip("-github not provided")
+	}
+
+	p := &Project{
+		Repository: "git@github.com:mcuadros/dockership.git",
+		Files:      []string{".gitignore"},
+	}
+
+	g := NewGithub(githubToken)
+	files, err := g.GetFiles(p)
+	c.Assert(err, Equals, nil)
+	c.Assert(files, HasLen, 1)
+	c.Assert(string(files[0].Name), Equals, ".gitignore")
+	c.Assert(string(files[0].Content), Equals, "build\nhttp/bindata.go\n")
+}
+
 func (s *CoreSuite) TestGithub_GetDockerFileNotFound(c *C) {
 	if !*githubFlag {
 		c.Skip("-github not provided")

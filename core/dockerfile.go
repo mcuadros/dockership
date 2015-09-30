@@ -7,15 +7,21 @@ import (
 )
 
 type Dockerfile struct {
-	blob        []byte
+	content     []byte
 	project     *Project
 	revision    Revision
 	environment *Environment
+	Files       []*File
 }
 
-func NewDockerfile(blob []byte, p *Project, r Revision, e *Environment) *Dockerfile {
+type File struct {
+	Name    string
+	Content []byte
+}
+
+func NewDockerfile(content []byte, p *Project, r Revision, e *Environment) *Dockerfile {
 	return &Dockerfile{
-		blob:        blob,
+		content:     content,
 		project:     p,
 		revision:    r,
 		environment: e,
@@ -23,7 +29,7 @@ func NewDockerfile(blob []byte, p *Project, r Revision, e *Environment) *Dockerf
 }
 
 func (d *Dockerfile) Get() []byte {
-	result := d.blob
+	result := d.content
 	result = d.resolveInfoVariables(result)
 	result = d.resolveEtcdVariables(result)
 

@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"path"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
@@ -33,7 +32,7 @@ func (s *CoreSuite) TestDocker_Deploy(c *C) {
 
 	d, _ := NewDocker(m.URL(), nil)
 	rev := Revision{"foo": "bar"}
-	err := d.Deploy(p, rev, &Dockerfile{blob: []byte("FROM base\n")}, input, false)
+	err := d.Deploy(p, rev, &Dockerfile{content: []byte("FROM base\n")}, input, false)
 	c.Assert(err, Equals, nil)
 
 	l, _ := d.ListContainers(p)
@@ -73,12 +72,10 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 
 	defer ts.Close()
 
-	file := writeRandomFile("qux")
 	p := &Project{
 		Name:       "image",
 		Repository: "git@github.com:foo/bar.git",
 		NoCache:    true,
-		Files:      []string{file},
 	}
 
 	input := bytes.NewBuffer(nil)
@@ -87,13 +84,12 @@ func (s *CoreSuite) TestDocker_BuildImage(c *C) {
 	d, err := NewDocker(ts.URL, nil)
 	c.Assert(err, IsNil)
 
-	err = d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{blob: []byte("FROM base\n")}, input)
+	err = d.BuildImage(p, Revision{"key": "qux"}, &Dockerfile{content: []byte("FROM base\n")}, input)
 	c.Assert(err, IsNil)
 	s.Wait()
 
-	c.Assert(files, HasLen, 2)
+	c.Assert(files, HasLen, 1)
 	c.Assert(files["Dockerfile"], Equals, "FROM base\n")
-	c.Assert(files[path.Base(file)], Equals, "qux")
 	c.Assert(requests[0].URL.Query().Get("t"), Equals, "image:qux")
 	c.Assert(requests[0].URL.Query().Get("nocache"), Equals, "1")
 	c.Assert(requests[0].URL.Query().Get("rm"), Equals, "1")

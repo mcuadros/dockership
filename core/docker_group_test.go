@@ -18,7 +18,7 @@ func (s *CoreSuite) TestDockerGroup_BuildImage(c *C) {
 	p := &Project{Repository: "git@github.com:foo/bar.git", UseShortRevisions: true}
 	r := Revision{"foo/bar": Commit("qux")}
 	input := bytes.NewBuffer(nil)
-	result := dg.BuildImage(p, r, &Dockerfile{blob: []byte("")}, input)
+	result := dg.BuildImage(p, r, &Dockerfile{content: []byte("")}, input)
 
 	c.Assert(result, HasLen, 5)
 	for _, r := range result {
@@ -73,7 +73,7 @@ func (s *CoreSuite) TestDockerGroup_DeployListContainersAndListImages(c *C) {
 	r := Revision{"foo/bar": Commit("qux")}
 
 	input := bytes.NewBuffer(nil)
-	errors := dg.Deploy(p, r, &Dockerfile{blob: []byte("")}, input, true)
+	errors := dg.Deploy(p, r, &Dockerfile{content: []byte("")}, input, true)
 	c.Assert(errors, HasLen, 0)
 	c.Assert(string(input.Bytes()), HasLen, 255)
 

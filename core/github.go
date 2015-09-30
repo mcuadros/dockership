@@ -41,6 +41,27 @@ func (g *Github) GetDockerFile(p *Project) (content []byte, err error) {
 	return
 }
 
+func (g *Github) GetFiles(p *Project) (files []*File, err error) {
+	info := p.Repository.Info()
+	commit, err := g.doGetLastCommit(info)
+	if err != nil {
+		return
+	}
+
+	for _, f := range p.Files {
+		file := &File{Name: f}
+		file.Content, err = g.doGetFileContent(info, commit, f)
+
+		if err != nil {
+			return
+		}
+
+		files = append(files, file)
+	}
+
+	return
+}
+
 func (g *Github) GetLastCommit(p *Project) (Commit, error) {
 	return g.doGetLastCommit(p.Repository.Info())
 }

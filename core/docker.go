@@ -91,7 +91,10 @@ func (d *Docker) cleanContainers(p *Project) error {
 			}
 		}
 
-		d.waitForGracefulShutdown(c)
+		err := d.waitForGracefulShutdown(c)
+		if err != nil {
+			Error(err.Error(), "project", p, "container", c.GetShortID())
+		}
 
 		Debug("Removing container", "project", p, "container", c.GetShortID(), "end-point", d.endPoint)
 		if err := d.removeContainer(c); err != nil {
@@ -457,12 +460,17 @@ func (d *Docker) restartLinkedContainers(p *Project) error {
 	return nil
 }
 
-func (d *Docker) waitForGracefulShutdown(c * Container) {
+func (d *Docker) waitForGracefulShutdown(c * Container) error {
 	timedOut := 0
-	for c.IsRunning() && timedOut >= GracefulShutdownTime {
+	isStillRunning := false
+	for isStillRunning = c.IsRunning(); isStillRunning && timedOut >= GracefulShutdownTime; {
 		<-time.After(time.Second)
 		timedOut++
 	}
+	if isStillRunning {
+		return errors.New("Graceful shutdown timed out on container")
+	}
+	return nil
 }
 
 func (d *Docker) restartContainer(p *Project, c *Container) error {
@@ -474,7 +482,10 @@ func (d *Docker) restartContainer(p *Project, c *Container) error {
 		return err
 	}
 
-	d.waitForGracefulShutdown(c)
+	err := d.waitForGracefulShutdown(c)
+	if err != nil {
+		Error(err.Error(), "project", p, "container", c.GetShortID())
+	}
 
 	if err := d.startContainer(p, c); err != nil {
 		return err

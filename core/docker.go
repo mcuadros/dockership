@@ -15,6 +15,7 @@ import (
 )
 
 const LatestTag = "latest"
+const GracefulShutdownTime = 20
 
 type Docker struct {
 	endPoint string
@@ -85,10 +86,12 @@ func (d *Docker) cleanContainers(p *Project) error {
 	for _, c := range l {
 		if c.IsRunning() {
 			Debug("Stoping container and image", "project", p, "container", c.GetShortID(), "end-point", d.endPoint)
-			if err := d.killContainer(c); err != nil {
+			if err := d.stopContainer(c); err != nil {
 				return err
 			}
 		}
+
+		d.waitForGracefulShutdown(c)
 
 		Debug("Removing container", "project", p, "container", c.GetShortID(), "end-point", d.endPoint)
 		if err := d.removeContainer(c); err != nil {
@@ -99,9 +102,8 @@ func (d *Docker) cleanContainers(p *Project) error {
 	return nil
 }
 
-func (d *Docker) killContainer(c *Container) error {
-	kopts := docker.KillContainerOptions{ID: c.ID}
-	if err := d.client.KillContainer(kopts); err != nil {
+func (d *Docker) stopContainer(c *Container) error {
+	if err := d.client.StopContainer(c.ID, GracefulShutdownTime); err != nil {
 		return err
 	}
 
@@ -455,14 +457,24 @@ func (d *Docker) restartLinkedContainers(p *Project) error {
 	return nil
 }
 
+func (d *Docker) waitForGracefulShutdown(c * Container) {
+	timedOut := 0
+	for c.IsRunning() && timedOut >= GracefulShutdownTime {
+		<-time.After(time.Second)
+		timedOut++
+	}
+}
+
 func (d *Docker) restartContainer(p *Project, c *Container) error {
 	if !c.IsRunning() {
 		return nil
 	}
 
-	if err := d.killContainer(c); err != nil {
+	if err := d.stopContainer(c); err != nil {
 		return err
 	}
+
+	d.waitForGracefulShutdown(c)
 
 	if err := d.startContainer(p, c); err != nil {
 		return err

@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/mcuadros/dockership/core"
 
-	"code.google.com/p/gcfg"
+	"gopkg.in/gcfg.v1"
 	"github.com/mcuadros/go-defaults"
 )
 

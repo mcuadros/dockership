@@ -5,7 +5,7 @@
 
 Why?
 ----
-Nowadays we have many powerful tools for *configuration management* such as [Puppet](http://puppetlabs.com/puppet/what-is-puppet), [Chef](http://www.getchef.com/chef/) and  [Ansible](http://www.ansibleworks.com/) even docker-based deployments tools like [Deis](http://deis.io). These tools are great for medium/big projects, but not optimal for small startups without a DevOps guy, and personal side projects.
+Nowadays we have many powerful tools for *configuration management* such as [Puppet](http://puppetlabs.com/puppet/what-is-puppet), [Chef](http://www.getchef.com/chef/) and  [Ansible](http://www.ansibleworks.com/) even docker-based deployments tools like [Deis](http://deis.io). These tools are great for medium/big projects, but not optimal for small startups without a DevOps expert, and personal side projects.
 
 With Dockership you can deploy your applications, based on a Docker container, to several servers without learning complex DSLs or hundreds of new terms. Learning new things is great, but when you deploy from time to time, remember how to do it becomes hard to remember.
 
